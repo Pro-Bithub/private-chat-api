@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Private-chat Template 3</title>
+
+    <!-- GOOGLE WEB FONT -->
+	<base href="https://iheb.local.itwise.pro/private-chat-app/public/forms/template-3/">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+	<link rel="shortcut icon" href="https://local.itwise.pro/private-chat/app/assets/favicon.png" type="image/x-icon">
+
+    <!-- BASE CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/vendors.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- YOUR CUSTOM CSS -->
+    <link href="css/custom.css" rel="stylesheet">
+</head>
+
+<body>
+	<div class="container-fluid">
+	    <div class="row row-height">
+	        <div class="col-lg-6 background-image p-0">
+	            <div class="content-left-wrapper opacity-mask" data-opacity-mask="rgba(0, 0, 0, 0.6)">
+	                <a href="#0" id="logo"><img src="https://local.itwise.pro/private-chat/app/assets/logo.png" alt="" width="150px"></a>
+	                <div class="text-start">
+	                	<small>Welcome back</small>
+	                    <h1>Duis aute irure dolor in reprehenderit in voluptate velit esse.</h1>
+	                </div>
+	            </div>
+	        </div>
+	        <div class="col-lg-6 d-flex flex-column content-right">
+				<ul class="nav nav-tabs" id="myTab" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button"
+							role="tab" aria-controls="home" aria-selected="true">LOGIN</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"
+							role="tab" aria-controls="profile" aria-selected="false">REGISTER</button>
+					</li>
+				</ul>
+				<div class="container my-auto py-5">
+					<div class="tab-content" id="myTabContent">
+						<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+							<div class="row">
+								<div class="col-lg-9 col-xl-7 mx-auto position-relative">
+									<h4 class="mb-4">Sign in</h4>
+									<form class="input_style_2" method="post">
+										<div class="form-group">
+											<label for="email_address">Email Address</label>
+											<input type="email" name="email_address" id="email_address" class="form-control">
+										</div>
+										<div class="form-group">
+											<label for="password">Password</label>
+											<input type="password" name="password" id="password" class="form-control">
+										</div>
+										<button type="submit" class="btn_1 full-width">Login</button>
+									</form>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+							<div class="row">
+								<div class="col-lg-9 col-xl-7 mx-auto">
+									<h4 class="mb-4">Sign up</h4>
+									<form class="input_style_2" method="post">
+										<div class="form-group">
+											<label for="full_name">Full Name</label>
+											<input type="text" name="full_name" id="full_name" class="form-control">
+										</div>
+										<div class="form-group">
+											<label for="email_address">Email Address</label>
+											<input type="email" name="email_address" id="email_address" class="form-control">
+										</div>
+										<div class="form-group">
+											<label for="password1">Password</label>
+											<input type="password" name="password1" id="password1" class="form-control">
+										</div>
+										<div class="form-group">
+											<label for="password2">Confirm Password</label>
+											<input type="password" name="password2" id="password2" class="form-control">
+										</div>										
+										<button type="submit" class="btn_1 full-width">Sign Up</button>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+            
+	            <div class="container pb-3 copy">© Private-chat.pro - All Rights Reserved.</div>
+	        </div>
+	    </div>
+	    <!-- /row -->
+	</div>
+	<!-- /container -->
+	
+	<!-- COMMON SCRIPTS -->
+    <script src="js/common_scripts.js"></script>
+	<script src="js/common_func.js"></script>
+</body>
+</html>

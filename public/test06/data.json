@@ -1,0 +1,16 @@
+{
+  "data": {
+    "id": null,
+    "accountId": "1",
+    "name": "test06",
+    "url": "https://iheb.local.itwise.pro/private-chat-app/public/test06",
+    "comment": "test",
+    "template": "1",
+    "status": "1",
+    "date_start": {
+      "date": "2023-03-27 10:37:33.000000",
+      "timezone_type": 1,
+      "timezone": "+00:00"
+    }
+  }
+}
