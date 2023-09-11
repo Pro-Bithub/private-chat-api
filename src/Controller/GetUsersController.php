@@ -162,4 +162,44 @@ class GetUsersController extends AbstractController
             'data' => $profiles,
         ]);
     }
+
+
+    #[Route('/checkMail')]
+    public function checkMail(Request $request, EntityManagerInterface $entityManagerInterface): Response
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+        
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+    
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        $user = $tokenData->getUser();
+
+        $slug = $request->query->get('email');
+        // $account = $request->query->get('account');
+        
+        $sql3 = "SELECT u.email FROM `user` as u WHERE u.email = :email ";
+        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+        $statement3->bindValue('email', $slug);
+        
+        $results3 = $statement3->executeQuery()->fetchAllAssociative();
+
+        return new JsonResponse([
+            'status' => true,
+            'data' => $results3,
+        ]);
+    }
+
 }

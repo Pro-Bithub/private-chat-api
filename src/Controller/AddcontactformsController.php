@@ -4,19 +4,25 @@ namespace App\Controller;
 
 use App\Entity\ContactCustomFields;
 use App\Entity\ContactFormFields;
+use App\Entity\Contacts;
+use App\Entity\Profiles;
+use App\Entity\UserLogs;
 use App\Repository\ContactsRepository;
+use App\Repository\ProfilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Sinergi\BrowserDetector\Os;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class AddcontactformsController extends AbstractController
 {
     #[Route('/addcontactforms')]
-    public function index(Request $request, EntityManagerInterface $entityManagerInterface,ContactsRepository $contactsRepository): Response
+    public function index(Request $request,UserPasswordHasherInterface $userPasswordHasher,  EntityManagerInterface $entityManagerInterface,ContactsRepository $contactsRepository,ProfilesRepository $profilesRepository): Response
     {
 
         // $authorizationHeader = $request->headers->get('Authorization');
@@ -33,25 +39,37 @@ class AddcontactformsController extends AbstractController
         // // dd($tokenData);
         // if ($tokenData === null) {
         //     throw new AccessDeniedException('Invalid token.');
-        // }
+        // }$data['account']
     
         // // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
 
         $data = json_decode($request->getContent(), true);
         $contactforms = $data['forms'];
-
-        $sql1 = "SELECT c.id
-        from `profiles` AS p
-        left join `contacts` as c on c.id = p.u_id  
-        WHERE p.id = :id and c.status = 1";
-        
+      
+    
+        $sql1 = "SELECT c.id AS contact_id, p.id AS profile_id
+        FROM `profiles` AS p
+        LEFT JOIN `contacts` AS c ON c.id = p.u_id  
+        WHERE p.id = :id AND c.status = 1";
         $statement1 = $entityManagerInterface->getConnection()->prepare($sql1);
         $statement1->bindValue('id', $data['contact']);
-        $profile = $statement1->executeQuery()->fetchAssociative();
-        // dd();
-        $contactid =$profile['id'];
+        $result = $statement1->executeQuery()->fetchAssociative();
 
+        $contactId = $result['contact_id'];
+        $profileId = $result['profile_id'];
+
+       
+
+        $firstname="";
+        $lastname="";
+        $email="";
+        $phone="";
+        $country="";
+        $name="";
+        $date_birth=null;
+        
+        
         //$fieldid = $data['forms']['fieldId'];
        //dd($data,$contactforms, $contactid);
         foreach ($contactforms  as $i => $value) {
@@ -59,7 +77,7 @@ class AddcontactformsController extends AbstractController
             //dd($value['fieldId']);
             //dd($title);
             $ContactCustomFields = new ContactCustomFields();
-            $ContactCustomFields->contactId = $contactid;
+            $ContactCustomFields->contactId = $contactId;
             $ContactCustomFields->formFieldId = $value['fieldId'];
             $ContactCustomFields->field_value = $value['value'];
            // $ContactCustomFields->save();
@@ -74,50 +92,66 @@ class AddcontactformsController extends AbstractController
             $statement->bindValue('id', $value['fieldId']);
             $field = $statement->executeQuery()->fetchAssociative();
             //  dd($field);
-            $contact = $contactsRepository->find($contactid);
+        
             if($field['field_name'] == 'First Name'){
-                $contact->firstname = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                $firstname=$value['value'];
             }else if($field['field_name'] == 'Last Name'){
-                $contact->lastname = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                $lastname=$value['value'];
             }else if($field['field_name'] == 'E-mail'){
-                $contact->email = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                $email=$value['value'];
             }else if($field['field_name'] == 'Phone'){
-                $contact->phone = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                $phone = $value['value'];
             }else if($field['field_name'] == 'Country'){
-                $contact->country = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                $country = $value['value'];
             }else if($field['field_name'] == 'Birth date'){ 
                 $dateOfBirth = \DateTimeImmutable::createFromFormat('Y-m-d', $value['value']);
-
-            if ($dateOfBirth === false) {
-                // Handle invalid date format if necessary
-                throw new \InvalidArgumentException('Invalid date format provided.');
-            }
-                $contact->date_birth = $dateOfBirth;
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
+                if ($dateOfBirth) {
+                    $date_birth = $dateOfBirth;
+                }
             }else if($field['field_name'] == 'Name'){
-                $contact->name = $value['value'];
-                $entityManagerInterface->persist($contact);
-                $entityManagerInterface->flush();
-            }else{
-
+                $name = $value['value'];
+             
             }
 
         }
 
+        $contact = $contactsRepository->find($contactId);
+        if (!empty($firstname)) 
+        $contact->firstname = $firstname;
+        if (!empty($lastname)) 
+        $contact->lastname = $lastname;
+        if (!empty($email)) 
+        $contact->email = $email;
+        if (!empty($phone)) 
+        $contact->phone = $phone;
+        if (!empty($country)) 
+        $contact->country = $country;
+        if ($date_birth!=null) 
+        $contact->date_birth = $date_birth;
+        if (!empty($name)) 
+        $contact->name = $name;
+        $entityManagerInterface->persist($contact);
+        $entityManagerInterface->flush();
+
+        $profile = $profilesRepository->find($profileId);
+        if (!empty($email)) {
+            $profile->password = $userPasswordHasher->hashPassword($profile,$email);  
+            $entityManagerInterface->persist($profile);
+            $entityManagerInterface->flush();
+        }
+   
+      
+        $data = [];
+        $data['login'] = $profile->login;
+        $data['password'] = $email;
+        $data['firstname'] = $contact->firstname ?? ''; 
+        $data['lastname'] = $contact->lastname ?? '';   
+
         return new JsonResponse([
             'success' => 'true',
-            'data' => $ContactCustomFields
+            'data' => $data
+         
+          
         ]);
     }
 

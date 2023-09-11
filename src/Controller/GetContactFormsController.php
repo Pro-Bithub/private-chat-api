@@ -70,6 +70,9 @@ class GetContactFormsController extends AbstractController
             }
         
             }
+            if(empty($filters)){
+                $filters[] = ' 1=1';
+            }
         
             $sql1 = "SELECT e.*
             FROM contact_forms e

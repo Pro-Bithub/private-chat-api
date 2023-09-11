@@ -106,6 +106,12 @@ class ContactForms
     #[Groups(['read10:collection'])]
     public ?string $text_capture = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?string $text_capture_before = null;
+
+    
+
     #[ORM\Column(length: 64, nullable: true)]
     #[Groups(['read10:collection'])]
     public ?string $sendable_agents = null;

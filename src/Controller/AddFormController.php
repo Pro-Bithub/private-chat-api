@@ -54,28 +54,32 @@ class AddFormController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        $sql = "SELECT c.*
-        FROM `contact_forms` AS c
-        WHERE c.form_type = :form_type AND c.status = 1 and c.account_id = :account_id
-        ORDER BY c.form_type, c.id  DESC";
-
-        $statement = $entityManagerInterface->getConnection()->prepare($sql);
-        $statement->bindValue('form_type', $data['formType']);
-        $statement->bindValue('account_id', $data['account']);
-
-        $contactForms1 = $statement->executeQuery()->fetchAssociative();
-
-        //  dd($contactForms1['id']);
-        if (is_array($contactForms1)) {
-            if (count($contactForms1) > 0) {
-                $contactForms2 = $contactFormsRepository->find($contactForms1['id']);
-                $contactForms2->status = 0;
-                $contactForms2->date_end = new \DateTimeImmutable();
-
-                $entityManagerInterface->persist($contactForms2);
-                $entityManagerInterface->flush();
+        if ($data['formType'] != 4 && $data['formType'] != "4") {
+            $sql = "SELECT c.*
+            FROM `contact_forms` AS c
+            WHERE c.form_type = :form_type AND c.status = 1 and c.account_id = :account_id
+            ORDER BY c.form_type, c.id  DESC";
+            $statement = $entityManagerInterface->getConnection()->prepare($sql);
+            $statement->bindValue('form_type', $data['formType']);
+            $statement->bindValue('account_id', $data['account']);
+            $contactForms1 = $statement->executeQuery()->fetchAllAssociative();
+            //  dd($contactForms1['id']);
+            if (is_array($contactForms1)) {
+                if (count($contactForms1) > 0) {
+                    foreach ($contactForms1 as $contactForm) {
+                        $contactForms2 = $contactFormsRepository->find($contactForm['id']);
+                        $contactForms2->status = 0;
+                        $contactForms2->date_end = new \DateTimeImmutable();
+                        $entityManagerInterface->persist($contactForms2);
+                        $entityManagerInterface->flush();
+                    }
+                }
             }
         }
+        
+     
+
+
         $ContactForms = new ContactForms();
         //dump($data);
         $account = $accountsRepository->find($data['account']);
@@ -92,6 +96,9 @@ class AddFormController extends AbstractController
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
+        $ContactForms->text_capture_before = $data['textCaptureBefore'];
+        $ContactForms->introduction = $data['introduction'];
+        
         $ContactForms->date_start = new \DateTimeImmutable();
         $ContactForms->status = "1";
 
@@ -249,13 +256,41 @@ class AddFormController extends AbstractController
 
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
-        $ContactForms = $contactFormsRepository->find($id);
         $data = json_decode($request->getContent(), true);
+        
+        if ($data['formType'] != 4 && $data['formType'] != "4" && ($data['status'] === "1" ||$data['status'] === 1  )  ) {
+            $sql = "SELECT c.*
+            FROM `contact_forms` AS c
+            WHERE c.form_type = :form_type AND c.status = 1 and c.account_id = :account_id and c.id !=:id
+            ORDER BY c.form_type, c.id  DESC";
+            $statement = $entityManagerInterface->getConnection()->prepare($sql);
+            $statement->bindValue('form_type', $data['formType']);
+            $statement->bindValue('account_id', $data['account']);
+            $statement->bindValue('id', $id);
+            $contactForms1 = $statement->executeQuery()->fetchAllAssociative();
+            //  dd($contactForms1['id']);
+            if (is_array($contactForms1)) {
+                if (count($contactForms1) > 0) {
+                    foreach ($contactForms1 as $contactForm) {
+                        $contactForms2 = $contactFormsRepository->find($contactForm['id']);
+                        $contactForms2->status = 0;
+                        $contactForms2->date_end = new \DateTimeImmutable();
+                        $entityManagerInterface->persist($contactForms2);
+                        $entityManagerInterface->flush();
+                    }
+                }
+            }
+        }
+
+        $ContactForms = $contactFormsRepository->find($id);
+   
         $ContactForms->form_type = $data['formType'];
         $ContactForms->friendly_name = $data['FriendlyName'];
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
+        $ContactForms->text_capture_before = $data['textCaptureBefore'];
+        $ContactForms->introduction = $data['introduction'];
         $ContactForms->status = $data['status'];
 
         $contactFormField = isset($data['contactFormField']) ? $data['contactFormField'] : [];
@@ -378,6 +413,7 @@ class AddFormController extends AbstractController
                     'account_id' => $row['account_id'],
                     'form_type' => $row['form_type'],
                     'text_capture' => $row['text_capture'],
+                    'text_capture_before' => $row['text_capture_before'],
                     'sendable_agents' => $row['sendable_agents'],
                     'status' => $row['status'],
                     'friendly_name' => $row['friendly_name'],

@@ -226,7 +226,7 @@ class GetsalesController extends AbstractController
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "   
                 ;";
 
-        $sql3 = "SELECT * FROM sales as e left JOIN contacts r ON r.id = e.contact_id left JOIN plans p ON p.id = e.plan_id and p.account_id = :account_id and e.contact_id = :contact_id";
+        $sql3 = "SELECT * FROM sales as e left JOIN contacts r ON r.id = e.contact_id  left JOIN user d ON d.id = e.user_id left JOIN plans p ON p.id = e.plan_id where p.account_id = :account_id and e.contact_id = :contact_id GROUP BY e.id";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         // dd($statement3);
         $statement3->bindValue('account_id', $user->accountId);
@@ -257,7 +257,7 @@ class GetsalesController extends AbstractController
             'draw' => $draw,
             'recordsTotal' => $results3,
             'recordsFiltered' => $results1,
-            'data' => $results,
+            'data' => $results
         ]);
     }
 }

@@ -77,6 +77,10 @@ class GetLinksController extends AbstractController
             }
         
             }
+            		 
+if(empty($filters)){
+    $filters[] = ' 1=1';
+}
         
             $sql1 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids
             FROM clickable_links e

@@ -276,7 +276,7 @@ class AddPlanContollerController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-        $sql4 = "SELECT * FROM `plan_discounts` as d WHERE d.plan_id = :id and d.status = 1";
+        $sql4 = "SELECT * FROM `plan_discounts` as d WHERE d.plan_id = :id ";
         $statement4 = $entityManagerInterface->getConnection()->prepare($sql4);
         $statement4->bindValue('id', $plans->id);
         $discount = $statement4->executeQuery()->fetchAllAssociative();
@@ -373,7 +373,7 @@ class AddPlanContollerController extends AbstractController
                 $entityManagerInterface->flush();
 
 
-                $sql5 = "SELECT pdu.user_id FROM `plan_discount_users` as pdu WHERE pdu.discount_id = :id and pdu.status = 1";
+                $sql5 = "SELECT pdu.user_id FROM `plan_discount_users` as pdu WHERE pdu.discount_id = :id ";
                 $statement6 = $entityManagerInterface->getConnection()->prepare($sql5);
                 $statement6->bindValue('id', $discount[0]['id']);
 
@@ -453,11 +453,28 @@ class AddPlanContollerController extends AbstractController
             }
         }else{
             if (count($discount) != 0) {
-                $sqlUpdate = "UPDATE `plan_discounts` SET `status` = 0 WHERE `plan_id` = :id ";
-                $statementUpdate = $entityManagerInterface->getConnection()->prepare($sqlUpdate);
-                $statementUpdate->bindValue('id', $plans->id);
-                $statementUpdate->execute();
-                
+              
+                $logs = new UserLogs();
+                $logs->user_id = $data['user_id'];
+                $logs->element = 5;
+                $logs->action = 'delete';
+                $logs->element_id = $discount[0]['id'];
+                $logs->source = 1;
+                $logs->log_date = new \DateTimeImmutable();
+                $entityManagerInterface->persist($logs);
+                $entityManagerInterface->flush();
+
+                $sqlDelete = "DELETE FROM `plan_discounts` WHERE `plan_id` = :id ";
+                $statementDelete = $entityManagerInterface->getConnection()->prepare($sqlDelete);
+                $statementDelete->bindValue('id', $plans->id);
+                $statementDelete->execute();
+
+                $sqlDelete = "DELETE FROM `plan_discount_users` WHERE `discount_id` = :id ";
+                $statementDelete = $entityManagerInterface->getConnection()->prepare($sqlDelete);
+                $statementDelete->bindValue('id', $discount[0]['id']);
+                $statementDelete->execute();
+
+
             }
         }
 

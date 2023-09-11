@@ -80,6 +80,9 @@ class GetContactsController extends AbstractController
         
             }
 
+            if(empty($filters)){
+                $filters[] = ' 1=1';
+            }
             
             $sql1 = "SELECT e.* , COUNT(d.contact_id) as total_sales
             FROM contacts e
