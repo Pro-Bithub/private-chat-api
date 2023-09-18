@@ -260,4 +260,121 @@ class GetsalesController extends AbstractController
             'data' => $results
         ]);
     }
+
+
+    #[Route('/get_forms/{contact_id}', name: 'get_forms')]
+    public function getforms(Request $request, EntityManagerInterface $entityManagerInterface, $contact_id): JsonResponse
+    {
+
+
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        $user = $tokenData->getUser();
+
+        $draw = (int) $request->get('draw', 1);
+        $start = (int) $request->get('start', 0);
+        $length = (int) $request->get('length', 5);
+        $search = $request->get('columns')[1]['search']['value'] ?? null;
+
+        $columns = $request->get('columns');
+
+        $order = $request->get('order');
+
+        $sort = [];
+        foreach ($order as  $orders) {
+            if (isset($columns[$orders['column']]['name'])) {
+                $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
+            }
+        }
+
+
+        $filters = [];
+        $filterValues = [];
+        if ($request->get('search')['value'] &&  trim($request->get('search')['value']) != '') {
+            $filters[] = "cf.field_value LIKE :searchTerm OR c.field_name LIKE :searchTerm ";
+            $filterValues['searchTerm'] = '%' . trim($request->get('search')['value']) . '%';
+        }
+
+        if ($request->get('columns')) {
+            foreach ($request->get('columns') as $column) {
+                if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
+                    if ($column['name'] == 'field') {
+                        $filters[] = " (c.field_name LIKE :" . $column['name'] . ")";
+                    } else if ($column['name'] == 'value') {
+                        $filters[] = "(cf.field_value  LIKE :" . $column['name'] . ")";
+                    } 
+                    $filterValues[$column['name']] = '%' . trim($column['search']['value']) . '%';
+                }
+            }
+        }
+
+        $sql1 = "SELECT cf.id , cf.field_value as value ,c.field_name as field
+            FROM contact_custom_fields cf
+                left JOIN custom_fields c ON c.id = cf.form_field_id
+                where cf.contact_id = :contact_id
+                 " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
+                GROUP BY cf.id
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
+                LIMIT :limit OFFSET :offset
+                ;";
+        //dd($sql1,$filters);
+        $sql2 = "SELECT cf.id , cf.field_value as value
+        FROM contact_custom_fields cf
+            left JOIN custom_fields c ON c.id = cf.form_field_id
+            where cf.contact_id = :contact_id
+             " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
+            GROUP BY cf.id
+            " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "  
+                ;";
+        $sql3 = "SELECT cf.id , cf.field_value as value  FROM contact_custom_fields cf left JOIN custom_fields c ON c.id = cf.form_field_id  where cf.contact_id = :contact_id";
+      
+           
+        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+        // dd($statement3);
+ 
+        $statement3->bindValue('contact_id', $contact_id);
+
+        $results3 = $statement3->executeQuery()->rowCount();
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+        $statement1 = $entityManagerInterface->getConnection()->prepare($sql2);
+        foreach ($filterValues as $key => $value) {
+            $statement->bindValue($key, $value);
+            $statement1->bindValue($key, $value);
+        }
+        // $statement->bindValue('searchTerm', '%' . $search . '%');
+        $statement->bindValue('limit', $length, \PDO::PARAM_INT);
+        $statement->bindValue('offset', $start, \PDO::PARAM_INT);
+    
+        $statement->bindValue('contact_id', $contact_id);
+        $statement1->bindValue('contact_id', $contact_id);
+        $results = $statement->executeQuery()->fetchAllAssociative();
+
+        $results1 = $statement1->executeQuery()->rowCount();
+        // $data1 = $this->PredefindTextsRepository->findDataBySearch($search);
+        // dd($results);
+
+        return new JsonResponse([
+            'draw' => $draw,
+            'recordsTotal' => $results3,
+            'recordsFiltered' => $results1,
+            'data' => $results
+        ]);
+    }
 }

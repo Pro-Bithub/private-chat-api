@@ -450,6 +450,93 @@ class CreateUserController extends AbstractController
     }
 
 
+
+    #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
+    public function addUserPresentation( $id,Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        // $user = $tokenData->getUser();
+        $data = json_decode($request->getContent(), true);
+        // dd($data);
+        $userid = $userRepository->find($id);
+        $userPresentation = new UserPresentations();
+        $userPresentation->user =$userid;
+        $userPresentation->gender = $data['gender'];
+        $userPresentation->website = $data['website'];
+        $userPresentation->role = $data['role'];
+        $userPresentation->nickname = $data['nickname'];
+        $userPresentation->country = $data['country'];
+        $userPresentation->languages = $data['languages'];
+        $userPresentation->expertise = $data['expertise'];
+        $userPresentation->diploma = $data['diploma'];
+        $userPresentation->brand_name = $data['brand_name'];
+        $userPresentation->contact_phone = $data['contact_phone'];
+        $userPresentation->contact_mail = $data['contact_mail'];
+        $userPresentation->atrological_sign = $data['atrological_sign'];
+        $userPresentation->skills = $data['skills'];
+        $userPresentation->status = '1';
+        $userPresentation->date_start = new \DateTime('@' . strtotime('now'));
+        $userPresentation->presentation = $data['presentation'];
+        $userPresentation->contact_phone_comment = $data['contact_phone_comment'];
+
+
+
+        $entityManagerInterface->persist($userPresentation);
+        $entityManagerInterface->flush();
+
+
+
+        $logs = new UserLogs();
+        $logs->user_id = $data['user_id'];
+        $logs->element = 18;
+        $logs->action = 'add';
+        $logs->element_id = $userPresentation->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+        // $time =  new \DateTimeImmutable();
+        // $profile = $profilesRepository->findProfileById($userPresentation->user);
+        // $profile->username = $userPresentation->nickname;
+        // $entityManagerInterface->persist($profile);
+        // $entityManagerInterface->flush();
+
+        // $UserLogs = new UserLogs();
+        // $UserLogs->user_id = $data['user_id'];
+        // $UserLogs->action = 'Update Profile';
+        // $UserLogs->element = '30';
+        // $UserLogs->element_id = $profile->id;
+        // $UserLogs->log_date = $time;
+        // $UserLogs->source = '1';
+        // $entityManagerInterface->persist($UserLogs);
+        // $entityManagerInterface->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $userPresentation,
+        ]);
+    }
+
+
+
     #[Route('/update_user_presentation/{id}', name: 'app_update_user_presentation_controller')]
     public function updateUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, ProfilesRepository $profilesRepository): Response
     {
@@ -527,6 +614,67 @@ class CreateUserController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'data' => $userPresentation,
+        ]);
+    }
+
+
+
+    #[Route('/delete_user_presentation/{id}', name: 'app_delete_user_presentation_controller')]
+    public function deleteUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, ProfilesRepository $profilesRepository): Response
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        $deleted = false;
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        // $user = $tokenData->getUser();
+        $data = json_decode($request->getContent(), true);
+        // dd($data);
+        $userPresentation = $userPresentationsRepository->find($id);
+  
+        if (!$userPresentation) {
+          
+        } else {
+            $logs = new UserLogs();
+            $logs->user_id = $data['user_id'];
+            $logs->element = 18;
+            $logs->action = 'delete';
+            $logs->element_id = $userPresentation->id;
+            $logs->source = 1;
+            $logs->log_date = new \DateTimeImmutable();
+            $entityManagerInterface->persist($logs);
+            $entityManagerInterface->flush();
+            
+            $entityManagerInterface->remove($userPresentation); // Assuming $entityManager is your Entity Manager
+            $entityManagerInterface->flush();
+            $deleted=true;
+            // You can return a success response or perform any other required action here.
+        }
+        
+
+
+
+      
+
+ 
+
+        return new JsonResponse([
+            'success' => true,
+            'data' =>  $deleted ,
         ]);
     }
 

@@ -96,7 +96,7 @@ class AddFormController extends AbstractController
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
-        $ContactForms->text_capture_before = $data['textCaptureBefore'];
+      //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
         $ContactForms->introduction = $data['introduction'];
         
         $ContactForms->date_start = new \DateTimeImmutable();
@@ -289,7 +289,7 @@ class AddFormController extends AbstractController
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
-        $ContactForms->text_capture_before = $data['textCaptureBefore'];
+      //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
         $ContactForms->introduction = $data['introduction'];
         $ContactForms->status = $data['status'];
 
