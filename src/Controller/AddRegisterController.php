@@ -25,8 +25,15 @@ class AddRegisterController extends AbstractController
         $this->parameterBag = $parameterBag;
 
     }
+    
     public function __invoke(Request $request, EntityManagerInterface $entityManagerInterface): Registrations
     {
+        function addTrailingSlashIfMissing($str) {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
 
         $authorizationHeader = $request->headers->get('Authorization');
 
@@ -43,7 +50,8 @@ class AddRegisterController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
-    
+        $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
+        $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         $user = $tokenData->getUser();
        // dd($this->parameterBag->get('kernel.project_dir'));
@@ -55,43 +63,35 @@ class AddRegisterController extends AbstractController
         $Registrations->accountId = $user->accountId;
         $Registrations->name = $data['name'];
         $Registrations->slug_url = $data['slug_url'];
+        $Registrations->redirect_url = $data['redirect_url'];
         $Registrations->comment = $data['comment'];
         $Registrations->template = $data['template'];
         $Registrations->date_start = new \DateTime('@'.strtotime('now'));
         $Registrations->status = $data['status'];
         $Registrations->url = $data['url'];
+
+        $formstemplate='forms/template-'.$data['template'];
+        $newBaseHref = $APP_URL.$formstemplate.'/'; 
+
+        $file = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/index.html', '', '');
+        $fileContents = $file->getContents();
+        $fileContents = str_replace('[base-href]',  $newBaseHref , $fileContents);
+      
+        $file_forget_password = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/forget_password.html', '', '');
+        $fileContentsfgp = $file_forget_password->getContents();
+        $fileContentsfgp = str_replace('[base-href]',  $newBaseHref , $fileContentsfgp);
+
         
-        $file1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/index.html', '', '');
-        $file_forget_password1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/forget_password.html', '', '');
-       // $file_reset_password1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/reset_password.html', '', '');
+        $filesystem->dumpFile($data['slug_url'].'/index.html',  $fileContents);
+        $filesystem->dumpFile($data['slug_url'].'/forget_password.html',  $fileContentsfgp);
+       // $filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password1->getContents());
+        $json = json_encode(array('data' => $Registrations));
+        $filesystem->dumpFile('forms/template-'.$data['template'].'/assets/js/'.$data['slug_url'].'/data.json', $json);
 
-        $file2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/index.html', '', '');
-        $file_forget_password2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/forget_password.html', '', '');
-        //$file_reset_password2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/reset_password.html', '', '');
-        // dd($file2);
-        $file3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/index.html', '', '');
-        $file_forget_password3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/forget_password.html', '', '');
-        //$file_reset_password3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/reset_password.html', '', '');
-        if($data['template'] == '1'){
-            $filesystem->dumpFile($data['slug_url'].'/index.html', $file1->getContents());
-            $filesystem->dumpFile($data['slug_url'].'/forget_password.html', $file_forget_password1->getContents());
-           // $filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password1->getContents());
-            $json = json_encode(array('data' => $Registrations));
-            $filesystem->dumpFile('forms/template-1/assets/js/'.$data['slug_url'].'/data.json', $json);
-        }else if($data['template'] == '2'){
+   
+     
 
-            $filesystem->dumpFile($data['slug_url'].'/index.html', $file2->getContents());
-            $filesystem->dumpFile($data['slug_url'].'/forget_password.html', $file_forget_password2->getContents());
-           // $filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password2->getContents());
-            $json = json_encode(array('data' => $Registrations));
-            $filesystem->dumpFile('forms/template-2/assets/js/'.$data['slug_url'].'/data.json', $json);
-        }else{
-            $filesystem->dumpFile($data['slug_url'].'/index.html', $file3->getContents());
-            $filesystem->dumpFile($data['slug_url'].'/forget_password.html', $file_forget_password3->getContents());
-            //$filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password3->getContents());
-            $json = json_encode(array('data' => $Registrations));
-            $filesystem->dumpFile('forms/template-3/js/'.$data['slug_url'].'/data.json', $json);
-        }
+
         $entityManagerInterface->persist($Registrations);
         $entityManagerInterface->flush();
         
@@ -106,7 +106,7 @@ class AddRegisterController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
         
-        return $Registrations;
+        return $Registrations; 
     }
 
     #[Route('/delete_registrations/{id}', name: 'app_delete_registrations_controller')]
@@ -164,4 +164,24 @@ class AddRegisterController extends AbstractController
             'data' => $registrations,
         ]);
     }
+
+    #[Route('get/page/url', name: 'app_get_page_url')]
+    public function getPageUrl(
+    ): Response {
+        function addTrailingSlashIfMissing2($str) {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+       $APP_URL = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'));
+       
+       return new JsonResponse([
+        'success' => true,
+        'data' => $APP_URL,
+    ]);
+       
+    }
+
 }

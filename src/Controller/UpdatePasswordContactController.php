@@ -8,6 +8,7 @@ use App\Repository\ContactsRepository;
 use App\Repository\ProfilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,14 +20,17 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\SplFileInfo;
 class UpdatePasswordContactController extends AbstractController
 {
+    protected $parameterBag;
+
     /**
     * @var ContactsRepository
     * @var profilesRepository
     */
     private $ContactsRepository;
     private $profilesRepository;
-    public function __construct(private MailerInterface $mailer , ContactsRepository $ContactsRepository, ProfilesRepository $profilesRepository)
+    public function __construct(ParameterBagInterface $parameterBag,private MailerInterface $mailer , ContactsRepository $ContactsRepository, ProfilesRepository $profilesRepository)
     {
+        $this->parameterBag = $parameterBag;
         $this->ContactsRepository = $ContactsRepository;
         $this->profilesRepository = $profilesRepository;
     }
@@ -39,6 +43,15 @@ class UpdatePasswordContactController extends AbstractController
      */
     public function sendEmail(Request $request) 
     {
+        function addTrailingSlashIfMissing($str) {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+       
+
        // dd($request->get('email'));
        $data = json_decode($request->getContent(), true);
        $name = $request->get('name');
@@ -46,6 +59,9 @@ class UpdatePasswordContactController extends AbstractController
        //dd($data);
        $contact = $this->ContactsRepository->loadContactByEmail($request->get('login'));
        if($contact != null){
+        $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
+        $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
+
         $email = (new Email())
             ->from('hello@example.com')
             ->to($request->get('login'))
@@ -61,36 +77,29 @@ class UpdatePasswordContactController extends AbstractController
 
                 <p>If you did not make this request then please ignore this email.</p>
 
-                <p>Otherwise, please click this link to change your password: <a href="https://iheb.local.itwise.pro/private-chat-app/public/'.$name.'/reset_password'. '/'.$contact->id.'.html'.'">[link]</a></p>             
+                <p>Otherwise, please click this link to change your password: <a href="'.$APP_URL.$name.'/reset_password'. '/'.$contact->id.'.html'.'">[link]</a></p>             
             ');
 
      $this->mailer->send($email);
    
     //dd($user->id);
      //return $user;
+
+    
+
+     $formstemplate='forms/template-'.$template;
+     $newBaseHref = $APP_URL.$formstemplate.'/'; 
+
      $filesystem = new Filesystem();
         
-    
-     $file_reset_password1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/reset_password.html', '', '');
+     $file = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/reset_password.html', '', '');
+     $fileContents = $file->getContents();
+     $fileContents = str_replace('[base-href]',  $newBaseHref , $fileContents);
 
-    
-     $file_reset_password2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/reset_password.html', '', '');
+     $filesystem->dumpFile($name.'/reset_password' .'/'. $contact->id . '.html',  $fileContents );
 
-    
-     $file_reset_password3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/reset_password.html', '', '');
-     if($template == '1'){
-       
-         $filesystem->dumpFile($name.'/reset_password' .'/'. $contact->id . '.html', $file_reset_password1->getContents());
-        
-     }else if($template == '2'){
-       
-         $filesystem->dumpFile($name.'/reset_password' .'/'. $contact->id . '.html', $file_reset_password2->getContents());
-       
-     }else{
-       
-         $filesystem->dumpFile($name.'/reset_password' .'/'. $contact->id . '.html', $file_reset_password3->getContents());
-         
-     }
+
+
         return new JsonResponse([
             'success' => 'true',
             'data' => $contact
@@ -114,23 +123,23 @@ class UpdatePasswordContactController extends AbstractController
         $profile = $this->profilesRepository->findOneByContact($request->get('idContact'));
         //dd($profiles);
      //   $user = new User();
-     if($Contact){
+     if($Contact &&  $profile){
        // $profiles->password = $userPasswordHasher->hashPassword($profiles,$request->get('password'));
        
-        $profiles = new Profiles();
+       /*  $profiles = new Profiles();
         $profiles->accountId = $profile->accountId;
-        $profiles->username = $profile->username;
-        $profiles->password = $userPasswordHasher->hashPassword($profiles,$request->get('password'));
-        $profiles->login = $profile->login;
+        $profiles->username = $profile->username; */
+        $profile->password = $userPasswordHasher->hashPassword($profile,$request->get('password'));
+       /*  $profiles->login = $profile->login;
         $profiles->u_id = $profile->u_id;
-        $profiles->u_type = '1';
+        $profiles->u_type = '2'; */
         $time =  new \DateTimeImmutable();
         
         $UserLogs = new UserLogs();
         $UserLogs->user_id = $Contact->id;
         $UserLogs->action = 'Update Password Profile';
         $UserLogs->element = '30';
-        $UserLogs->element_id = $profiles->id;
+        $UserLogs->element_id = $profile->id;
         $UserLogs->log_date = $time;
         $UserLogs->source = '1';
         $entityManagerInterface->persist($UserLogs);
@@ -141,7 +150,7 @@ class UpdatePasswordContactController extends AbstractController
         // $user->setPassword($hashedPassword);
 
        
-        $entityManagerInterface->persist($profiles);
+        $entityManagerInterface->persist($profile);
         $entityManagerInterface->flush();
       
     

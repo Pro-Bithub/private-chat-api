@@ -52,7 +52,9 @@ class ProfilesRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('u')
             ->where('u.u_id = :id')
+            ->andWhere('u.u_type = :type')
             ->setParameter('id', $id)
+            ->setParameter('type', 2) 
             ->getQuery()
             ->getOneOrNullResult();
     }

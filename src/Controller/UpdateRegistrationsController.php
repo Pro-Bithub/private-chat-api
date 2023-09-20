@@ -8,6 +8,7 @@ use App\Repository\AccountsRepository;
 use App\Repository\RegistrationsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,12 +19,14 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class UpdateRegistrationsController extends AbstractController
 {
+    protected $parameterBag;
     /**
     * @var RegistrationsRepository
     */
     private $RegistrationsRepository;
-    public function __construct(RegistrationsRepository $RegistrationsRepository)
+    public function __construct(ParameterBagInterface $parameterBag,RegistrationsRepository $RegistrationsRepository)
     {
+        $this->parameterBag = $parameterBag;
         $this->RegistrationsRepository = $RegistrationsRepository;
     }
     #[Route('/update/registrations')]
@@ -35,7 +38,12 @@ class UpdateRegistrationsController extends AbstractController
      */
     public function updateregistrations(Request $request,  EntityManagerInterface $entityManagerInterface, AccountsRepository $accountsRepository)
     {
-        
+        function addTrailingSlashIfMissing($str) {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
          
         $authorizationHeader = $request->headers->get('Authorization');
 
@@ -44,6 +52,9 @@ class UpdateRegistrationsController extends AbstractController
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
        
+        $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
+        $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
+
         //$data = json_decode($request->getContent(), true);
        $Registrations1 = $this->RegistrationsRepository->findOneById($request->get('idregister'));
        $Registrations1->status = 0;
@@ -65,45 +76,40 @@ class UpdateRegistrationsController extends AbstractController
        $Registrations->name = $request->get('name');
        $Registrations->accountId = $request->get('account_id');
        $Registrations->slug_url = $request->get('slug_url');
+       $Registrations->redirect_url = $request->get('redirect_url');
        $Registrations->comment = $request->get('comment');
        $Registrations->template = $request->get('template');
        $Registrations->status = $request->get('status');
        $Registrations->url = $request->get('url');
        $Registrations->date_start = new \DateTimeImmutable();
        $filesystem = new Filesystem();
-       $file1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/index.html', '', '');
-       $file_forget_password1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/forget_password.html', '', '');
-      // $file_reset_password1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/reset_password.html', '', '');
 
-       $file2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/index.html', '', '');
-       $file_forget_password2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/forget_password.html', '', '');
-       //$file_reset_password2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/reset_password.html', '', '');
+       $formstemplate='forms/template-'.$request->get('template');
+       $newBaseHref = $APP_URL.$formstemplate.'/'; 
 
-       $file3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/index.html', '', '');
-       $file_forget_password3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/forget_password.html', '', '');
-       //$file_reset_password3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/reset_password.html', '', '');
-       if($request->get('template') == '1'){
-           $filesystem->dumpFile($request->get('slug_url').'/index.html', $file1->getContents());
-           $filesystem->dumpFile($request->get('slug_url').'/forget_password.html', $file_forget_password1->getContents());
-           //$filesystem->dumpFile($request->get('slug_url').'/reset_password.html', $file_reset_password1->getContents());
-           $json = json_encode(array('data' => $Registrations));
-           $filesystem->dumpFile('forms/template-1/assets/js/'.$request->get('slug_url').'/data.json', $json);
-       }else if($request->get('template') == '2'){
-           $filesystem->dumpFile($request->get('slug_url').'/index.html', $file2->getContents());
-           $filesystem->dumpFile($request->get('slug_url').'/forget_password.html', $file_forget_password2->getContents());
-          // $filesystem->dumpFile($request->get('slug_url').'/reset_password.html', $file_reset_password2->getContents());
-           $json = json_encode(array('data' => $Registrations));
-           $filesystem->dumpFile('forms/template-2/assets/js/'.$request->get('slug_url').'/data.json', $json);
-       }else{
-           $filesystem->dumpFile($request->get('slug_url').'/index.html', $file3->getContents());
-           $filesystem->dumpFile($request->get('slug_url').'/forget_password.html', $file_forget_password3->getContents());
-          // $filesystem->dumpFile($request->get('slug_url').'/reset_password.html', $file_reset_password3->getContents());
-           $json = json_encode(array('data' => $Registrations));
-           $filesystem->dumpFile('forms/template-3/js/'.$request->get('slug_url').'/data.json', $json);
-       }
+       $file = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/index.html', '', '');
+       $fileContents = $file->getContents();
+       $fileContents = str_replace('[base-href]',  $newBaseHref , $fileContents);
+
+       $file_forget_password = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/forget_password.html', '', '');
+       $fileContentsfgp = $file_forget_password->getContents();
+       $fileContentsfgp = str_replace('[base-href]',  $newBaseHref , $fileContentsfgp);
+
+
+   
+       $filesystem->dumpFile($request->get('slug_url').'/index.html',  $fileContents);
+       $filesystem->dumpFile($request->get('slug_url').'/forget_password.html',  $fileContentsfgp);
+      // $filesystem->dumpFile($request->get('slug_url').'/reset_password.html', $file_reset_password1->getContents());
+       $json = json_encode(array('data' => $Registrations));
+       $filesystem->dumpFile('forms/template-'.$request->get('template').'/assets/js/'.$request->get('slug_url').'/data.json', $json);
+
+  
+    
+
        
        $entityManagerInterface->persist($Registrations);
        $entityManagerInterface->flush();
+    
        $logs = new UserLogs();
         $logs->user_id = $request->get('user_id');
         $logs->element = 26;
@@ -111,7 +117,6 @@ class UpdateRegistrationsController extends AbstractController
         $logs->element_id = $Registrations->id;
         $logs->source = 1;
         $logs->log_date = new \DateTimeImmutable();
-
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
        return new JsonResponse([
@@ -143,17 +148,7 @@ class UpdateRegistrationsController extends AbstractController
        $data = json_decode($request->getContent(), true);
        $Registrations = $this->RegistrationsRepository->findOneById($request->get('idregister'));
        $Registrations->status = $request->get('status');
-    //    $filesystem = new Filesystem();
-    //    $file1 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-1/index.html', '', '');
-    //    $file2 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-2/index.html', '', '');
-    //    $file3 = new SplFileInfo('/home/ihebitwi/public_html/private-chat-app/public/forms/template-3/index.html', '', '');
-    //    if($request->get('template') == '1'){
-    //        $filesystem->dumpFile($request->get('name').'/index.html', $file1->getContents());
-    //    }else if($request->get('template') == '2'){
-    //        $filesystem->dumpFile($request->get('name').'/index.html', $file2->getContents());
-    //    }else{
-    //        $filesystem->dumpFile($request->get('name').'/index.html', $file3->getContents());
-    //    }
+  
        
        $entityManagerInterface->persist($Registrations);
        $entityManagerInterface->flush();

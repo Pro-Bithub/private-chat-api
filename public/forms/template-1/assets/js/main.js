@@ -25,6 +25,7 @@
     var top_text = $(this).parent(".form-group").find(".top_text");
     $(this).toggleClass("animated", this.value > "");
     $(top_text).toggleClass("animated", this.value > "");
+   
   });
 
   $(".signup_form_style_two .form-control")

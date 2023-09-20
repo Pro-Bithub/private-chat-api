@@ -107,6 +107,10 @@ class Registrations
 
     #[ORM\Column(length: 255)]
     #[Groups(['read102:collection'])]
+    public ?string $redirect_url = null;
+
+    #[ORM\Column(length: 255)]
+    #[Groups(['read102:collection'])]
     public ?string $comment = null;
 
     #[ORM\Column]
@@ -141,6 +145,19 @@ class Registrations
 
         return $this;
     }
+    
+    public function getRedirectUrl(): ?string
+    {
+        return $this->redirect_url;
+    }
+
+    public function setRedirectUrl(string $redirect_url): self
+    {
+        $this->redirect_url = $redirect_url;
+
+        return $this;
+    }
+
     public function getAccount(): ?string
     {
         return $this->accountId;

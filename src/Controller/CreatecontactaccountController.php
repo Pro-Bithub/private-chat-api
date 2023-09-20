@@ -28,74 +28,76 @@ class CreatecontactaccountController extends AbstractController
         $this->ProfilesRepository = $ProfilesRepository;
     }
 
+  
     #[Route('/createcontactaccount', name: 'app_createcontactaccount')]
-    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface): Response
+    public function createcontactaccount(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface):Response
     {
-        //dd($request->get('account'));
-        $contact = new Contacts();
-        $contact->accountId = $request->get('account');
-        $contact->origin = $request->get('origin');
-        $contact->name = $request->get('name');
-        $contact->status = '1';
-        $contact->email = $request->get('email');
-        $contact->date_start = new \DateTime('@'.strtotime('now'));
-        $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+    
+       $contact = new Contacts();
+       $contact->accountId = $request->get('account');
+       $contact->origin = $request->get('origin');
+       $contact->name = $request->get('name');
+       $contact->status = '1';
+       $contact->email = $request->get('email');
+       $contact->date_start = new \DateTime('@'.strtotime('now'));
+       $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
 
-        $entityManagerInterface->persist($contact);
-        $entityManagerInterface->flush();
-        $time =  new \DateTimeImmutable();
+       $entityManagerInterface->persist($contact);
+       $entityManagerInterface->flush();
+       $time =  new \DateTimeImmutable();
 
-      
-        $UserLogs = new UserLogs();
-        $UserLogs->user_id = $contact->id;
-        $UserLogs->action = 'Register Contact';
-        $UserLogs->element = '27';
-        $UserLogs->element_id = $contact->id;
-        $UserLogs->log_date = $time;
-        $UserLogs->source = '3';
-        $entityManagerInterface->persist($UserLogs);
-        $entityManagerInterface->flush();
+     
+       $UserLogs = new UserLogs();
+       $UserLogs->user_id = $contact->id;
+       $UserLogs->action = 'Register Contact';
+       $UserLogs->element = '27';
+       $UserLogs->element_id = $contact->id;
+       $UserLogs->log_date = $time;
+       $UserLogs->source = '3';
+       $entityManagerInterface->persist($UserLogs);
+       $entityManagerInterface->flush();
 
-        $profiles = new Profiles();
-        $profiles->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
-        $profiles->accountId = $request->get('account');
-        $profiles->username = $request->get('name');
-        $profiles->login = $request->get('email');
-        $profiles->password = $userPasswordHasher->hashPassword($profiles,$request->get('password'));
-        $profiles->u_type = '2';
-        $profiles->u_id = $contact->id;
-        $request1 = Request::createFromGlobals();
-        $userAgent = $request1->headers->get('User-Agent');
-        
-        // Use a library like BrowserDetect to parse the user agent string
-        $browser = new \Sinergi\BrowserDetector\Browser($userAgent);
-        $os = new Os();
+       $profiles = new Profiles();
+       $profiles->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
+       $profiles->accountId = $request->get('account');
+       $profiles->username = $request->get('name');
+       $profiles->login = $request->get('email');
+       $profiles->password = $userPasswordHasher->hashPassword($profiles,$request->get('password'));
+       $profiles->u_type = '2';
+       $profiles->u_id = $contact->id;
+       $request1 = Request::createFromGlobals();
+       $userAgent = $request1->headers->get('User-Agent');
        
-        
-        
-        //dd($os->getName());
-        $browserName = $browser->getName();
-        $profiles->browser_data = $browserName . ';' . $os->getName();
-       // $profiles->browser_data = $_SERVER['HTTP_USER_AGENT'];
-        $entityManagerInterface->persist($profiles);
-        $entityManagerInterface->flush();
+       // Use a library like BrowserDetect to parse the user agent string
+       $browser = new \Sinergi\BrowserDetector\Browser($userAgent);
+       $os = new Os();
+      
+       
+       
+       //dd($os->getName());
+       $browserName = $browser->getName();
+       $profiles->browser_data = $browserName . ';' . $os->getName();
+      // $profiles->browser_data = $_SERVER['HTTP_USER_AGENT'];
+       $entityManagerInterface->persist($profiles);
+       $entityManagerInterface->flush();
 
-        $UserLogs = new UserLogs();
-        $UserLogs->user_id = $contact->id;
-        $UserLogs->action = 'new Profile';
-        $UserLogs->element = '30';
-        $UserLogs->element_id = $profiles->id;
-        $UserLogs->log_date = $time;
-        $UserLogs->source = '3';
-        $entityManagerInterface->persist($UserLogs);
-        $entityManagerInterface->flush();
+       $UserLogs = new UserLogs();
+       $UserLogs->user_id = $contact->id;
+       $UserLogs->action = 'new Profile';
+       $UserLogs->element = '30';
+       $UserLogs->element_id = $profiles->id;
+       $UserLogs->log_date = $time;
+       $UserLogs->source = '3';
+       $entityManagerInterface->persist($UserLogs);
+       $entityManagerInterface->flush();
 
-        return new JsonResponse([
-            'success' => 'true',
-            'data' => $profiles,
-            'account_id' => $contact->accountId,
-        ]);
-
+       return new JsonResponse([
+           'success' => 'true',
+           'data' => $profiles,
+           'account_id' => $contact->accountId,
+       ]);
+       
+    
     }
 
     #[Route('/auth_profile', name: 'auth_profile')]
@@ -176,7 +178,7 @@ class CreatecontactaccountController extends AbstractController
 
        
     
-}
+    }
 
 #[Route('/add_profile', name: 'add_profile')]
 public function addprofile(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface):Response
