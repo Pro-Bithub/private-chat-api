@@ -84,7 +84,7 @@ class GetContactsController extends AbstractController
                 $filters[] = ' 1=1';
             }
             
-            $sql1 = "SELECT e.* , COUNT(d.contact_id) as total_sales
+            $sql1 = "SELECT e.* , COUNT(d.contact_id) as total_sales  
             FROM contacts e
             left JOIN sales d ON d.contact_id = e.id
                  ". (!empty($filters) ? 'where e.account_id = :account_id and' : ''). implode(' AND',$filters)."
@@ -96,7 +96,11 @@ class GetContactsController extends AbstractController
                 ;";
         
                 //dd($sql1,$filters);
-                $sql2 = "SELECT e.* , COUNT(d.contact_id) as total_sales
+                /*  , SUBSTRING_INDEX(GROUP_CONCAT(cb.balance), ',', -1) as balance
+                   , SUBSTRING_INDEX(GROUP_CONCAT(cb.balance_type), ',', -1) as type
+                   , SUBSTRING_INDEX(GROUP_CONCAT(d.date_creation), ',', -1) as last_payment_date 
+                     left JOIN contact_balances cb ON cb.contact_id = e.id*/
+                $sql2 = "SELECT e.* , COUNT(d.contact_id) as total_sales 
                 FROM contacts e
                 left JOIN sales d ON d.contact_id = e.id
                 ". (!empty($filters) ? 'where e.account_id = :account_id and' : ''). implode(' AND',$filters)."

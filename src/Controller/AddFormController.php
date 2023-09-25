@@ -89,6 +89,11 @@ class AddFormController extends AbstractController
 
         // $date = DateTime::createFromFormat('Y-m-d', $data['dateStart']);
         // $datediscount = DateTime::createFromFormat('Y-m-d', $data['discountdateStart']);
+     
+        $ContactForms->source = $data['source'];
+        $ContactForms->agent_status = $data['agentStatus'];
+        $ContactForms->button = $data['button'];
+        $ContactForms->message_capture = $data['messageCapture'];
 
         $ContactForms->account = $account;
         $ContactForms->form_type = $data['formType'];
@@ -205,10 +210,19 @@ class AddFormController extends AbstractController
                     'sendable_agents' => $row['sendable_agents'],
                     'status' => $row['status'],
                     'friendly_name' => $row['friendly_name'],
+                    'source' => $row['source'],
+                    'agent_status' => $row['agent_status'],
+                    'message_capture' => $row['message_capture'],
+                    'button' => $row['button'],
+                    'introduction' => $row['introduction'],
+                    'waiting_time' => $row['waiting_time'],
                     'fields' => [],
                 ];
             }
-
+      
+   
+        
+     
             $combinedData[$formId]['fields'][] = [
                 'field_id' => $row['field_id'],
                 'field_name' => $row['field_name'],
@@ -284,6 +298,11 @@ class AddFormController extends AbstractController
 
         $ContactForms = $contactFormsRepository->find($id);
    
+        $ContactForms->source = $data['source'];
+        $ContactForms->agent_status = $data['agentStatus'];
+        $ContactForms->button = $data['button'];
+        $ContactForms->message_capture = $data['messageCapture'];
+
         $ContactForms->form_type = $data['formType'];
         $ContactForms->friendly_name = $data['FriendlyName'];
         $ContactForms->sendable_agents = $data['sendableAgents'];
@@ -416,6 +435,10 @@ class AddFormController extends AbstractController
                     'text_capture_before' => $row['text_capture_before'],
                     'sendable_agents' => $row['sendable_agents'],
                     'status' => $row['status'],
+                    'source' => $row['source'],
+                    'agent_status' => $row['agent_status'],
+                    'message_capture' => $row['message_capture'],
+                    'button' => $row['button'],
                     'friendly_name' => $row['friendly_name'],
                     'fields' => [],
                 ];

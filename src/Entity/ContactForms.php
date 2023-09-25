@@ -116,6 +116,29 @@ class ContactForms
     #[Groups(['read10:collection'])]
     public ?string $sendable_agents = null;
 
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?int $source = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?int $agent_status = null;
+
+    #[ORM\Column(length: 255,nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?string $message_capture = null;
+
+    
+    #[ORM\Column(length: 25, nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?string $button = null;
+   
+
+
+
+
+
     #[ORM\Column(nullable: true)]
     #[Groups(['read10:collection'])]
     public ?string $waiting_time = null;
