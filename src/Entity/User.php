@@ -102,7 +102,7 @@ use App\Controller\GetUsersController;
             ],
         ],
         'UpdatePassword' => [
-            'method' => 'PUT',
+            'method' => 'POST',
             'path' => '/user/{id}/update',
             'deserialize' => false,
             'controller' => UpdateUserPasswordController::class,

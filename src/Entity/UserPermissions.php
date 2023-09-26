@@ -21,10 +21,16 @@ use Symfony\Component\Serializer\Annotation\Groups;
             ],
         ],
         'post'=> [
+            'method' => 'POST',
+            'path' => '/user/permissions/{id}',
+            'deserialize' => false,
+            'controller' => UpdateUserPermissionController::class,
             'openapi_context' => [
                 'security' => [['bearerAuth' => []]],
             ],
+           
         ],
+     
     ],
     itemOperations: [
         'get' => [
@@ -35,17 +41,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
                 'security' => [['bearerAuth' => []]],
             ],
         ],
-        'put'=> [
-            'method' => 'PUT',
-            'deserialize' => false,
-            'controller' => UpdateUserPermissionController::class,
-            'normalization_context' => [
-                'groups' => ['read:collection']
-            ],
-            'openapi_context' => [
-                'security' => [['bearerAuth' => []]],
-            ],
-        ],
+       
         'delete'=> [
             'openapi_context' => [
                 'security' => [['bearerAuth' => []]],
