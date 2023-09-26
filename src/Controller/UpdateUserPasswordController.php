@@ -32,7 +32,7 @@ class UpdateUserPasswordController extends AbstractController
 
 
 
-    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface): User
+    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface)
     {
         $data = json_decode($request->getContent(), true);
         $profile = $this->profilesRepository->findProfileById($data['iduser']);
