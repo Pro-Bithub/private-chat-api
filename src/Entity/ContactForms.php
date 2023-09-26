@@ -106,9 +106,7 @@ class ContactForms
     #[Groups(['read10:collection'])]
     public ?string $text_capture = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['read10:collection'])]
-    public ?string $text_capture_before = null;
+  
 
     
 

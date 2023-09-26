@@ -432,7 +432,6 @@ class AddFormController extends AbstractController
                     'account_id' => $row['account_id'],
                     'form_type' => $row['form_type'],
                     'text_capture' => $row['text_capture'],
-                    'text_capture_before' => $row['text_capture_before'],
                     'sendable_agents' => $row['sendable_agents'],
                     'status' => $row['status'],
                     'source' => $row['source'],
