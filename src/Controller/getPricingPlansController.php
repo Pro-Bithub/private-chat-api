@@ -158,7 +158,13 @@ class getPricingPlansController extends AbstractController
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
                 ;";
 
-        $sql3 = "SELECT * FROM plans p0_ left JOIN plan_users p1_ ON p0_.id = p1_.plan_id left JOIN plan_discounts p2_ ON p0_.id = p2_.plan_id and p1_.status = 1 and p0_.account_id = :account_id  GROUP BY p0_.id";
+        $sql3 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name
+        FROM plans e
+        left  JOIN plan_users r ON r.plan_id = e.id and r.status = 1
+        left JOIN plan_discounts d ON d.plan_id = e.id
+         where e.account_id = :account_id 
+        GROUP BY e.id
+        ;";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('account_id', $user->accountId);
 
@@ -189,7 +195,8 @@ class getPricingPlansController extends AbstractController
             'draw' => $draw,
             'recordsTotal' => $results3,
             'recordsFiltered' => $results1,
-            'data' => $results,
+            'data' => $results
+     
         ]);
     }
 

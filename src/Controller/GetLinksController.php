@@ -100,7 +100,12 @@ if(empty($filters)){
                 ". (!empty($sort) ? 'order BY ' : ''). implode(' ,',$sort)."
                 ;";
         
-                $sql3= "SELECT * FROM clickable_links p0_ left JOIN clickable_links_users p1_ ON p0_.id = p1_.link_id and p0_.account_id = :account_id and p1_.status = 1  GROUP BY p0_.id";
+                $sql3= "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids
+                FROM clickable_links e
+                left JOIN clickable_links_users r ON r.link_id = e.id and r.status = 1
+                where e.account_id = :account_id 
+                    GROUP BY e.id
+                  ";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('account_id',$user->accountId);
 

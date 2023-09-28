@@ -130,7 +130,12 @@ if(empty($filters)){
        
         ;";
 
-        $sql3= "SELECT * FROM predefind_texts p0_ LEFT JOIN predefined_text_users p1_ ON p0_.id = p1_.text_id and p0_.account_id = :account_id and p1_.status = 1 GROUP BY p0_.id";
+        $sql3= "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids
+        FROM predefind_texts e
+        LEFT JOIN predefined_text_users r ON r.text_id = e.id and r.status = 1
+       where e.account_id = :account_id 
+        GROUP BY e.id
+       ";
 $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
 $statement3->bindValue('account_id',$user->accountId);
 

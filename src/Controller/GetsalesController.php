@@ -102,7 +102,13 @@ class GetsalesController extends AbstractController
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "   
                 ;";
 
-        $sql3 = "SELECT * FROM sales as e left JOIN contacts r ON r.id = e.contact_id left JOIN plans p ON p.id = e.plan_id and p.account_id = :account_id";
+        $sql3 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, r.id as contact_id,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        FROM sales e
+       left JOIN contacts r ON r.id = e.contact_id
+       left JOIN user d ON d.id = e.user_id
+       left JOIN plans p ON p.id = e.plan_id
+       where p.account_id = :account_id 
+            GROUP BY e.id";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         // dd($statement3);
         $statement3->bindValue('account_id', $user->accountId);

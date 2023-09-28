@@ -148,4 +148,43 @@ class GetContactsController extends AbstractController
                     'data' => $results,
                 ]);
     }
+
+
+    #[Route('/contacts/get/country', name: 'app_get_country_contacts_controller')]
+    public function getcounrty(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+     
+           
+        $sql1 = "SELECT DISTINCT  UPPER( c.country) as country
+        FROM contacts c
+        where  c.country is not null and  trim(c.country) <> ''
+            ;";
+    
+    $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+    $results = $statement->executeQuery()->fetchAllAssociative();
+        
+                return new JsonResponse([
+                    'data' => $results,
+                  
+                ]);
+    }
+
 }

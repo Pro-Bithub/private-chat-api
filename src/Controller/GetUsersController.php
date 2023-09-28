@@ -93,7 +93,7 @@ class GetUsersController extends AbstractController
                 " . implode(' ', $filters) . "
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . ";";
 
-        $sql3 = "SELECT * FROM user e where e.id != :id and e.account_id = :account_id";
+        $sql3 = "SELECT e.* , p.nickname as nickname , p.role as role FROM user e    left join user_presentations p on p.user_id = e.id where e.id != :id and e.account_id = :account_id";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('account_id', $user->accountId);
 
