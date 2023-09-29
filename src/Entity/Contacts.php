@@ -127,6 +127,22 @@ class Contacts
     #[Groups(['read:collection'])]
     public Collection $notes;
 
+
+    #[ORM\Column(length: 32, nullable: true)]
+    #[Groups(['read:collection'])]
+    public ?string $source = null;
+  
+    #[ORM\Column(length: 32, nullable: true)]
+    #[Groups(['read:collection'])]
+    public ?string $source_type = null;
+
+
+    #[ORM\Column]
+    #[Groups(['read:collection', 'read108:collection'])]
+    public ?int $source_id = null;
+
+
+
     // #[ORM\OneToMany(mappedBy: 'contact', targetEntity: ContactCustomFields::class)]
     // #[Groups(['read:collection'])]
     public Collection $contactCustomFields;

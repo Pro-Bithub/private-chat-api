@@ -145,7 +145,7 @@ fetch(AssetsUrl)
                             if (!/^https?:\/\//i.test(redirectUrl)) {
                               redirectUrl = "http://" + redirectUrl;
                             }
-                            window.location.href = redirectUrl;
+                            window.location.href = baseUrl + pagename;
 
                         } else {
                             Swal.fire({
@@ -364,7 +364,14 @@ fetch(AssetsUrl)
                                 if (!/^https?:\/\//i.test(redirectUrl)) {
                                   redirectUrl = "http://" + redirectUrl;
                                 }
-                                window.location.href = redirectUrl;
+                                const id = responseathu.data.username!=null? responseathu.data.id: null;
+                                const accountId =responseathu.data.username!=null? responseathu.data.accountId: null;
+                                const username =responseathu.data.username!=null ? encodeURIComponent(responseathu.data.username): null;
+                                const login = responseathu.data.login!=null ? encodeURIComponent(responseathu.data.login): null;
+
+                                const updatedUrl = `${redirectUrl}?id=${id}&accountId=${accountId}&username=${username}&login=${login}`;
+
+                                window.location.href = updatedUrl;
                              
                               
                            

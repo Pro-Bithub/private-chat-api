@@ -8,12 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\HttpClient\Exception\ClientException;
-use WhichBrowser\Model\Browser;
-use Symfony\Component\BrowserKit\Client;
-use Sinergi\BrowserDetector\Os;
+
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class DashbordController extends AbstractController
 {
