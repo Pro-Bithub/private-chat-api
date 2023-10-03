@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\ContactCustomFieldsRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -51,7 +52,7 @@ class ContactCustomFields
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['read:collection'])]
-    private ?int $id = null;
+    public ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['read:collection'])]
@@ -64,6 +65,13 @@ class ContactCustomFields
     #[ORM\Column(length: 255)]
     #[Groups(['read:collection'])]
     public ?string $field_value = null;
+
+
+    
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['read:collection','read29:collection'])]
+    public ?\DateTimeInterface $created_at = null;
+
 
     public function getId(): ?int
     {

@@ -330,7 +330,7 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT cf.id , cf.field_value as value ,c.field_name as field
+        $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field
             FROM contact_custom_fields cf
                 left JOIN custom_fields c ON c.id = cf.form_field_id
                 where cf.contact_id = :contact_id
@@ -340,7 +340,7 @@ class GetsalesController extends AbstractController
                 LIMIT :limit OFFSET :offset
                 ;";
         //dd($sql1,$filters);
-        $sql2 = "SELECT cf.id , cf.field_value as value
+        $sql2 = "SELECT cf.id , cf.field_value as value , cf.created_at 
         FROM contact_custom_fields cf
             left JOIN custom_fields c ON c.id = cf.form_field_id
             where cf.contact_id = :contact_id
@@ -348,7 +348,7 @@ class GetsalesController extends AbstractController
             GROUP BY cf.id
             " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "  
                 ;";
-        $sql3 = "SELECT cf.id , cf.field_value as value  FROM contact_custom_fields cf left JOIN custom_fields c ON c.id = cf.form_field_id  where cf.contact_id = :contact_id";
+        $sql3 = "SELECT cf.id , cf.field_value as value  , cf.created_at  FROM contact_custom_fields cf left JOIN custom_fields c ON c.id = cf.form_field_id  where cf.contact_id = :contact_id";
       
            
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);

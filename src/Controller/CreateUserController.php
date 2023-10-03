@@ -449,7 +449,69 @@ class CreateUserController extends AbstractController
         ]);
     }
 
+    #[Route('/add_user_notifications', name: 'app_add_user_notifications_controller')]
+    public function addUserNotifications( Request $request, EntityManagerInterface $entityManagerInterface,  UserRepository $userRepository): Response
+    {
 
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        // $user = $tokenData->getUser();
+        $data = json_decode($request->getContent(), true);
+        $usernotifications =new UserNotifications() ;
+        $usernotifications->visitor_register = $data['visitorRegister'];
+        $usernotifications->visitor_login = $data['visitorLogin'];
+        $usernotifications->plan_actions = $data['planActions'];
+        $usernotifications->contact_form_actions = $data['contactFormActions'];
+        $usernotifications->predefined_text_actions = $data['predefinedTextActions'];
+        $usernotifications->links_actions = $data['linksActions'];
+        $usernotifications->user_actions = $data['userActions'];
+        $usernotifications->landing_page_actions = $data['landingPageActions'];
+        $usernotifications->contact_actions = $data['contactActions'];
+        $usernotifications->sales = $data['sales'];
+
+   
+        
+        $old_user = $userRepository->find($data['u_id']);
+        $usernotifications->user = $old_user;
+
+
+
+        $entityManagerInterface->persist($usernotifications);
+        $entityManagerInterface->flush();
+
+        $logs = new UserLogs();
+        $logs->user_id = $data['user_id'];
+        $logs->element = 15;
+        $logs->action = 'create';
+        $logs->element_id = $usernotifications->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $usernotifications,
+      
+       
+        ]);
+    }
 
     #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
     public function addUserPresentation( $id,Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response

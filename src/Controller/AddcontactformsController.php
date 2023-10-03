@@ -80,9 +80,22 @@ class AddcontactformsController extends AbstractController
             $ContactCustomFields->contactId = $contactId;
             $ContactCustomFields->formFieldId = $value['fieldId'];
             $ContactCustomFields->field_value = $value['value'];
+            $ContactCustomFields->created_at = new \DateTimeImmutable();
            // $ContactCustomFields->save();
             $entityManagerInterface->persist($ContactCustomFields);
             $entityManagerInterface->flush();
+
+          /* user not known  
+            $logs = new UserLogs();
+            $logs->user_id = $data['user_id'];
+            $logs->element = 22;
+            $logs->action = 'create';
+            $logs->element_id = $ContactCustomFields->id;
+            $logs->source = 1;
+            $logs->log_date = new \DateTimeImmutable();
+
+            $entityManagerInterface->persist($logs);
+            $entityManagerInterface->flush(); */
 
             $sql = "SELECT c.field_name
             from `custom_fields` AS c  
@@ -93,6 +106,8 @@ class AddcontactformsController extends AbstractController
             $field = $statement->executeQuery()->fetchAssociative();
             //  dd($field);
         
+        
+            
             if($field['field_name'] == 'First Name'){
                 $firstname=$value['value'];
             }else if($field['field_name'] == 'Last Name'){
@@ -112,6 +127,9 @@ class AddcontactformsController extends AbstractController
                 $name = $value['value'];
              
             }
+
+     
+
 
         }
 

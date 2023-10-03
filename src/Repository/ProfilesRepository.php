@@ -59,6 +59,17 @@ class ProfilesRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findProfileByIduser($id)
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.u_id = :id')
+            ->andWhere('p.u_type = :type')
+            ->setParameter('id', $id)
+            ->setParameter('type', 1) 
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function findProfileById($id)
     {
         return $this->createQueryBuilder('u')

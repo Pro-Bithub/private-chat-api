@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -73,7 +72,7 @@ class AddUserController extends AbstractController
   
 
         //dd($_REQUEST['gender']);
-        $data = json_decode($request->getContent(), true);
+      //  $data = json_decode($request->getContent(), true);
         // $userPresentations->setGender($request->request->get('gender'));
         // $userPresentations->setWebsite($request->request->get('website'));
         // $userPresentations->setRole($request->request->get('role'));
