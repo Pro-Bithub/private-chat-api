@@ -15,7 +15,7 @@ class GetTypeFormController extends AbstractController
 public function index(EntityManagerInterface $entityManagerInterface): Response
 { 
     
-    $sql = "SELECT c.account_id , c.id as form_id, c.form_type, c.text_capture, c.friendly_name, cu.field_name, cu.field_type, cu.id
+    $sql = "SELECT c.account_id , c.id as form_id, c.form_type, c.text_capture, c.friendly_name, cu.field_name, cu.field_type, cf.id
     FROM `contact_forms` AS c
     LEFT JOIN `contact_form_fields` AS cf ON cf.form_id = c.id
     LEFT JOIN `custom_fields` AS cu ON cu.id = cf.field_id
@@ -62,7 +62,7 @@ public function index(EntityManagerInterface $entityManagerInterface): Response
 #[Route('/GetFormTypeByAccountId/{id}', name: 'app_Get_formType_ByAccountId_form')]
 public function GetFormTypeByAccountId(EntityManagerInterface $entityManagerInterface,$id): Response
 { 
-    $sql = "SELECT c.account_id , c.id as form_id, c.form_type, c.text_capture, c.friendly_name, cu.field_name, cu.field_type, cu.id
+    $sql = "SELECT c.account_id , c.id as form_id, c.form_type, c.text_capture, c.friendly_name, cu.field_name, cu.field_type, cf.id
     FROM `contact_forms` AS c
     LEFT JOIN `contact_form_fields` AS cf ON cf.form_id = c.id
     LEFT JOIN `custom_fields` AS cu ON cu.id = cf.field_id

@@ -23,12 +23,12 @@ class AddRegisterController extends AbstractController
     public function __construct(ParameterBagInterface $parameterBag)
     {
         $this->parameterBag = $parameterBag;
-
     }
-    
+
     public function __invoke(Request $request, EntityManagerInterface $entityManagerInterface): Registrations
     {
-        function addTrailingSlashIfMissing($str) {
+        function addTrailingSlashIfMissing($str)
+        {
             if (!in_array(substr($str, -1), ['/', '\\'])) {
                 $str .= '/';
             }
@@ -54,8 +54,8 @@ class AddRegisterController extends AbstractController
         $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         $user = $tokenData->getUser();
-       // dd($this->parameterBag->get('kernel.project_dir'));
-       $filesystem = new Filesystem();
+        // dd($this->parameterBag->get('kernel.project_dir'));
+        $filesystem = new Filesystem();
         // dd($filesystem);
         $Registrations = new Registrations();
         $data = json_decode($request->getContent(), true);
@@ -66,35 +66,51 @@ class AddRegisterController extends AbstractController
         $Registrations->redirect_url = $data['redirect_url'];
         $Registrations->comment = $data['comment'];
         $Registrations->template = $data['template'];
-        $Registrations->date_start = new \DateTime('@'.strtotime('now'));
+        $Registrations->date_start = new \DateTime('@' . strtotime('now'));
         $Registrations->status = $data['status'];
         $Registrations->url = $data['url'];
 
-        $formstemplate='forms/template-'.$data['template'];
-        $newBaseHref = $APP_URL.$formstemplate.'/'; 
+        $formstemplate = 'forms/template-' . $data['template'];
+        $newBaseHref = $APP_URL . $formstemplate . '/';
 
-        $file = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/index.html', '', '');
+        $file = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/index.html', '', '');
         $fileContents = $file->getContents();
-        $fileContents = str_replace('[base-href]',  $newBaseHref , $fileContents);
-      
-        $file_forget_password = new SplFileInfo($APP_PUBLIC_DIR.$formstemplate.'/forget_password.html', '', '');
+        $fileContents = str_replace('[base-href]',  $newBaseHref, $fileContents);
+        $fileContents = str_replace('[api-url]',  $APP_URL, $fileContents);
+
+        $file_forget_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/forget_password.html', '', '');
         $fileContentsfgp = $file_forget_password->getContents();
-        $fileContentsfgp = str_replace('[base-href]',  $newBaseHref , $fileContentsfgp);
+        $fileContentsfgp = str_replace('[base-href]',  $newBaseHref, $fileContentsfgp);
+        $fileContentsfgp =  str_replace('[api-url]', $APP_URL, $fileContentsfgp);
 
-        
-        $filesystem->dumpFile($data['slug_url'].'/index.html',  $fileContents);
-        $filesystem->dumpFile($data['slug_url'].'/forget_password.html',  $fileContentsfgp);
-       // $filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password1->getContents());
+
+        $filesystem->dumpFile($data['slug_url'] . '/index.html',  $fileContents);
+        $filesystem->dumpFile($data['slug_url'] . '/forget_password.html',  $fileContentsfgp);
+        // $filesystem->dumpFile($data['slug_url'].'/reset_password.html', $file_reset_password1->getContents());
+
+        $file_reset_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/reset_password.html', '', '');
+        $fileContentsrestpwd = $file_reset_password->getContents();
+        $fileContentsrestpwd = str_replace('[base-href]',  $newBaseHref, $fileContentsrestpwd);
+        $fileContentsrestpwd = str_replace('[api-url]',  $APP_URL, $fileContentsrestpwd);
+        $filesystem->dumpFile($data['slug_url'] . '/reset_password.html',  $fileContentsrestpwd);
+
+
+
+
+
+
+
         $json = json_encode(array('data' => $Registrations));
-        $filesystem->dumpFile('forms/template-'.$data['template'].'/assets/js/'.$data['slug_url'].'/data.json', $json);
+        $filesystem->dumpFile($request->get('slug_url') . '/data.json', $json);
 
-   
-     
+
+
+
 
 
         $entityManagerInterface->persist($Registrations);
         $entityManagerInterface->flush();
-        
+
         $logs = new UserLogs();
         $logs->user_id = $data['user_id'];
         $logs->element = 26;
@@ -105,8 +121,8 @@ class AddRegisterController extends AbstractController
 
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
-        
-        return $Registrations; 
+
+        return $Registrations;
     }
 
     #[Route('/delete_registrations/{id}', name: 'app_delete_registrations_controller')]
@@ -117,7 +133,7 @@ class AddRegisterController extends AbstractController
         EntityManagerInterface $entityManagerInterface,
     ): Response {
 
-         
+
         $authorizationHeader = $request->headers->get('Authorization');
 
         // Check if the token is present and in the expected format (Bearer TOKEN)
@@ -133,19 +149,19 @@ class AddRegisterController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
-    
+
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
         $registrations = $registrationsRepository->find($id);
         $data = json_decode($request->getContent(), true);
         $registrations->date_end = new \DateTimeImmutable();
         $registrations->status = '0';
-    
-       
+
+
         //dd($clickableLinksUser);
         $entityManagerInterface->persist($registrations);
         $entityManagerInterface->flush();
-    
+
         $logs = new UserLogs();
         $logs->user_id = $data['user_id'];
         $logs->element = 26;
@@ -153,12 +169,12 @@ class AddRegisterController extends AbstractController
         $logs->element_id = $registrations->id;
         $logs->source = 1;
         $logs->log_date = new \DateTimeImmutable();
-    
+
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
-    
-       
-    
+
+
+
         return new JsonResponse([
             'success' => true,
             'data' => $registrations,
@@ -166,22 +182,21 @@ class AddRegisterController extends AbstractController
     }
 
     #[Route('get/page/url', name: 'app_get_page_url')]
-    public function getPageUrl(
-    ): Response {
-        function addTrailingSlashIfMissing2($str) {
+    public function getPageUrl(): Response
+    {
+        function addTrailingSlashIfMissing2($str)
+        {
             if (!in_array(substr($str, -1), ['/', '\\'])) {
                 $str .= '/';
             }
             return $str;
         }
 
-       $APP_URL = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'));
-       
-       return new JsonResponse([
-        'success' => true,
-        'data' => $APP_URL,
-    ]);
-       
-    }
+        $APP_URL = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'));
 
+        return new JsonResponse([
+            'success' => true,
+            'data' => $APP_URL,
+        ]);
+    }
 }

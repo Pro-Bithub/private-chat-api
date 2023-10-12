@@ -98,36 +98,49 @@ class AddcontactformsController extends AbstractController
             $entityManagerInterface->flush(); */
 
             $sql = "SELECT c.field_name
-            from `custom_fields` AS c  
-            WHERE c.id = :id and c.status = 1";
+            from `contact_form_fields` AS cf 
+            LEFT JOIN `custom_fields` AS c  ON cf.field_id = c.id
+            WHERE cf.id = :id and c.status = 1";
             
             $statement = $entityManagerInterface->getConnection()->prepare($sql);
             $statement->bindValue('id', $value['fieldId']);
             $field = $statement->executeQuery()->fetchAssociative();
             //  dd($field);
-        
-        
-            
-            if($field['field_name'] == 'First Name'){
-                $firstname=$value['value'];
-            }else if($field['field_name'] == 'Last Name'){
-                $lastname=$value['value'];
-            }else if($field['field_name'] == 'E-mail'){
-                $email=$value['value'];
-            }else if($field['field_name'] == 'Phone'){
-                $phone = $value['value'];
-            }else if($field['field_name'] == 'Country'){
-                $country = $value['value'];
-            }else if($field['field_name'] == 'Birth date'){ 
-                $dateOfBirth = \DateTimeImmutable::createFromFormat('Y-m-d', $value['value']);
-                if ($dateOfBirth) {
-                    $date_birth = $dateOfBirth;
-                }
-            }else if($field['field_name'] == 'Name'){
-                $name = $value['value'];
-             
+        if($field['field_name']!=null){
+            $field_name = strtolower(str_replace(' ', '', $field['field_name']));
+            switch ($field_name) {
+                case 'firstname':
+                    $firstname = $value['value'];
+                    break;
+                case 'lastname':
+                    $lastname = $value['value'];
+                    break;
+                case 'email':
+                case 'e-mail':
+                case 'mail':
+                    $email = $value['value'];
+                    break;
+                case 'phone':
+                    $phone = $value['value'];
+                    break;
+                case 'country':
+                    $country = $value['value'];
+                    break;
+                case 'birthdate':
+                    $dateOfBirth = \DateTimeImmutable::createFromFormat('Y-m-d', $value['value']);
+                    if ($dateOfBirth) {
+                        $date_birth = $dateOfBirth;
+                    }
+                    break;
+                case 'name':
+                    $name = $value['value'];
+                    break;
             }
 
+        }
+      
+
+     
      
 
 

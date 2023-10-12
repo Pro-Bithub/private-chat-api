@@ -330,9 +330,12 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field
+        $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name
             FROM contact_custom_fields cf
-                left JOIN custom_fields c ON c.id = cf.form_field_id
+            left JOIN `contact_form_fields` AS cff ON cff.id = cf.form_field_id
+            left JOIN contact_forms f ON f.id = cff.form_id
+            left JOIN custom_fields c ON c.id = cff.field_id
+
                 where cf.contact_id = :contact_id
                  " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
                 GROUP BY cf.id
@@ -340,15 +343,23 @@ class GetsalesController extends AbstractController
                 LIMIT :limit OFFSET :offset
                 ;";
         //dd($sql1,$filters);
-        $sql2 = "SELECT cf.id , cf.field_value as value , cf.created_at 
-        FROM contact_custom_fields cf
-            left JOIN custom_fields c ON c.id = cf.form_field_id
+        $sql2 = "SELECT  cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name
+       FROM contact_custom_fields cf
+            left JOIN `contact_form_fields` AS cff ON cff.id = cf.form_field_id
+            left JOIN contact_forms f ON f.id = cff.form_id
+            left JOIN custom_fields c ON c.id = cff.field_id
             where cf.contact_id = :contact_id
              " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
             GROUP BY cf.id
             " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "  
                 ;";
-        $sql3 = "SELECT cf.id , cf.field_value as value  , cf.created_at  FROM contact_custom_fields cf left JOIN custom_fields c ON c.id = cf.form_field_id  where cf.contact_id = :contact_id";
+        $sql3 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name
+       FROM contact_custom_fields cf
+            left JOIN `contact_form_fields` AS cff ON cff.id = cf.form_field_id
+            left JOIN contact_forms f ON f.id = cff.form_id
+            left JOIN custom_fields c ON c.id = cff.field_id   
+         
+          where cf.contact_id = :contact_id";
       
            
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
