@@ -96,12 +96,8 @@ class AddRegisterController extends AbstractController
 
 
 
-
-
-
-
         $json = json_encode(array('data' => $Registrations));
-        $filesystem->dumpFile($request->get('slug_url') . '/data.json', $json);
+       $filesystem->dumpFile($data['slug_url']  . '/data.json', $json);
 
 
 

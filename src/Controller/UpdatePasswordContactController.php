@@ -56,7 +56,7 @@ class UpdatePasswordContactController extends AbstractController
         // dd($request->get('email'));
         $data = json_decode($request->getContent(), true);
         $name = $request->get('name');
-        $url = $request->get('name');
+        $url = $request->get('url');
         //dd($data);
         $contact = $this->ContactsRepository->loadContactByEmail($request->get('login'));
         if ($contact != null) {

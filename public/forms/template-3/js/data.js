@@ -41,13 +41,15 @@ fetch(AssetsUrl)
     console.log(data);
 
     if (document.querySelector("#forgetPassUrl1") != null) {
-      document.querySelector("#forgetPassUrl1").href =
-        baseUrl + data.data.slug_url + "/forget_password.html";
-    }
-    if (document.querySelector("#backToLogin") != null) {
-      document.querySelector("#backToLogin").href =
-        baseUrl + data.data.slug_url + "/index.html";
-    }
+        document.querySelector("#forgetPassUrl1").href =
+          currentUrlresult + "forget_password.html";
+      }
+      if (document.querySelector("#backToLogin") != null) {
+        document.querySelector("#backToLogin").href =
+          currentUrlresult  + "index.html";
+      }
+
+      
     document.querySelector("#name").textContent = data.data.name;
     document.querySelector("#comment").textContent = data.data.comment;
 
@@ -84,8 +86,8 @@ fetch(AssetsUrl)
             if (responcreat.success) {
               Swal.fire({
                 icon: "success",
-                title: "Added!",
-                text: "Your account has been created successfully",
+                title: "Account Created Successfully",
+                text: "Your account has been created successfully.",
                 showConfirmButton: true, // Show the "OK" button
                 timer: 1500,
               }).then((result) => {
@@ -222,8 +224,8 @@ fetch(AssetsUrl)
             if (responseathu.success == "true") {
               Swal.fire({
                 icon: "success",
-                title: "Added!",
-                text: "Connected successfully",
+                title: "Connected Successfully",
+                text: "Your profile has been connected successfully.",
                 showConfirmButton: false,
                 timer: 2500,
                 didClose: () => {
@@ -312,7 +314,7 @@ fetch(AssetsUrl)
                 title: "Sended!",
                 text: "Check your email to reset your password",
                 showConfirmButton: false,
-                timer: 1500,
+                timer: 2500,
               });
               $("#forget-password-form")[0].reset();
             } else {
@@ -344,7 +346,7 @@ fetch(AssetsUrl)
         var urlParams = new URLSearchParams(window.location.search);
         var uid = urlParams.get("uid");
         if (!uid || uid.trim() === "") {
-          return urlParamuid;
+          return null;
         }
         return uid;
       }
@@ -383,14 +385,17 @@ fetch(AssetsUrl)
 
               if (data.success == "true") {
                 Swal.fire({
-                  icon: "success",
-                  title: "Updated!",
-                  text: "Updated successfully",
-                  showConfirmButton: false,
-                  timer: 1500,
-                });
-                $("#reset-password-form")[0].reset();
-                window.location.href = currentUrlresult;
+                    icon: "success",
+                    title: "Password Reset Successful",
+                    text: "Your password has been updated successfully.",
+                    showConfirmButton: false,
+                    timer: 2500,
+                    didClose: () => {
+                        $("#reset-password-form")[0].reset();
+                        window.location.href = currentUrlresult;
+                    },
+                  });
+
               } else {
                 Swal.fire({
                   icon: "error",

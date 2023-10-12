@@ -102,9 +102,16 @@ class UpdateRegistrationsController extends AbstractController
 
         $filesystem->dumpFile($request->get('slug_url') . '/index.html',  $fileContents);
         $filesystem->dumpFile($request->get('slug_url') . '/forget_password.html',  $fileContentsfgp);
-        // $filesystem->dumpFile($request->get('slug_url').'/reset_password.html', $file_reset_password1->getContents());
+    
+        
+        $file_reset_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/reset_password.html', '', '');
+        $fileContentsrestpwd = $file_reset_password->getContents();
+        $fileContentsrestpwd = str_replace('[base-href]',  $newBaseHref, $fileContentsrestpwd);
+        $fileContentsrestpwd = str_replace('[api-url]',  $APP_URL, $fileContentsrestpwd);
+        $filesystem->dumpFile($request->get('slug_url') . '/reset_password.html',  $fileContentsrestpwd);
 
-        // $filesystem->dumpFile('forms/template-'.$request->get('template').'/assets/js/'.$request->get('slug_url').'/data.json', $json);
+
+
 
         $json = json_encode(array('data' => $Registrations));
         $filesystem->dumpFile($request->get('slug_url') . '/data.json', $json);
