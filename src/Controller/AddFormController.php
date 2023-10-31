@@ -53,7 +53,7 @@ class AddFormController extends AbstractController
 
 
         $data = json_decode($request->getContent(), true);
-
+/* 
         if ($data['formType'] != 4 && $data['formType'] != "4") {
             $sql = "SELECT c.*
             FROM `contact_forms` AS c
@@ -76,7 +76,7 @@ class AddFormController extends AbstractController
                 }
             }
         }
-        
+         */
      
 
 
@@ -272,7 +272,7 @@ class AddFormController extends AbstractController
         // $user = $tokenData->getUser();
         $data = json_decode($request->getContent(), true);
         
-        if ($data['formType'] != 4 && $data['formType'] != "4" && ($data['status'] === "1" ||$data['status'] === 1  )  ) {
+   /*      if ($data['formType'] != 4 && $data['formType'] != "4" && ($data['status'] === "1" ||$data['status'] === 1  )  ) {
             $sql = "SELECT c.*
             FROM `contact_forms` AS c
             WHERE c.form_type = :form_type AND c.status = 1 and c.account_id = :account_id and c.id !=:id
@@ -294,7 +294,7 @@ class AddFormController extends AbstractController
                     }
                 }
             }
-        }
+        } */
 
         $ContactForms = $contactFormsRepository->find($id);
    
@@ -337,15 +337,61 @@ class AddFormController extends AbstractController
         //     $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         //     $statement3->bindValue('id', $predefindText->id);
         //     $predefinedTextUserIds = $statement3->executeQuery()->fetchAllAssociative();
-        $result = array_column($predefinedTextUserIds, 'field_id');
+        $resultold = array_column($predefinedTextUserIds, 'field_id');
 
-        $difference2 = array_diff($result, $contactFormField);
+     /*    $difference2 = array_diff($resultold, $contactFormField); */
         //dd($difference2, $result, $clickableLinksUser);
-        if (!empty($difference2)) {
-            foreach ($difference2 as $difference) {
-                if (in_array($difference, $result)) {
+
+        // Find added items
+        $added_items = array_diff($contactFormField, $resultold);
+        // Find removed items
+         $removed_items = array_diff($resultold, $contactFormField);
+         if (!empty($added_items)) {
+            foreach ($added_items as $user_id) {
+                $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $user_id);
+                if (empty($form_field_data)) {
+                    $ContactFormFields = new ContactFormFields();
+                    $field = $customFieldsRepository->find($user_id);
+                    $ContactFormFields->form = $ContactForms;
+                    $ContactFormFields->field = $field;
+                    $ContactFormFields->status = '1';
+                    $ContactFormFields->date_start = new \DateTimeImmutable();
+                    $entityManagerInterface->persist($ContactFormFields);
+                    $entityManagerInterface->flush();
+                    $logs = new UserLogs();
+                    $logs->user_id = $data['user_id'];
+                    $logs->element = 22;
+                    $logs->action = 'create';
+                    $logs->element_id = $ContactFormFields->id;
+                    $logs->source = 1;
+                    $logs->log_date = new \DateTimeImmutable();
+                    $entityManagerInterface->persist($logs);
+                    $entityManagerInterface->flush();
+                }
+            }
+         }
+         if (!empty($removed_items)) {
+            foreach ($removed_items as $difference) {
                     $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $difference);
                     if (!empty($form_field_data)) {
+                        $form_field = $form_field_data[0];
+                        $form_field->status = '0';
+                        $form_field->date_end = new \DateTimeImmutable();
+                        $entityManagerInterface->persist($form_field);
+                        $entityManagerInterface->flush();
+                    }
+            }
+         }
+
+      /*   $trak="start";
+        if (!empty($difference2)) {
+            foreach ($difference2 as $difference) {
+                $trak.="is deffirance";
+                $trak.="in_array(difference,resultold)".in_array($difference, $resultold);
+                if (in_array($difference, $resultold)) {
+                    $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $difference);
+                    if (!empty($form_field_data)) {
+                        $trak.="remove old  by defferance".$difference;
                         $form_field = $form_field_data[0];
                         $form_field->status = '0';
                         $form_field->date_end = new \DateTimeImmutable();
@@ -354,6 +400,7 @@ class AddFormController extends AbstractController
                         $entityManagerInterface->flush();
                     }
                 } else {
+                    $trak.="addedone by defferance".$difference;
                     $ContactFormFields = new ContactFormFields();
                     $field = $customFieldsRepository->find($difference);
                     $ContactFormFields->form = $ContactForms;
@@ -377,11 +424,13 @@ class AddFormController extends AbstractController
                 }
             }
         } else {
+            $trak.=" is not deffirance";
             foreach ($contactFormField as $user_id) {
                 $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $user_id);
-
+                $trak.="check ".$user_id;
 
                 if (empty($form_field_data)) {
+                    $trak.="is empty  ";
                     $ContactFormFields = new ContactFormFields();
                     $field = $customFieldsRepository->find($user_id);
                     $ContactFormFields->form = $ContactForms;
@@ -404,7 +453,7 @@ class AddFormController extends AbstractController
                     $entityManagerInterface->flush();
                 }
             }
-        }
+        } */
 
         $rawQuery4 = "SELECT DISTINCT t.* , f.field_name , f.field_type , c.id as field_id 
         FROM contact_forms AS t 
@@ -449,6 +498,11 @@ class AddFormController extends AbstractController
                 'field_type' => $row['field_type'],
             ];
         }
+
+       
+         
+
+     
 
         return new JsonResponse([
             'success' => true,

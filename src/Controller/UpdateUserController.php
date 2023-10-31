@@ -47,16 +47,16 @@ class UpdateUserController extends AbstractController
        // $safeFilename = $slugger->slug($originalFilename);
         $fileName = $userPresentations->id.'.'.$uploadedFile->guessExtension();
 
-   // dd($fileName);
+        // dd($fileName);
 
-   try {
-   // $uploadedFile->move($this->getuploadPath(), $fileName);
-    $userPresentations->picture = $fileUploader->upload($uploadedFile);
-    //$data = array("data" => "File is valid, and was successfully uploaded.");
-    } catch (FileException $e) {
-    // ... handle exception if something happens during file upload
-    $data = array("data" => "File is not valid, and was successfully uploaded.");
-    }
+        try {
+                // $uploadedFile->move($this->getuploadPath(), $fileName);
+                    $userPresentations->picture = $fileUploader->upload($uploadedFile);
+                    //$data = array("data" => "File is valid, and was successfully uploaded.");
+                    } catch (FileException $e) {
+                    // ... handle exception if something happens during file upload
+                    $data = array("data" => "File is not valid, and was successfully uploaded.");
+            }
 
        
         

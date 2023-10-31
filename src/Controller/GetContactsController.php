@@ -48,6 +48,9 @@ class GetContactsController extends AbstractController
         $sort = [];
         foreach ($order as  $orders){
             if(isset($columns[$orders['column']]['name'])){
+                if($columns[$orders['column']]['name']=='created_at')
+                $sort[] =  ' e.id ' .$orders['dir'];
+                else
                 $sort[] = $columns[$orders['column']]['name']. ' ' .$orders['dir'];
             } 
         }
@@ -62,31 +65,41 @@ class GetContactsController extends AbstractController
         $filters[] = "(e.id LIKE :searchTerm OR e.name LIKE :searchTerm OR e.email LIKE :searchTerm OR e.lastname LIKE :searchTerm OR e.firstname LIKE :searchTerm OR e.country LIKE :searchTerm OR e.phone LIKE :searchTerm)";
         $filterValues['searchTerm'] = '%'.trim($request->get('search')['value']).'%';
         }
-        
+       
+      
         if($request->get('columns')) {
-            foreach($request->get('columns') as $column){
+                foreach($request->get('columns') as $column){
+                 
 
-                if(isset($column['search']['value']) && trim($column['search']['value']) != '') {
-                    if($column['name'] == 'total_sales') {
-                        $filtershaving[] = "(total_sales = :total_sales)";
-                        $filterValueshaving[str_replace('.', '_',$column['name'])] = str_replace('%', '', $column['search']['value']);
-                    }else{
-                    $filters[] = "(".$column['name']." LIKE :".str_replace('.', '_',$column['name']).")";
-                    $filterValues[str_replace('.', '_',$column['name'])] = $column['search']['value'];
-                }
+                    if(isset($column['search']['value']) && trim($column['search']['value']) != '') {  
                 
-            }
-            }
+                        if($column['name'] == 'total_sales') {
+                            $filtershaving[] = "(total_sales = :total_sales)";
+                            $filterValueshaving[str_replace('.', '_',$column['name'])] = str_replace('%', '', $column['search']['value']);
+                        }else if ($column['name'] == 'created_at'){
+                            $filters[] = "( DATE_FORMAT(cd.created_at, '%Y-%m-%d') LIKE :".str_replace('.', '_',$column['name']).")";
+                            $filterValues[str_replace('.', '_',$column['name'])] = $column['search']['value'];
+                        }else{
+                        $filters[] = "(".$column['name']." LIKE :".str_replace('.', '_',$column['name']).")";
+                        $filterValues[str_replace('.', '_',$column['name'])] = $column['search']['value'];
+                         }
+                    
+                }
+         }
         
             }
+          
+         
+     
 
             if(empty($filters)){
                 $filters[] = ' 1=1';
             }
             
-            $sql1 = "SELECT e.* , COUNT(d.contact_id) as total_sales  
+            $sql1 = "  SELECT SUBSTRING_INDEX(GROUP_CONCAT(cd.created_at ORDER BY cd.created_at), ',', 1) as created_at, e.* , COUNT(d.contact_id) as total_sales  
             FROM contacts e
             left JOIN sales d ON d.contact_id = e.id
+            LEFT JOIN contact_custom_fields cd ON cd.contact_id = e.id
                  ". (!empty($filters) ? 'where e.account_id = :account_id and' : ''). implode(' AND',$filters)."
                  GROUP BY e.id
                  ". (!empty($filtershaving) ? ' having ' : ''). implode(' AND',$filtershaving)."
@@ -94,6 +107,10 @@ class GetContactsController extends AbstractController
                
                 LIMIT :limit OFFSET :offset
                 ;";
+          /*           return new JsonResponse([
+                'sql1' => $sql1,
+              
+            ]); */
         
                 //dd($sql1,$filters);
                 /*  , SUBSTRING_INDEX(GROUP_CONCAT(cb.balance), ',', -1) as balance
@@ -103,6 +120,7 @@ class GetContactsController extends AbstractController
                 $sql2 = "SELECT e.* , COUNT(d.contact_id) as total_sales 
                 FROM contacts e
                 left JOIN sales d ON d.contact_id = e.id
+                LEFT JOIN contact_custom_fields cd ON cd.contact_id = e.id
                 ". (!empty($filters) ? 'where e.account_id = :account_id and' : ''). implode(' AND',$filters)."
                 GROUP BY e.id
                 ". (!empty($filtershaving) ? ' having ' : ''). implode(' AND',$filtershaving)."

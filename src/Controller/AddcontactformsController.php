@@ -181,8 +181,6 @@ class AddcontactformsController extends AbstractController
         return new JsonResponse([
             'success' => 'true',
             'data' => $data
-         
-          
         ]);
     }
 
@@ -236,4 +234,6 @@ class AddcontactformsController extends AbstractController
             'data' => $result1
         ]);
     }
+   
+  
 }
