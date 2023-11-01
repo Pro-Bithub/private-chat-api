@@ -67,6 +67,7 @@ class AddcontactformsController extends AbstractController
         $phone="";
         $country="";
         $name="";
+        $gender = '';
         $date_birth=null;
         
         
@@ -97,7 +98,7 @@ class AddcontactformsController extends AbstractController
             $entityManagerInterface->persist($logs);
             $entityManagerInterface->flush(); */
 
-            $sql = "SELECT c.field_name
+            $sql = "SELECT c.field_name , c.field_type
             from `contact_form_fields` AS cf 
             LEFT JOIN `custom_fields` AS c  ON cf.field_id = c.id
             WHERE cf.id = :id and c.status = 1";
@@ -106,7 +107,53 @@ class AddcontactformsController extends AbstractController
             $statement->bindValue('id', $value['fieldId']);
             $field = $statement->executeQuery()->fetchAssociative();
             //  dd($field);
-        if($field['field_name']!=null){
+     
+        
+
+            if($field['field_type']!=null){
+                $field_type = intval($field['field_type']);
+                switch ($field_type) {
+                    case 10:
+                        $firstname = $value['value'];
+                        break;
+                    case 11:
+                        $lastname = $value['value'];
+                        break;
+                    case 6:
+                        $email = $value['value'];
+                        break;
+                    case 7:
+                        $phone = $value['value'];
+                        break;
+                    case 8:
+                        $country = $value['value'];
+                        break;
+                    case 13:
+                      if($value['value'])  {
+                        $input = $value['value'];
+                            if (strcasecmp(substr($input, 0, 1), 'H') === 0 || strcasecmp(substr($input, 0, 1), 'M') === 0) {
+                                $gender = 'H';
+                            }else{
+                                $gender = 'F';
+                            }
+                       }
+                  
+                        break;
+                    case 14:
+                        $dateOfBirth = \DateTimeImmutable::createFromFormat('Y-m-d', $value['value']);
+                        if ($dateOfBirth) {
+                            $date_birth = $dateOfBirth;
+                        }
+                        break;
+                    case 15:
+                        $name = $value['value'];
+                        break;
+                 
+                        
+                }
+            }
+
+    /*    old if($field['field_name']!=null){
             $field_name = strtolower(str_replace(' ', '', $field['field_name']));
             switch ($field_name) {
                 case 'firstname':
@@ -138,7 +185,7 @@ class AddcontactformsController extends AbstractController
             }
 
         }
-      
+       */
 
      
      
@@ -161,6 +208,8 @@ class AddcontactformsController extends AbstractController
         $contact->date_birth = $date_birth;
         if (!empty($name)) 
         $contact->name = $name;
+        if (!empty($gender)) 
+        $contact->gender = $gender;
         $entityManagerInterface->persist($contact);
         $entityManagerInterface->flush();
 

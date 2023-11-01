@@ -8,7 +8,6 @@ use App\Entity\UserLogs;
 use App\Repository\AccountsRepository;
 use App\Repository\ContactFormsRepository;
 use App\Repository\CustomFieldsRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,10 +23,10 @@ class AddCustomFieldsController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $ids = $data;
-        $idsinsql="";
+        $idsinsql = "";
         foreach ($ids as $key => $id) {
             if ($key > 0) {
-                $idsinsql .= ", "; 
+                $idsinsql .= ", ";
             }
             $idsinsql .= $id;
         }
@@ -35,26 +34,26 @@ class AddCustomFieldsController extends AbstractController
         $RAW_QUERY2 = "SELECT  GROUP_CONCAT(cflv.value SEPARATOR '##') AS list_values_select ,cf.*
         FROM `custom_fields` AS cf
         LEFT JOIN `custom_field_list_values` AS cflv ON cflv.custom_field_id = cf.id  
-        WHERE cf.status = 1  AND cf.id IN ( ".$idsinsql." ) 
+        WHERE cf.status = 1  AND cf.id IN ( " . $idsinsql . " ) 
         GROUP BY cf.id";
         ///and cf.account_id =:account
-        
+
 
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
-      //  $stmt->bindValue('account', $request->attributes->get('account'));
-     
+        //  $stmt->bindValue('account', $request->attributes->get('account'));
+
 
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
         return new JsonResponse([
             'success' => true,
             'data' => $result1,
-            
+
         ]);
     }
 
 
     #[Route('/api/getContactFormsById/{id}', name: 'app_get_contact_forms_by_id')]
-    public function getContactFormsById(  $id,Request $request, EntityManagerInterface $entityManagerInterface, ContactFormsRepository $contactFormsRepository): Response
+    public function getContactFormsById($id, Request $request, EntityManagerInterface $entityManagerInterface, ContactFormsRepository $contactFormsRepository): Response
     {
 
         $onecontactform = $contactFormsRepository->find($id);
@@ -66,10 +65,10 @@ class AddCustomFieldsController extends AbstractController
         GROUP BY cf.id";
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
         $stmt->bindValue('id', $id);
-      $result1 = $stmt->executeQuery()->fetchAllAssociative();
-     
+        $result1 = $stmt->executeQuery()->fetchAllAssociative();
 
-    
+
+
         return new JsonResponse([
             'success' => true,
             'data' => $onecontactform,
@@ -79,7 +78,7 @@ class AddCustomFieldsController extends AbstractController
 
 
 
-    
+
 
 
     #[Route('/add_custom_fields', name: 'app_add_custom_fields')]
@@ -103,7 +102,7 @@ class AddCustomFieldsController extends AbstractController
 
         $entityManagerInterface->persist($customFields);
         $entityManagerInterface->flush();
-        if ($data['fieldType'] == '12') {
+        if ($data['fieldType'] == '12' || $data['fieldType'] == '13') {
             if (is_array($data['fieldvalue'])) {
                 $limit = 50;
 

@@ -607,7 +607,7 @@ class getPlansController extends AbstractController
 
         // dd($request->query->get('status'));
 
-
+   
         if (empty($plans) || in_array("plans", $plans)) {
             $querry1 = $querry2 = [];
 
@@ -701,7 +701,7 @@ class getPlansController extends AbstractController
         }
         if (empty($plans) || in_array("contact_forms", $plans)) {
             $query7 = $query8 = [];
-
+       
             if ($request->attributes->get('agent_id') && !$request->attributes->get('admin')) {
 
                 $query7[] = ' (pr.u_type = 1 AND pr.id = :agent_id)';
@@ -711,12 +711,15 @@ class getPlansController extends AbstractController
                 $query8[] = ' (t.status = :status)';
             }
 
-            $rawQuery4 = "SELECT DISTINCT t.* , f.field_name , f.field_type , f.id as field_id 
+            $rawQuery4 = "SELECT   CASE
+            WHEN f.field_type = 12 OR f.field_type = 13 THEN  GROUP_CONCAT(DISTINCT  cflv.value SEPARATOR '##') 
+            ELSE NULL END AS list_values_select  , t.* , f.field_name , f.field_type , f.id as field_id 
                            FROM contact_forms AS t 
                            LEFT JOIN contact_form_fields AS c ON c.form_id = t.id AND c.status = 1 
                            LEFT JOIN custom_fields AS f ON f.id = c.field_id 
+                           LEFT JOIN `custom_field_list_values` AS cflv ON cflv.custom_field_id =  f.id  
                            LEFT JOIN profiles AS pr ON FIND_IN_SET(pr.u_id, t.sendable_agents) 
-                           WHERE t.account_id = :account AND t.form_type = 4 " . (!empty($query7) ? 'AND' : '') . implode(' AND ', $query7) . " " . (!empty($query8) ? 'AND' : '') . implode(' AND ', $query8) . " ";
+                           WHERE t.account_id = :account AND t.form_type = 4 " . (!empty($query7) ? 'AND' : '') . implode(' AND ', $query7) . " " . (!empty($query8) ? 'AND' : '') . implode(' AND ', $query8) . "  GROUP BY t.id , c.id , f.id";
 
             $stmt4 = $entityManagerInterface->getConnection()->prepare($rawQuery4);
             $stmt4->bindValue('account', $request->attributes->get('account'));
@@ -729,8 +732,10 @@ class getPlansController extends AbstractController
 
             $result = $stmt4->executeQuery()->fetchAllAssociative();
 
-            $combinedData = [];
+      
 
+            $combinedData = [];
+          
             foreach ($result as $row) {
                 $formId = $row['id'];
 
@@ -743,14 +748,26 @@ class getPlansController extends AbstractController
                         'sendable_agents' => $row['sendable_agents'],
                         'status' => $row['status'],
                         'friendly_name' => $row['friendly_name'],
+                        'introduction' => $row['introduction'],
+                        'message_capture' => $row['message_capture'],
+                        'source' => $row['source'],
+                        'agent_status' => $row['agent_status'],
                         'fields' => [],
                     ];
+                }
+
+                $listArray = [];
+                if ($row['field_type'] == 12 || $row['field_type'] == 13) {
+                    if ($row['list_values_select'] !== null) {
+                        $listArray = explode('##', $row['list_values_select']);
+                    }
                 }
 
                 $combinedData[$formId]['fields'][] = [
                     'field_id' => $row['field_id'],
                     'field_name' => $row['field_name'],
                     'field_type' => $row['field_type'],
+                    'field_value' => $listArray,
                 ];
             }
 
