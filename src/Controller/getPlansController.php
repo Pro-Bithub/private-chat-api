@@ -713,7 +713,7 @@ class getPlansController extends AbstractController
 
             $rawQuery4 = "SELECT   CASE
             WHEN f.field_type = 12 OR f.field_type = 13 THEN  GROUP_CONCAT(DISTINCT  cflv.value SEPARATOR '##') 
-            ELSE NULL END AS list_values_select  , t.* , f.field_name , f.field_type , f.id as field_id 
+            ELSE NULL END AS list_values_select  , t.* , f.field_name , f.field_type , c.id as field_id 
                            FROM contact_forms AS t 
                            LEFT JOIN contact_form_fields AS c ON c.form_id = t.id AND c.status = 1 
                            LEFT JOIN custom_fields AS f ON f.id = c.field_id 
@@ -747,6 +747,7 @@ class getPlansController extends AbstractController
                         'text_capture' => $row['text_capture'],
                         'sendable_agents' => $row['sendable_agents'],
                         'status' => $row['status'],
+                        'button' => $row['button'],
                         'friendly_name' => $row['friendly_name'],
                         'introduction' => $row['introduction'],
                         'message_capture' => $row['message_capture'],
@@ -767,7 +768,7 @@ class getPlansController extends AbstractController
                     'field_id' => $row['field_id'],
                     'field_name' => $row['field_name'],
                     'field_type' => $row['field_type'],
-                    'field_value' => $listArray,
+                    'field_default_value' => $listArray,
                 ];
             }
 
@@ -845,6 +846,23 @@ class getPlansController extends AbstractController
         //     ]);
         // }
     }
+
+    #[Route('/getDataByProfileId/{id}')]
+    public function getDataByProfileId(Request $request, $id, EntityManagerInterface $entityManagerInterface): Response
+    {
+
+        $sql2 = "SELECT c.firstname , c.lastname , c.email ,c.phone , c.country  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
+        $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
+        $statement2->bindValue('id', $id);
+        $results = $statement2->executeQuery()->fetchAllAssociative();
+
+        return new JsonResponse([
+            'success' => 'true',
+            'data' => $results
+        ]);
+      
+    }
+
 
     #[Route('/getTotalBalancebyaccount/{id}')]
     public function getTotalBalancebyaccount(Request $request, $id, EntityManagerInterface $entityManagerInterface)

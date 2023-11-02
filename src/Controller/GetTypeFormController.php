@@ -60,7 +60,7 @@ class GetTypeFormController extends AbstractController
                 'field_name' => $row['field_name'],
                 'field_type' => $row['field_type'],
                 'field_id' => $row['id'],
-                'field_value' => $listArray,
+                'field_default_value' => $listArray,
             ];
         }
 
