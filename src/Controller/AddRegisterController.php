@@ -69,19 +69,54 @@ class AddRegisterController extends AbstractController
         $Registrations->date_start = new \DateTime('@' . strtotime('now'));
         $Registrations->status = $data['status'];
         $Registrations->url = $data['url'];
+        $Registrations->lang = $data['lang'];
 
         $formstemplate = 'forms/template-' . $data['template'];
         $newBaseHref = $APP_URL . $formstemplate . '/';
 
+
+        //for page contact
+        $formstemplateContact = 'forms/template-contact';
+        $newBaseContactHref = $APP_URL . $formstemplateContact . '/';
+        $fileContact = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/index.html', '', '');
+        $fileContentsContact = $fileContact->getContents();
+        $fileContentsContact = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContact);
+        $filesystem->dumpFile($data['slug_url'] . '/contact/index.html',  $fileContentsContact);
+
+        $fileContacterror = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/error.html', '', '');
+        $fileContentsContacterror = $fileContacterror->getContents();
+        $fileContentsContacterror = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContacterror);
+        $filesystem->dumpFile($data['slug_url'] . '/contact/error.html',  $fileContentsContacterror);
+
+        $fileContactsuccess = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/success.html', '', '');
+        $fileContentsContactsuccess = $fileContactsuccess->getContents();
+        $fileContentsContactsuccess = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactsuccess);
+        $filesystem->dumpFile($data['slug_url'] . '/contact/success.html',  $fileContentsContactsuccess);
+
+        $fileContactrequest = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/request.php', '', '');
+        $fileContentsContactrequest = $fileContactrequest->getContents();
+        $fileContentsContactrequest = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactrequest);
+        $filesystem->dumpFile($data['slug_url'] . '/contact/request.php',  $fileContentsContactrequest);
+       //
+
+       $lang = ($Registrations->lang == 1) ? 'en' : 'fr';
+
+
+    
         $file = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/index.html', '', '');
         $fileContents = $file->getContents();
         $fileContents = str_replace('[base-href]',  $newBaseHref, $fileContents);
         $fileContents = str_replace('[api-url]',  $APP_URL, $fileContents);
+        $fileContents = str_replace('[lang]',  $lang, $fileContents);
+
+        
 
         $file_forget_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/forget_password.html', '', '');
         $fileContentsfgp = $file_forget_password->getContents();
         $fileContentsfgp = str_replace('[base-href]',  $newBaseHref, $fileContentsfgp);
         $fileContentsfgp =  str_replace('[api-url]', $APP_URL, $fileContentsfgp);
+        $fileContentsfgp =  str_replace('[lang]', $lang, $fileContentsfgp);
+
 
 
         $filesystem->dumpFile($data['slug_url'] . '/index.html',  $fileContents);
@@ -92,15 +127,21 @@ class AddRegisterController extends AbstractController
         $fileContentsrestpwd = $file_reset_password->getContents();
         $fileContentsrestpwd = str_replace('[base-href]',  $newBaseHref, $fileContentsrestpwd);
         $fileContentsrestpwd = str_replace('[api-url]',  $APP_URL, $fileContentsrestpwd);
+        $fileContentsrestpwd = str_replace('[lang]',$lang, $fileContentsrestpwd);
+
         $filesystem->dumpFile($data['slug_url'] . '/reset_password.html',  $fileContentsrestpwd);
 
 
 
-        $json = json_encode(array('data' => $Registrations));
+        $json = json_encode(array('data' => $Registrations, 'api_url'=>$APP_URL));
        $filesystem->dumpFile($data['slug_url']  . '/data.json', $json);
 
 
 
+
+       $filesystem->chmod($data['slug_url'] , 0755);
+       $filesystem->chmod($data['slug_url'].'/contact' , 0755);
+       $filesystem->chmod($data['slug_url'].'/contact/request.php' , 0644);
 
 
 

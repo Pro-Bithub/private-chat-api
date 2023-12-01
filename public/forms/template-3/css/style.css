@@ -110,7 +110,8 @@ a.animated_link.active {
     color: #434bdf
 }
 .forgetstyle{
-    padding-left: 25rem;
+    display: block;
+    text-align: right;
 }
 a.animated_link.active:before {
     content: "";

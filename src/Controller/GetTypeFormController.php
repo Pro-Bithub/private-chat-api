@@ -148,7 +148,7 @@ class GetTypeFormController extends AbstractController
         // $result = $stmt->executeQuery()->fetchAllAssociative();
         // return new JsonResponse([
         //     'success' => 'true',
-        //     'data' => $result
+        //     'data' => $result and p.u_type=1
         // ]);
 
 
@@ -159,10 +159,11 @@ class GetTypeFormController extends AbstractController
             $query2[] = ' (u.status = :status)';
         }
 
-        $rawQuery = "SELECT p.id as profile_id , u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
+        $rawQuery = "SELECT up.id as presentation_id, up.status as presentation_stauts,up.nickname as nickname ,   p.id as profile_id , u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
         FROM `user` AS u
-        left join `profiles` as p on p.u_id = u.id
-         WHERE u.account_id = :account 
+        left join `user_presentations` as up on up.user_id = u.id and  up.status =1
+        left join `profiles` as p on p.u_id = u.id  and u_type in (1,3)
+         WHERE u.account_id = :account  
         " . (!empty($query2) ? 'AND' : '') . implode(' AND ', $query2) . " 
         ";
 
@@ -172,11 +173,39 @@ class GetTypeFormController extends AbstractController
         if (!empty($query2)) {
             $stmt->bindValue('status', $request->query->get('status'));
         }
-        $result = $stmt->executeQuery()->fetchAllAssociative();
+        $userwithpresentation = $stmt->executeQuery()->fetchAllAssociative();
+
+
+        $data = [];
+   
+        foreach ($userwithpresentation as $row) {
+            if (empty($data[$row['id']])) {
+                $data[$row['id']] = [
+                    'profile_id' => $row['profile_id'],
+                    'email' => $row['email'],
+                    'lastname' => $row['lastname'],
+                    'id' => $row['id'],
+                    'firstname' => $row['firstname'],
+                    'status' => $row['status'],
+                    'user_key' => $row['user_key'],
+                    'presentations' => [],
+                ];
+            }
+            if($row['presentation_stauts']){
+                if($row['presentation_stauts']===1)
+                $data[$row['id']]['presentations'][] = [
+                    'nickname' => $row['nickname'],
+                    'id' => $row['presentation_id'],
+                ];
+            }
+          
+        }
+
+
 
         return new JsonResponse([
             'success' => 'true',
-            'data' => $result
+            'data' => $data
         ]);
     }
 }

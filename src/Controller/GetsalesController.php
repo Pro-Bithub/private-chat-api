@@ -49,6 +49,13 @@ class GetsalesController extends AbstractController
         $sort = [];
         foreach ($order as  $orders) {
             if (isset($columns[$orders['column']]['name'])) {
+                if( $columns[$orders['column']]['name']=='firstname') 
+                $sort[] =  'user_firstname ' . $orders['dir'];
+                 else if( $columns[$orders['column']]['name']=='name')
+                 $sort[] = 'plan_name ' . $orders['dir'];
+                 else if( $columns[$orders['column']]['name']=='email')
+                 $sort[] = 'contact_email ' . $orders['dir'];
+                 else
                 $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
             }
         }
@@ -65,9 +72,9 @@ class GetsalesController extends AbstractController
             foreach ($request->get('columns') as $column) {
                 if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
                     if ($column['name'] == 'email') {
-                        $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . ")";
+                        $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . " OR r.name ". " LIKE :" . $column['name'] .  " OR r.firstname ". " LIKE :" . $column['name'] . " OR r.lastname ". " LIKE :" . $column['name'] . " OR r.id ". " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'firstname') {
-                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . ")";
+                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email ". " LIKE :" . $column['name'] .  " OR d.firstname ". " LIKE :" . $column['name'] . " OR d.lastname ". " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'name') {
                         $filters[] = "(p." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else {
@@ -78,10 +85,12 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,r.id as contact_id, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql1 = "SELECT e.* ,  SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
             FROM sales e
                 left JOIN contacts r ON r.id = e.contact_id
                 left JOIN user d ON d.id = e.user_id
+                left JOIN user_presentations up ON up.user_id = e.user_id  and  up.status =1
+                
                 left JOIN plans p ON p.id = e.plan_id
                 where p.account_id = :account_id 
                  " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
@@ -91,10 +100,11 @@ class GetsalesController extends AbstractController
                 ;";
 
         //dd($sql1,$filters);
-        $sql2 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, r.id as contact_id,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql2 = "SELECT e.* ,SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
             FROM sales e
            left JOIN contacts r ON r.id = e.contact_id
            left JOIN user d ON d.id = e.user_id
+           left JOIN user_presentations up ON up.user_id = e.user_id  and  up.status =1
            left JOIN plans p ON p.id = e.plan_id
            where p.account_id = :account_id 
                 " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
@@ -102,7 +112,7 @@ class GetsalesController extends AbstractController
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "   
                 ;";
 
-        $sql3 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, r.id as contact_id,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql3 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
         FROM sales e
        left JOIN contacts r ON r.id = e.contact_id
        left JOIN user d ON d.id = e.user_id
@@ -137,7 +147,7 @@ class GetsalesController extends AbstractController
             'draw' => $draw,
             'recordsTotal' => $results3,
             'recordsFiltered' => $results1,
-            'data' => $results,
+            'data' => $results
         ]);
     }
 
@@ -179,6 +189,11 @@ class GetsalesController extends AbstractController
         $sort = [];
         foreach ($order as  $orders) {
             if (isset($columns[$orders['column']]['name'])) {
+                if( $columns[$orders['column']]['name']=='firstname') 
+                $sort[] =  'user_firstname ' . $orders['dir'];
+                 else if( $columns[$orders['column']]['name']=='name')
+                 $sort[] = 'plan_name ' . $orders['dir'];
+                 else
                 $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
             }
         }
@@ -197,7 +212,7 @@ class GetsalesController extends AbstractController
                     if ($column['name'] == 'email') {
                         $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'firstname') {
-                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . ")";
+                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email ". " LIKE :" . $column['name'] .  " OR d.firstname ". " LIKE :" . $column['name'] . " OR d.lastname ". " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'name') {
                         $filters[] = "(p." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else {
@@ -208,10 +223,11 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,r.id as contact_id, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql1 = "SELECT e.* ,SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
             FROM sales e
                 left JOIN contacts r ON r.id = e.contact_id
-                left JOIN user d ON d.id = e.user_id
+                left JOIN user d ON d.id = e.user_id       
+                left JOIN user_presentations up ON up.user_id = e.user_id and  up.status =1
                 left JOIN plans p ON p.id = e.plan_id
                 where p.account_id = :account_id and e.contact_id = :contact_id
                  " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
@@ -221,10 +237,11 @@ class GetsalesController extends AbstractController
                 ;";
 
         //dd($sql1,$filters);
-        $sql2 = "SELECT e.* ,d.id as user_id, d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, r.id as contact_id,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql2 = "SELECT e.* ,SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
             FROM sales e
            left JOIN contacts r ON r.id = e.contact_id
            left JOIN user d ON d.id = e.user_id
+           left JOIN user_presentations up ON up.user_id = e.user_id  and  up.status =1
            left JOIN plans p ON p.id = e.plan_id
            where p.account_id = :account_id and e.contact_id = :contact_id
                 " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
@@ -330,7 +347,7 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name
+        $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name ,c.field_type
             FROM contact_custom_fields cf
             left JOIN `contact_form_fields` AS cff ON cff.id = cf.form_field_id
             left JOIN contact_forms f ON f.id = cff.form_id

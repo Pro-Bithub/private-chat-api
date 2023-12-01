@@ -15,19 +15,26 @@ final class DeserializeListener
     private $decorated;
     private $denormalizer;
     private $serializerContextBuilder;
+    private $logger; // Add a logger property
 
-    public function __construct(DenormalizerInterface $denormalizer, SerializerContextBuilderInterface $serializerContextBuilder, DecoratedListener $decorated)
+
+    public function __construct(DenormalizerInterface $denormalizer,SerializerContextBuilderInterface $serializerContextBuilder, DecoratedListener $decorated)
     {
         $this->denormalizer = $denormalizer;
         $this->serializerContextBuilder = $serializerContextBuilder;
         $this->decorated = $decorated;
+
     }
 
     public function onKernelRequest(RequestEvent $event): void {
         $request = $event->getRequest();
+
+
         if ($request->isMethodCacheable(false) || $request->isMethod(Request::METHOD_DELETE)) {
             return;
         }
+
+
 
         if ('form' === $request->getContentType()) {
             $this->denormalizeFormRequest($request);

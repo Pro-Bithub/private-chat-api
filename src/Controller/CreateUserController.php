@@ -26,12 +26,22 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Sinergi\BrowserDetector\Os;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Util\SecureRandom;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[AsController]
 class CreateUserController extends AbstractController
 {
+
+    protected $parameterBag;
+
+    public function __construct(ParameterBagInterface $parameterBag)
+    {
+        $this->parameterBag = $parameterBag;
+    }
 
     public function __invoke(FileUploader $fileUploader, Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface, AccountsRepository $accountsRepository, UserRepository $userRepository): Response
     {
@@ -94,28 +104,29 @@ class CreateUserController extends AbstractController
 
         $userPresentations->gender = $request->get('gender');
         $userPresentations->website = $request->get('website');
-        if ($request->files->get('file') != null) {
+
+        /*   if ($request->files->get('file') != null) {
             $uploadedFile = $request->files->get('file');
-        
+
             // Upload the original file and get its filename
             $originalFileName = $fileUploader->upload($uploadedFile);
-        
+
             // Get the user's ID
             $userId = $user->id;
-        
+
             // Extract the original file extension
             $extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-        
+
             // Create a new filename by appending the user's ID to the original filename
             $newFileName = $userId . '.' . $extension;
-        
+
             // Get the destination directory
             $destinationDirectory = $fileUploader->getUploadPath();
-        
+
             // Copy the original file and rename it with the new filename
             $sourcePath = $destinationDirectory . '/' . $originalFileName;
             $destinationPath = $destinationDirectory . '/' . $newFileName;
-        
+
             if (file_exists($sourcePath)) {
                 copy($sourcePath, $destinationPath);
             } else {
@@ -124,10 +135,20 @@ class CreateUserController extends AbstractController
             }
 
             $userPresentations->picture = $originalFileName;
+        } */
 
+
+        $uploadedFile = $request->files->get('file');
+
+        if (null !== $uploadedFile) {
+            try {
+                $userPresentations->picture = $fileUploader->upload($uploadedFile);
+            } catch (FileException $e) {
+            }
         }
-        
-        
+
+
+
 
 
         $userPresentations->role = $request->get('role');
@@ -281,41 +302,69 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->persist($userPermission);
         $entityManagerInterface->flush();
         // dd('eqqfs');
+        function addTrailingSlashIfMissing($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+
+        $avatar = null;
+        if (isset($userPresentations->picture)) {
+
+            $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/";
+            $avatar = $uploads_directory . $userPresentations->picture;
+        }
+
+
+        $client = HttpClient::create();
+        $data = [
+            "nickname" => $userPresentations->nickname,
+            "full_name" => $user->firstname ?? $user->firstname . ' ' . $user->lastname ?? $user->lastname,
+            "role" => "AGENT",
+            "is_active" => false,
+            "is_online" => false,
+            "created_at" =>  date('Y-m-d H:i:s'),
+            "profile_id" => $userPresentations->id,
+            "avatar" => $avatar,
+            "id" => $user->id,
+            "accountId" =>  $user->accountId,
+        ];
+
+
+
+
+
+        $ws_library = addTrailingSlashIfMissing($this->parameterBag->get('ws_library'));
+        $url = $ws_library . 'users';
+
+
+
+        $response = $client->request('POST', $url, [
+            'json' => $data,
+        ]);
+
+        $content = null;
+
+
+        $status = $response->getStatusCode();
+
+
+
+        if ($status < 400) {
+            $content = $response->getContent();
+        }
 
         return new JsonResponse([
             'success' => true,
             'data' => $user,
-            'nickname' => $userPresentations->nickname
+            'nickname' => $userPresentations->nickname,
+            'content' =>  $content,
+            'status' =>  $status,
+
         ]);
-
-
-        //dd($_REQUEST['gender'));
-        //$data = json_decode($request->getContent(), true);
-        // $userPresentations->setGender($request->request->get('gender'));
-        // $userPresentations->setWebsite($request->request->get('website'));
-        // $userPresentations->setRole($request->request->get('role'));
-        // $userPresentations->setNickname($request->request->get('nickname'));
-        // $userPresentations->setCountry($request->request->get('country'));
-        // $userPresentations->setLanguages($request->request->get('languages'));
-        // $userPresentations->setExpertise($request->request->get('expertise'));
-        // $userPresentations->setDiploma($request->request->get('diploma'));
-        // $userPresentations->setStatus($request->request->get('status'));
-        // $userPresentations->setBrandName($request->request->get('brandName'));
-        // $userPresentations->setContactPhone($request->request->get('contactPhone'));
-        // $userPresentations->setContactPhoneComment($request->request->get('contactPhoneComment'));
-        // $userPresentations->setContactMail($request->request->get('contactMail'));
-        // $userPresentations->setAtrologicalSign($request->request->get('atrologicalSign'));
-        // $userPresentations->setFile($request->files->get('file'));
-        // $userPresentations->setDateStart(new \DateTime('@'.strtotime('now')));
-
-
-
-
-
-
-
-
-
     }
 
     #[Route('/update_user_rights/{id}', name: 'app_update_user_rights_controller')]
@@ -450,7 +499,7 @@ class CreateUserController extends AbstractController
     }
 
     #[Route('/add_user_notifications', name: 'app_add_user_notifications_controller')]
-    public function addUserNotifications( Request $request, EntityManagerInterface $entityManagerInterface,  UserRepository $userRepository): Response
+    public function addUserNotifications(Request $request, EntityManagerInterface $entityManagerInterface,  UserRepository $userRepository): Response
     {
 
         $authorizationHeader = $request->headers->get('Authorization');
@@ -472,7 +521,7 @@ class CreateUserController extends AbstractController
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
         $data = json_decode($request->getContent(), true);
-        $usernotifications =new UserNotifications() ;
+        $usernotifications = new UserNotifications();
         $usernotifications->visitor_register = $data['visitorRegister'];
         $usernotifications->visitor_login = $data['visitorLogin'];
         $usernotifications->plan_actions = $data['planActions'];
@@ -484,8 +533,8 @@ class CreateUserController extends AbstractController
         $usernotifications->contact_actions = $data['contactActions'];
         $usernotifications->sales = $data['sales'];
 
-   
-        
+
+
         $old_user = $userRepository->find($data['u_id']);
         $usernotifications->user = $old_user;
 
@@ -508,13 +557,13 @@ class CreateUserController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'data' => $usernotifications,
-      
-       
+
+
         ]);
     }
 
-    #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
-    public function addUserPresentation( $id,Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
+    /*  witoutfile  #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
+    public function addUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
     {
 
         $authorizationHeader = $request->headers->get('Authorization');
@@ -539,7 +588,7 @@ class CreateUserController extends AbstractController
         // dd($data);
         $userid = $userRepository->find($id);
         $userPresentation = new UserPresentations();
-        $userPresentation->user =$userid;
+        $userPresentation->user = $userid;
         $userPresentation->gender = $data['gender'];
         $userPresentation->website = $data['website'];
         $userPresentation->role = $data['role'];
@@ -575,30 +624,276 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-        // $time =  new \DateTimeImmutable();
-        // $profile = $profilesRepository->findProfileById($userPresentation->user);
-        // $profile->username = $userPresentation->nickname;
-        // $entityManagerInterface->persist($profile);
-        // $entityManagerInterface->flush();
 
-        // $UserLogs = new UserLogs();
-        // $UserLogs->user_id = $data['user_id'];
-        // $UserLogs->action = 'Update Profile';
-        // $UserLogs->element = '30';
-        // $UserLogs->element_id = $profile->id;
-        // $UserLogs->log_date = $time;
-        // $UserLogs->source = '1';
-        // $entityManagerInterface->persist($UserLogs);
-        // $entityManagerInterface->flush();
+        $client = HttpClient::create();
+        $data = [
+            "nickname" =>  $userPresentation->nickname,
+            "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
+            "role" => "AGENT",
+            "is_active" => false,
+            "is_online" => false,
+            "created_at" =>  date('Y-m-d H:i:s'),
+            "presentation_id" => $userPresentation->id,
+            "id" => $userid->id,
+            "accountId" =>  $userid->accountId,
+        ];
+
+
+
+
+        function addTrailingSlashIfMissing2($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $ws_library = addTrailingSlashIfMissing2($this->parameterBag->get('ws_library'));
+        $url = $ws_library . 'users';
+
+
+
+        $response = $client->request('POST', $url, [
+            'json' => $data,
+        ]);
+
+
+        $content = null;
+
+
+        $status = $response->getStatusCode();
+
+
+
+        if ($status < 400) {
+            $content = $response->getContent();
+        }
+
 
         return new JsonResponse([
             'success' => true,
             'data' => $userPresentation,
+            'content' => $content,
+            'status_server_ws' => $status,
+        ]);
+    } */
+
+    #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
+    public function addUserPresentation($id, Request $request, FileUploader $fileUploader, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        // $user = $tokenData->getUser();
+
+        // dd($data);
+        $userid = $userRepository->find($id);
+        $userPresentation = new UserPresentations();
+        $userPresentation->user = $userid;
+        $userPresentation->gender = $request->get('gender');
+        $userPresentation->website = $request->get('website');
+        $userPresentation->role = $request->get('role');
+        $userPresentation->nickname = $request->get('nickname');
+        $userPresentation->country = $request->get('country');
+        $userPresentation->languages = $request->get('languages');
+        $userPresentation->expertise = $request->get('expertise');
+        $userPresentation->diploma = $request->get('diploma');
+        $userPresentation->brand_name = $request->get('brand_name');
+        $userPresentation->contact_phone = $request->get('contact_phone');
+        $userPresentation->contact_mail = $request->get('contact_mail');
+        $userPresentation->atrological_sign = $request->get('atrological_sign');
+        $userPresentation->skills = $request->get('skills');
+        $userPresentation->status = '1';
+        $userPresentation->date_start = new \DateTime('@' . strtotime('now'));
+        $userPresentation->presentation = $request->get('presentation');
+        $userPresentation->contact_phone_comment = $request->get('contact_phone_comment');
+
+
+        $uploadedFile = $request->files->get('file');
+
+        if (null !== $uploadedFile) {
+            try {
+                $userPresentation->picture = $fileUploader->upload($uploadedFile);
+            } catch (FileException $e) {
+            }
+        }
+
+
+        $entityManagerInterface->persist($userPresentation);
+        $entityManagerInterface->flush();
+
+        function addTrailingSlashIfMissing2($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+
+        $avatar = null;
+        if (isset($userPresentation->picture)) {
+
+            $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL')) . "uploads/";
+            $avatar = $uploads_directory . $userPresentation->picture;
+        }
+
+
+        $logs = new UserLogs();
+        $logs->user_id = $request->get('user_id');
+        $logs->element = 18;
+        $logs->action = 'add';
+        $logs->element_id = $userPresentation->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+
+        $client = HttpClient::create();
+        $data = [
+            "nickname" =>  $userPresentation->nickname,
+            "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
+            "role" => "AGENT",
+            "is_active" => false,
+            "is_online" => false,
+            "created_at" =>  date('Y-m-d H:i:s'),
+            "presentation_id" => $userPresentation->id,
+            "avatar" => $avatar,
+            "id" => $userid->id,
+            "accountId" =>  $userid->accountId,
+        ];
+
+
+
+
+
+        $ws_library = addTrailingSlashIfMissing2($this->parameterBag->get('ws_library'));
+        $url = $ws_library . 'users';
+
+
+
+        $response = $client->request('POST', $url, [
+            'json' => $data,
+        ]);
+
+
+        $content = null;
+
+
+        $status = $response->getStatusCode();
+
+
+
+        if ($status < 400) {
+            $content = $response->getContent();
+        }
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $userPresentation,
+            'content' => $content,
+            'status_server_ws' => $status,
+
         ]);
     }
 
 
+    #[Route('/update_user_presentation/{id}', name: 'app_update_user_presentation_controller')]
+    public function updateUserPresentation($id, Request $request, FileUploader $fileUploader, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, SluggerInterface $slugger, ProfilesRepository $profilesRepository): Response
 
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+
+        // dd($data);
+        $userPresentation = $userPresentationsRepository->find($id);
+        $userPresentation->gender = $request->get('gender');
+        $userPresentation->website = $request->get('website');
+        $userPresentation->role = $request->get('role');
+        $userPresentation->nickname = $request->get('nickname');
+        $userPresentation->country = $request->get('country');
+        $userPresentation->languages = $request->get('languages');
+        $userPresentation->expertise = $request->get('expertise');
+        $userPresentation->diploma = $request->get('diploma');
+        $userPresentation->brand_name = $request->get('brand_name');
+        $userPresentation->contact_phone = $request->get('contact_phone');
+        $userPresentation->contact_mail = $request->get('contact_mail');
+        $userPresentation->atrological_sign = $request->get('atrological_sign');
+        $userPresentation->skills = $request->get('skills');
+        $userPresentation->presentation = $request->get('presentation');
+        $userPresentation->contact_phone_comment = $request->get('contact_phone_comment');
+
+        $uploadedFile = $request->files->get('file');
+
+        if (null !== $uploadedFile) {
+            try {
+                $userPresentation->picture = $fileUploader->upload($uploadedFile);
+            } catch (FileException $e) {
+            }
+        }
+
+
+
+
+        $entityManagerInterface->persist($userPresentation);
+        $entityManagerInterface->flush();
+
+
+
+        $logs = new UserLogs();
+        $logs->user_id = $request->get('user_id');
+        $logs->element = 18;
+        $logs->action = 'update';
+        $logs->element_id = $userPresentation->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $userPresentation
+
+        ]);
+    }
+
+    /* 
+ old without imge 
     #[Route('/update_user_presentation/{id}', name: 'app_update_user_presentation_controller')]
     public function updateUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, ProfilesRepository $profilesRepository): Response
     {
@@ -657,21 +952,7 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-        // $time =  new \DateTimeImmutable();
-        // $profile = $profilesRepository->findProfileById($userPresentation->user);
-        // $profile->username = $userPresentation->nickname;
-        // $entityManagerInterface->persist($profile);
-        // $entityManagerInterface->flush();
 
-        // $UserLogs = new UserLogs();
-        // $UserLogs->user_id = $data['user_id'];
-        // $UserLogs->action = 'Update Profile';
-        // $UserLogs->element = '30';
-        // $UserLogs->element_id = $profile->id;
-        // $UserLogs->log_date = $time;
-        // $UserLogs->source = '1';
-        // $entityManagerInterface->persist($UserLogs);
-        // $entityManagerInterface->flush();
 
         return new JsonResponse([
             'success' => true,
@@ -679,7 +960,7 @@ class CreateUserController extends AbstractController
         ]);
     }
 
-
+ */
 
     #[Route('/delete_user_presentation/{id}', name: 'app_delete_user_presentation_controller')]
     public function deleteUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, ProfilesRepository $profilesRepository): Response
@@ -706,13 +987,15 @@ class CreateUserController extends AbstractController
         // $user = $tokenData->getUser();
         $data = json_decode($request->getContent(), true);
         // dd($data);
+
         $userPresentation = $userPresentationsRepository->find($id);
-  
-        if (!$userPresentation) {
-          
-        } else {
+        if ($userPresentation) {
+            $userPresentation->status = 0;
+            $userPresentation->date_end = new \DateTimeImmutable();
+            $entityManagerInterface->persist($userPresentation);
+            $entityManagerInterface->flush();
             $logs = new UserLogs();
-            $logs->user_id = $data['user_id'];
+            $logs->user_id =  $request->get('user_id');
             $logs->element = 18;
             $logs->action = 'delete';
             $logs->element_id = $userPresentation->id;
@@ -720,23 +1003,25 @@ class CreateUserController extends AbstractController
             $logs->log_date = new \DateTimeImmutable();
             $entityManagerInterface->persist($logs);
             $entityManagerInterface->flush();
-            
-            $entityManagerInterface->remove($userPresentation); // Assuming $entityManager is your Entity Manager
-            $entityManagerInterface->flush();
-            $deleted=true;
+
+            /*  $entityManagerInterface->remove($userPresentation); // Assuming $entityManager is your Entity Manager
+            $entityManagerInterface->flush(); */
+            $deleted = true;
+        } else {
+
             // You can return a success response or perform any other required action here.
         }
-        
 
 
 
-      
 
- 
+
+
+
 
         return new JsonResponse([
             'success' => true,
-            'data' =>  $deleted ,
+            'data' =>  $deleted,
         ]);
     }
 

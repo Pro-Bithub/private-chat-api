@@ -15,7 +15,7 @@ class GetUserAccountController extends AbstractController
 #[Route('/GetUserAccount/{id}', name: 'app_get_user_account')]
 public function GetUserAccount(EntityManagerInterface $entityManagerInterface,$id): Response
 { 
-    $sql = "SELECT a.id, a.firstname, a.lastname, b.* FROM `user` a LEFT JOIN user_presentations b ON a.id = b.user_id WHERE a.account_id = :account_id";
+    $sql = "SELECT a.id, a.firstname, a.lastname, b.* FROM `user` a LEFT JOIN user_presentations b ON a.id = b.user_id  and  b.status =1 WHERE a.account_id = :account_id ";
     $statement = $entityManagerInterface->getConnection()->prepare($sql);
     $statement->bindValue('account_id', $id);
     $contactForms = $statement->executeQuery()->fetchAllAssociative();           

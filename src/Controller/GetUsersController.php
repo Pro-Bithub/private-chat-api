@@ -64,12 +64,15 @@ class GetUsersController extends AbstractController
             $filterValues['searchTerm'] = '%' . trim($request->get('search')['value']) . '%';
         }
 
+ 
         if ($request->get('columns')) {
             foreach ($request->get('columns') as $column) {
                 if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
 
                     if ($column['name'] == 'role' || $column['name'] == 'nickname') {
                         $filters[] = "and (p." . $column['name'] . " LIKE :" . $column['name'] . ")";
+                    }else if( $column['name']  == 'firstname' ){
+                        $filters[] = "and ( LOWER(e.firstname)  LIKE LOWER(:" . $column['name'] . ") OR LOWER(e.lastname)  LIKE LOWER(:" . $column['name'] . ") OR  LOWER(CONCAT(e.firstname, ' ', e.lastname))  LIKE LOWER(:" . $column['name'] . ") )";
                     } else {
                         $filters[] = "and (e." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     }
@@ -78,22 +81,25 @@ class GetUsersController extends AbstractController
             }
         }
 
+    
+
+
         $sql1 = "SELECT e.* , p.nickname as nickname , p.role as role
             FROM user e
-            left join user_presentations p on p.user_id = e.id
+            left join user_presentations p on p.user_id = e.id and  p.status =1
             where e.id != :id and e.account_id = :account_id 
-            " . implode(' ', $filters) . "
+            " . implode(' ', $filters) . " 
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
                 LIMIT :limit OFFSET :offset;";
 
         //dd($sql1,$filters);
         $sql2 = "SELECT e.* FROM user e
-                left join user_presentations p on p.user_id = e.id
+                left join user_presentations p on p.user_id = e.id and  p.status =1
                 where e.id != :id and e.account_id = :account_id 
                 " . implode(' ', $filters) . "
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . ";";
 
-        $sql3 = "SELECT e.* , p.nickname as nickname , p.role as role FROM user e    left join user_presentations p on p.user_id = e.id where e.id != :id and e.account_id = :account_id";
+        $sql3 = "SELECT e.* , p.nickname as nickname , p.role as role FROM user e    left join user_presentations p on p.user_id = e.id and  p.status =1 where e.id != :id and e.account_id = :account_id ";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('account_id', $user->accountId);
 
@@ -149,7 +155,7 @@ class GetUsersController extends AbstractController
         $sql = "SELECT c.lastname , c.firstname, c.id , pr.picture
         FROM `profiles` AS p
         LEFT JOIN `user` AS c ON c.id = p.u_id 
-        left join user_presentations as pr on pr.user_id = c.id
+        left join user_presentations as pr on pr.user_id = c.id and  pr.status =1
         WHERE p.id = :id and c.status = 1";
 
         $statement = $entityManagerInterface->getConnection()->prepare($sql);

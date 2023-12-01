@@ -70,7 +70,7 @@ class AgentLogsController extends AbstractController
 
         $sql1 = "SELECT up.* FROM user_presentations up
       
-        where up.user_id = :id 
+        where up.user_id = :id and up.status =1
                  " . (!empty($filters) ? '  and'  . implode(' AND', $filters)  : ''). "
                
                 " . (!empty($sort) ? 'order BY '   . implode(' ,', $sort): '') . "
@@ -79,7 +79,7 @@ class AgentLogsController extends AbstractController
 
         // dd($sql1,$filters,$filterValues);
         $sql2 = "SELECT up.* FROM user_presentations up
-        where up.user_id = :id 
+        where up.user_id = :id and up.status =1
                  " . (!empty($filters) ? '  and'  . implode(' AND', $filters)  : ''). "
                
                 " . (!empty($sort) ? 'order BY '   . implode(' ,', $sort): '') . "

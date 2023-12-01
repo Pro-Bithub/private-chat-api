@@ -307,7 +307,7 @@ button:focus {
   color: #9a9a9a;
 }
 .forgetstyle{
-  padding-left: 20rem;
+  float: right;
 }
 .signup_form .form-group .form-control::-moz-placeholder {
   color: #9a9a9a;

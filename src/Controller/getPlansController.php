@@ -7,6 +7,7 @@ use App\Entity\UserLogs;
 use App\Repository\PlansRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -17,9 +18,15 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 #[AsController]
 class getPlansController extends AbstractController
 {
-    public function __construct(private PlansRepository $plansRepository)
+
+    protected $parameterBag;
+
+    public function __construct(ParameterBagInterface $parameterBag,private PlansRepository $plansRepository)
     {
+        $this->parameterBag = $parameterBag;
     }
+
+
 
     public function __invoke(): array
     {
@@ -416,7 +423,7 @@ class getPlansController extends AbstractController
 
         $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id, p.firstname, p.lastname, pr.*
         FROM `user` AS p
-        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id 
+        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id   and  pr.status =1
         WHERE p.id = :id");
         $stmt->bindValue('id', $id);
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
@@ -430,20 +437,41 @@ class getPlansController extends AbstractController
     #[Route('/presentationUsers')]
     public function getPresentationByUsers(Request $request, EntityManagerInterface $entityManagerInterface): Response
     {
+        function addTrailingSlashIfMissing($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+      
+
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
+
+
         $data = json_decode($request->getContent(), true);
         $id = intval($data['account_id']);
 
-        $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id AS UserID, p.firstname, p.lastname, pr.*
+        $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id AS UserID, p.firstname, p.lastname,
+        
+        CASE
+          WHEN  pr.picture is not null
+            THEN  concat( '$uploads_directory' , pr.picture )
+              ELSE null
+         END as avatar  ,pr.*
         FROM `user` AS p
-        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id 
+        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id   and  pr.status =1
         WHERE p.account_id = :id");
         $stmt->bindValue('id', $id);
+     
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
 
         return new JsonResponse([
             'success' => 'true',
             'total' => sizeof($result1),
-            'data' => $result1
+            'data' => $result1,
+        
         ]);
     }
 

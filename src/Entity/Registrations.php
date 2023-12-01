@@ -121,6 +121,12 @@ class Registrations
     #[Groups(['read102:collection'])]
     public ?string $status = null;
 
+
+    #[ORM\Column(type: "smallint")]
+    public  ?int  $lang;
+
+
+
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Groups(['read102:collection'])]
     public ?\DateTimeInterface $date_start = null;

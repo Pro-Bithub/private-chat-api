@@ -8,6 +8,7 @@ parameters:
     uploads_directory: '%env(uploads_directory)%'
     APP_PUBLIC_DIR: '%env(APP_PUBLIC_DIR)%'
     APP_URL: '%env(APP_URL)%'
+    ws_library: '%env(ws_library)%'
 services:
     # default configuration for services in *this* file
     _defaults:

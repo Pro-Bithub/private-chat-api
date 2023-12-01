@@ -138,7 +138,7 @@ body {
 }
 
 .forgetstyle{
-    padding-left: 19.7rem;
+    float: right;
 }
 .popover-header {
     box-shadow: none;

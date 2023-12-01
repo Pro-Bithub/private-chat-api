@@ -7,6 +7,7 @@ use App\Entity\Sales;
 use App\Entity\UserLogs;
 use App\Repository\ContactsRepository;
 use App\Repository\PlansRepository;
+use App\Repository\SalesRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,8 +46,6 @@ class SalesController extends AbstractController
 
 
 
-
-
             $contact = $contactsRepository->find($results[0]['u_id']);
             $plans = $plansRepository->find($data['plan']);
             // $date = DateTime::createFromFormat('Y-m-d', $data['dateStart']);
@@ -55,7 +54,7 @@ class SalesController extends AbstractController
             $sales->contact = $contact;
             $sales->user = $user;
             $sales->date_creation = new \DateTimeImmutable();
-            $sales->status = "1";
+            $sales->status = $data['sale_status'];
             $sales->plan = $plans;
             $sales->payment_method = $data['payment_method'];
             $sales->provider_id = $data['provider_id'];
@@ -73,7 +72,7 @@ class SalesController extends AbstractController
             $sales->contact = $contact;
             $sales->user = null;
             $sales->date_creation = new \DateTimeImmutable();
-            $sales->status = "1";
+            $sales->status = $data['sale_status'];
             $sales->plan = $plans;
             $sales->payment_method = $data['payment_method'];
             $sales->provider_id = $data['provider_id'];
@@ -94,43 +93,12 @@ class SalesController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-        $balance = new ContactBalances();
-        $balance->contact = $contact;
-        $balance->balance_type = $plans->billing_type;
-        $balance->balance = $plans->billing_volume;
-        $balance->request = "1";
-        $balance->request_id = $sales->id;
-
-        $entityManagerInterface->persist($balance);
-        $entityManagerInterface->flush();
-
-        $logs = new UserLogs();
-        $logs->user_id = $data['contact'];
-        $logs->element = 24;
-        $logs->action = 'create';
-        $logs->element_id = $balance->id;
-        $logs->source = 3;
-        $logs->log_date = new \DateTimeImmutable();
-        $entityManagerInterface->persist($logs);
-        $entityManagerInterface->flush();
 
 
 
 
-        if (count($results) > 0) {
 
-            $sql3 = "SELECT SUM(b.balance) as balance, b.balance_type  FROM `contact_balances` as b WHERE b.contact_id = :id GROUP BY b.balance_type having count(b.balance) > 0";
-            $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
-            $statement3->bindValue('id', $results[0]['u_id']);
-            $results6 = $statement3->executeQuery()->fetchAllAssociative();
-            // $contact_balances = $this->ContactBalancesRepository->loadbalancesByContact($id);
-            //dd($user);
-            // return new JsonResponse([
-            //     'success' => true,
-            //     'data' => $results6
-            // ]);
 
-        }
 
 
         return new JsonResponse([
@@ -139,18 +107,119 @@ class SalesController extends AbstractController
             'payment_method' => $sales->payment_method,
             'agent_id' => $sales->user == null ? null : $sales->user->id,
             'contact_name' => $sales->contact->name,
+            'lastname' => $sales->contact->lastname,
+            'firstname' => $sales->contact->firstname,
             'sale_status' => $sales->status,
             'plan_name' => $plans->name,
             'plan_tariff' => $plans->tariff,
             'plan_currency' => $plans->currency,
-            'id' => $balance->id,
-            'balance_type' => $balance->balance_type,
-            'balance' => $balance->balance,
-            'Total_balance' => $results6
+
+
         ]);
     }
 
-    
+
+    #[Route('/update_sales', name: 'app_update_sales')]
+    public function updateSales(Request $request, EntityManagerInterface $entityManagerInterface, SalesRepository $salesRepository): Response
+    {
+
+        $data = json_decode($request->getContent(), true);
+
+        $sales = $salesRepository->find($data['sale_id']);
+        $sales->status = $data['status'];
+        $sales->date_end = new \DateTimeImmutable();
+
+
+        $entityManagerInterface->persist($sales);
+        $entityManagerInterface->flush();
+
+
+
+
+
+        $logs = new UserLogs();
+        $logs->user_id =  $sales->contact->id;
+        $logs->element = 14;
+        $logs->action = 'update';
+        $logs->element_id = $sales->id;
+        $logs->source = 3;
+        $logs->log_date = new \DateTimeImmutable();
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+        if ($data['status'] === 2) {
+            return new JsonResponse([
+                'success' => true,
+                'sale_id' => $sales->id,
+                'payment_method' => $sales->payment_method,
+                'agent_id' => $sales->user == null ? null : $sales->user->id,
+                'contact_name' => $sales->contact->name,
+                'lastname' => $sales->contact->lastname,
+                'firstname' => $sales->contact->firstname,
+                'sale_status' => $sales->status,
+                'plan_name' => $sales->plan->name,
+                'plan_tariff' => $sales->plan->tariff,
+                'plan_currency' => $sales->plan->currency,
+            ]);
+        } else if ($data['status'] === 1) {
+
+            $balance = new ContactBalances();
+            $balance->contact = $sales->contact;
+            $balance->balance_type = $sales->plan->billing_type;
+            $balance->balance = $sales->plan->billing_volume;
+            $balance->request = "1";
+            $balance->request_id = $sales->id;
+
+            $entityManagerInterface->persist($balance);
+            $entityManagerInterface->flush();
+
+            $logs = new UserLogs();
+            $logs->user_id = $sales->contact->id;
+            $logs->element = 24;
+            $logs->action = 'create';
+            $logs->element_id = $balance->id;
+            $logs->source = 3;
+            $logs->log_date = new \DateTimeImmutable();
+            $entityManagerInterface->persist($logs);
+            $entityManagerInterface->flush();
+
+            $sql3 = "SELECT SUM(b.balance) as balance, b.balance_type  FROM `contact_balances` as b WHERE b.contact_id = :id GROUP BY b.balance_type having count(b.balance) > 0";
+            $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+            $statement3->bindValue('id', $sales->contact->id);
+            $results6 = $statement3->executeQuery()->fetchAllAssociative();
+
+            return new JsonResponse([
+                'success' => true,
+                'sale_id' => $sales->id,
+                'payment_method' => $sales->payment_method,
+                'agent_id' => $sales->user == null ? null : $sales->user->id,
+                'contact_name' => $sales->contact->name,
+                'lastname' => $sales->contact->lastname,
+                'firstname' => $sales->contact->firstname,
+                'sale_status' => $sales->status,
+                'plan_name' => $sales->plan->name,
+                'plan_tariff' => $sales->plan->tariff,
+                'plan_currency' => $sales->plan->currency,
+                'id' => $balance->id,
+                'balance_type' => $balance->balance_type,
+                'balance' => $balance->balance,
+                'Total_balance' => $results6,
+            ]);
+        }else{
+            return new JsonResponse([
+                'success' => false,
+             
+            ]);
+        }
+
+
+        /*      $sql2 = "SELECT * FROM `profiles` as p WHERE p.id = :id";
+        $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
+        $statement2->bindValue('id', $sales->contact->id);
+        $results = $statement2->executeQuery()->fetchAllAssociative(); */
+    }
+
+
     // #[Route('/get_sales/{id}', name: 'app_get_sales_controller')]
     // public function __invoke(Request $request, EntityManagerInterface $entityManagerInterface,$id): JsonResponse
     // {

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Error | Private-chat</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="[base-href]assets/css/bootstrap.min.css">
+
+    <!-- External Css -->
+    <link rel="stylesheet" href="[base-href]assets/css/line-awesome.min.css">
+    <link rel="stylesheet" href="[base-href]assets/css/owl.carousel.min.css" />
+
+    <!-- Custom Css --> 
+    <link rel="stylesheet" type="text/css" href="[base-href]assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="[base-href]assets/css/job-2.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="[base-href]assets/images/favicon.png">
+    <style type="text/css">
+      footer {position: absolute;bottom: 0;width: 100%;}
+    </style>
+  </head>
+  <body>
+    <div class="ugf-bg">
+      <div class="final-content">
+        <div class="icon">
+          <img src="[base-href]assets/images/error.png" alt="">
+        </div>
+       <h2  data-i18n="demo.t-errormessages"></h2>
+            <p data-i18n="demo.errormessages"></p>
+      </div>
+    </div>
+    <footer class="text-center mb-4">
+      © 2023 <a href="https://private-chat.pro" >Private-chat.pro</a> - All Rights Reserved.</a>
+    </footer>
+    <!-- Optional JavaScript -->
+    <script src="[base-href]assets/js/jquery.min.js"></script>
+    <script src="[base-href]assets/js/popper.min.js"></script>
+    <script src="[base-href]assets/js/bootstrap.min.js"></script>
+    <script src="[base-href]assets/js/i18n.js"></script>
+    <!-- <script src="js/custom.js"></script> -->
+    <script>
+        function getUrlParams() {
+            var params = new URLSearchParams(window.location.search);
+            return params;
+        }
+        var  lang = "[lang]";
+    
+        var params = getUrlParams();
+        if(params.get('lang') ){
+          lang =params.get('lang') 
+        }
+      
+        var i18n = new I18n();
+        i18n.localize();
+        i18n.lang(lang);
+
+    </script>
+
+  </body>
+</html>

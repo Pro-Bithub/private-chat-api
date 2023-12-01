@@ -39,7 +39,7 @@ class UpdateUserController extends AbstractController
         //$userPresentations = new UserPresentations();
         $data = json_decode($request->getContent(), true);
         //dd($request->get('idUser'));
-        $userPresentations = $this->UserPresentationsRepository->findOneById($request->get('idUser'));
+        $userPresentations = $this->UserPresentationsRepository->findOneById($request->get('id_p'));
         //dd($userPresentations);
         
         $uploadedFile = $request->files->get('file');
@@ -150,9 +150,4 @@ class UpdateUserController extends AbstractController
     }
 
 
-    public function getuploadPath()
-    {
-        $uploadPath = 'C:\Users\IHEB\admin-private-chat-app\src\assets\uploads';
-        return $uploadPath;
-    }
 }

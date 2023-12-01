@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Contactez-nous | Private-chat</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="[base-href]assets/css/bootstrap.min.css">
+
+    <!-- External Css -->
+    <link rel="stylesheet" href="[base-href]assets/css/line-awesome.min.css">
+    <link rel="stylesheet" href="[base-href]assets/css/owl.carousel.min.css" />
+
+    <!-- Custom Css --> 
+    <link rel="stylesheet" type="text/css" href="[base-href]assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="[base-href]assets/css/job-2.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="[base-href]assets/images/favicon.png">
+    <style type="text/css">
+      .job-application-form .error {color: #a53737;font-weight: 500;font-size: 12px;}
+      .ufg-job-application-wrapper .job-application-form .form-control.error {border: 1px solid #a53737;}
+      .spinner-grow {width: 14rem; height: 14rem;}
+      #overlay {position: fixed;width: 100%;height: 100%;left: 0;top: 0;z-index: 99999;background: rgb(37 97 162 / 27%);align-items: center;}
+      .hidden {display: none !important;}
+      .error-msg, .valid-msg {display: none;}
+      span.error-msg {color: #ca5050;font-weight: 500;}
+    </style>
+  </head>
+  <body>
+
+    <div class="ugf-wraper">
+      <div class="ugf-nav-wrap">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-7 col-sm-8">
+            <button id="dropdown-btn"  class="dropdown-toggle"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+            ><img src="[base-href]assets/images/fr.svg" width="19px"></button>
+            <div class="dropdown-menu" aria-labelledby="dropdown-btn">
+      <a class="dropdown-item" href="#" data-lang="en"> <img src="[base-href]assets/images/gb.svg" width="19px">  English</a>
+      <a class="dropdown-item" href="#" data-lang="fr"><img src="[base-href]assets/images/fr.svg" width="19px"> French</a>
+    </div>
+              <div class="ugf-nav">
+                <div class="logo-wrap">
+                  <h2 class="app-title">Private-chat</h2>
+                  <img src="[base-href]assets/images/favicon.png" width="50px" class="logo-half" alt="">
+                
+
+                </div>
+                <div class="job-wrap">
+           
+
+
+                  <h3 data-i18n="demo.title"> </h3>
+                  <p class="salary"  data-i18n="demo.Sub-titles" ></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+     
+      </div>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xl-6 col-lg-7 col-sm-8">
+            <div class="ufg-job-application-wrapper">
+              <form action="" method="POST" class="job-application-form" name="registration" id="request">
+                <div class="input-type-block">
+                  <h4  data-i18n="demo.pd" ></h4>
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label class="input-label" for="fName"> <div  data-i18n="demo.form.t-lastname"></div> <span>*</span></label>
+                        <input type="text" class="form-control" id="lastname" name="lastname" data-i18n-placeholder="demo.form.lastname" >
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label class="input-label" for="lName">  <div  data-i18n="demo.form.t-firstname"></div>   <span>*</span></label>
+                        <input type="text" class="form-control" id="firstname" name="firstname" data-i18n-placeholder="demo.form.firstname" >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="input-label" for="inputMail"> <div  data-i18n="demo.form.t-mail"></div>   <span>*</span></label>
+                    <input type="email" class="form-control" id="mail" name="mail"   data-i18n-placeholder="demo.form.mail">
+                  </div>
+                </div>
+                <div class="input-type-block">
+                  <h4 data-i18n="demo.rq"></h4>
+                  <div class="row">
+                  <div class="col-sm-12">
+                      <div class="form-group">
+                        <label class="input-label" for="institute"> <div  data-i18n="demo.form.t-subject"></div> <span>*</span></label>
+                     
+                        <select id="object" name="object" class="form-control" >
+											<option  disabled  selected data-i18n="demo.form.s-default-subject"></option>
+											<option value="1"  data-i18n="demo.form.s-1-subject"> </option>
+											<option value="2" data-i18n="demo.form.s-2-subject"> </option>
+											<option value="3" data-i18n="demo.form.s-3-subject"> </option>
+								
+										</select>
+                      </div>
+                    </div>
+
+                  </div>
+                  <div class="form-group"  id="details-info" >
+                    <label class="input-label" for="inputDetails" ><div  data-i18n="demo.form.t-details"></div> <span>*</span></label>
+                    <textarea class="form-control" id="details" name="details"  data-i18n-placeholder="demo.form.details" ></textarea>
+                  </div>
+                </div>
+          
+                <p class="app-description">
+                <input type="checkbox" id="checkbox" name="recontact" value="1" checked>
+               <span data-i18n="demo.form.terms_agreement" ></span>  </p>
+                <button class="btn" type="submit" data-i18n="demo.form.submit"></button>
+              </form>
+            </div>
+            <footer class="text-center mb-4">
+              © 2023 <a href="https://private-chat.pro" target="_blank">Private-chat.pro</a> - All Rights Reserved.
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div id="overlay" class="d-flex justify-content-center hidden">
+      <div class="spinner-grow" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="[base-href]assets/js/jquery-3.6.0.min.js"></script>
+    <script src="[base-href]assets/js/popper.min.js"></script>
+    <script src="[base-href]assets/js/bootstrap.min.js"></script>
+    <script src="[base-href]assets/js/custom.js"></script>
+    <script src="[base-href]assets/js/sweetalert2.js"></script>
+    <script type="text/javascript" src="[base-href]assets/js/jquery.validate.min.js"></script>
+    <script src="[base-href]assets/js/i18n.js"></script>
+    
+    <script type="text/javascript">
+
+
+
+        
+
+
+      $(function() {
+    var jsondata=null
+
+      function loding(){
+        fetch('../data.json')
+        .then(response => response.json())
+        .then(data => {
+          if(data){
+            if (data.hasOwnProperty('data')&& data.hasOwnProperty('api_url')) {
+            if (data.data.hasOwnProperty('accountId') ) 
+          {
+            jsondata={account_id:data.data.accountId,api_url:data.api_url}
+          }else{
+                    console.log(
+              '%caccountId Not existing from data.json ',
+              'color: red; font-weight: bold; font-size: 20px;'
+            );
+          }
+          }else{
+            console.log(
+              '%capi_url Not existing from data.json ',
+              'color: red; font-weight: bold; font-size: 20px;'
+            );
+          }
+
+          }
+     
+        })
+        .catch(error => {
+                    console.log(
+                        '%c  data.json file not exist   ',
+                        'color: red; font-weight: bold; font-size: 20px;'
+                      );
+
+                  });
+        }
+      
+        loding()
+
+      	var i18n = new I18n();
+        i18n.localize();
+        var  lang  = "[lang]"
+        i18n.lang(lang);
+        var flagSrc = lang === 'en' ? '[base-href]assets/images/gb.svg' : '[base-href]assets/images/fr.svg';
+         i18n.lang(lang);
+          $('#dropdown-btn img').attr('src', flagSrc);
+          
+
+        function updateValidationMessages(lang) {
+        $("form[name='registration']").validate().settings.messages = getValidationMessages(lang);
+    }
+
+
+        function getValidationMessages(lang) {
+       
+        if (lang === 'fr') {
+            return {
+                firstname: demoJson.demo.form.firstnameP.fr,
+                lastname: demoJson.demo.form.lastnameP.fr,
+                mail: demoJson.demo.form.mailP.fr,
+                object: demoJson.demo.form.objectP.fr,
+                details: demoJson.demo.form.detailsP.fr,
+                recontact:  demoJson.demo.form.recontactP.fr
+            };
+        } else {
+            return {
+              firstname: demoJson.demo.form.firstnameP.en,
+              lastname: demoJson.demo.form.lastnameP.en,
+              mail: demoJson.demo.form.mailP.en,
+                object: demoJson.demo.form.objectP.en,
+                details: demoJson.demo.form.detailsP.en,
+                recontact: demoJson.demo.form.recontactP.en
+            };
+        }
+    }
+    
+   
+        $('.dropdown-item').on('click', function () {
+           lang = $(this).data('lang');
+        
+         var flagSrc = lang === 'en' ? '[base-href]assets/images/gb.svg' : '[base-href]assets/images/fr.svg';
+         i18n.lang(lang);
+          $('#dropdown-btn img').attr('src', flagSrc);
+
+          updateValidationMessages(lang);
+        });
+        
+
+
+        $('#object').on('change', function() {
+          var selectedValue = $(this).val();
+         if (selectedValue !== '3') {
+                $('#details').rules('remove', 'required');
+            $('#details-info').addClass('hidden');
+            } else {
+           $('#details-info').removeClass('hidden');
+           let message= lang === 'en' ? demoJson.demo.form.detailsP.en:demoJson.demo.form.detailsP.fr
+          $('#details').rules('add', {
+                    required: true,
+                    messages: {
+                        required: message
+                    }
+                });
+            }
+        });
+
+         function send(){
+          $('#overlay').toggleClass('hidden');
+              var fd = new FormData();
+              fd.append('firstname', $('.job-application-form #firstname').val());
+              fd.append('lastname', $('.job-application-form #lastname').val());
+              fd.append('mail', $('.job-application-form #mail').val());
+              fd.append('object', $('.job-application-form #object').val());
+     
+              fd.append('details', $('.job-application-form #details').val());
+         
+      
+              fd.append('api_url',jsondata.api_url);
+              fd.append('account_id',jsondata.account_id);
+   $.ajax({
+                url: 'request.php',
+                method: 'post',
+                dataType: 'json',
+                processData: false,
+                contentType: false,
+                cache: false,
+                enctype: 'multipart/form-data',
+                data: fd,
+                success: function(response) {
+                  $('#overlay').toggleClass('hidden');
+                  console.log(response);
+                  if (response.code == true) {
+                   window.location.href = "success.html?lang="+lang;
+                  } else {
+                    window.location.href = "error.html?lang="+lang;
+                  }
+
+                  $("form[name='registration']")[0].reset();
+                }            
+              }); 
+
+          
+          }
+    
+        $("form[name='registration']").validate({
+          rules: {
+            firstname: "required",
+            lastname: "required",
+            mail: {
+              required: true,
+              email: true
+            },
+            object: "required",
+            recontact:"required",
+            details: "required",
+          },
+          messages: getValidationMessages(lang),
+          submitHandler: function(form) {
+            if(jsondata){
+              send()
+          return false;
+            }else{
+                        fetch('../data.json')
+                  .then(response => response.json())
+                  .then(data => {
+                    if(data){
+                      if (data.hasOwnProperty('data')&& data.hasOwnProperty('api_url')) {
+                      if (data.data.hasOwnProperty('accountId') ) 
+                    {
+                      jsondata={account_id:data.data.accountId,api_url:data.api_url}
+                      send()
+                      return false;
+                    }else{
+                              console.log(
+                        '%caccountId Not existing from data.json ',
+                        'color: red; font-weight: bold; font-size: 20px;'
+                      );
+                    }
+                    }else{
+                      console.log(
+                        '%capi_url Not existing from data.json ',
+                        'color: red; font-weight: bold; font-size: 20px;'
+                      );
+                    }
+
+                    }
+              
+                  })
+                  .catch(error => {
+                    console.log(
+                        '%c  data.json file  not exist  ',
+                        'color: red; font-weight: bold; font-size: 20px;'
+                      );
+
+                  });
+            }
+       
+
+           /*    $('#overlay').toggleClass('hidden');
+              Swal.fire({
+                title: 'Erreur!',
+                text: "Il ya des numéros de téléphone invalides!",
+                icon: 'warning',
+                confirmButtonText: 'Ok'
+              }); */
+           
+            
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -48,6 +48,16 @@ class ContactsRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function loadContactBsourceAndsourceType($source_id,$source_type)
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.source_id = :source_id and c.source_type = :source_type  ')
+            ->setParameter('source_id', $source_id)
+            ->setParameter('source_type', $source_type)
+            ->getQuery()
+            ->getResult();
+    }
+
 
          /**
      * @return Contacts[] Returns an array of Plans objects

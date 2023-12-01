@@ -153,7 +153,7 @@ WHERE ((u.user_id = cont.id and u.source = 3 and u.element in (20,21,3,7,22)) or
                     'recordsTotal' => $results3,
                     'recordsFiltered' => $results1,
                     'data' => $result,
-                
+                    'RAW_QUERY3' => $RAW_QUERY3,
                     ]);
     }
 }

@@ -100,11 +100,14 @@ class CreatecontactaccountController extends AbstractController
     
     }
 
+
+ 
+
     #[Route('/auth_profile', name: 'auth_profile')]
     public function CustomLogin(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface):Response
     {
         // dd($request->all());
-        
+      
             $login = $request->get('login');
             $password = $request->get('password');
             $account = $request->get('account_id');
@@ -154,7 +157,6 @@ class CreatecontactaccountController extends AbstractController
         //dd($os->getName());
         $browserName = $browser->getName();
         $profiles->browser_data = $browserName . ';' . $os->getName();
-
             $entityManagerInterface->persist($profiles);
             $entityManagerInterface->flush();
 

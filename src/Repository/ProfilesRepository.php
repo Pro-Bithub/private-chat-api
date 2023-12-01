@@ -100,6 +100,17 @@ class ProfilesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+    public function findContactProfileByIdProfile($id,$account)
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.id = :id')
+            ->Andwhere('u.u_type = 2')
+            ->Andwhere('u.accountId = :account')
+            ->setParameter('id', $id)
+            ->setParameter('account', $account)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 
 //    /**
 //     * @return Profiles[] Returns an array of Profiles objects

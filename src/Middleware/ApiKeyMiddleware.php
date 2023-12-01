@@ -11,6 +11,7 @@ use App\Controller\MessageController;
 use App\Controller\SalesController;
 use App\Controller\UpdateBalanceController;
 use App\Controller\GetUserAccountController;
+use App\Controller\VerificationController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +34,7 @@ class PlanUserMiddleware
 
         $object = $controller[0];
 
-        if ($object instanceof getPlansController || $object instanceof AddlogsController || $object instanceof MessageController || $object instanceof AddcontactformsController || $object instanceof SalesController || $object instanceof GetTypeFormController || $object instanceof ContactGuestController || $object instanceof UpdateBalanceController || $object instanceof GetUserAccountController) {
+        if ($object instanceof VerificationController || $object instanceof getPlansController || $object instanceof AddlogsController || $object instanceof MessageController || $object instanceof AddcontactformsController || $object instanceof SalesController || $object instanceof GetTypeFormController || $object instanceof ContactGuestController || $object instanceof UpdateBalanceController || $object instanceof GetUserAccountController) {
             $request = $event->getRequest();
             $key = $request->headers->get('key');
 
