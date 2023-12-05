@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,6 +12,17 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class GetTypeFormController extends AbstractController
 {
+
+    
+
+    protected $parameterBag;
+    public function __construct(ParameterBagInterface $parameterBag)
+    {
+        $this->parameterBag = $parameterBag;
+
+    }
+
+
     #[Route('/GetFormType', name: 'app_get_type_form')]
     public function index(EntityManagerInterface $entityManagerInterface): Response
     {
@@ -152,6 +164,16 @@ class GetTypeFormController extends AbstractController
         // ]);
 
 
+        function addTrailingSlashIfMissing($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
+
         $data = json_decode($request->getContent(), true);
         $query2 = [];
 
@@ -159,7 +181,7 @@ class GetTypeFormController extends AbstractController
             $query2[] = ' (u.status = :status)';
         }
 
-        $rawQuery = "SELECT up.id as presentation_id, up.status as presentation_stauts,up.nickname as nickname ,   p.id as profile_id , u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
+        $rawQuery = "SELECT  up.picture as picture, up.id as presentation_id, up.status as presentation_stauts,up.nickname as nickname ,   p.id as profile_id , u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
         FROM `user` AS u
         left join `user_presentations` as up on up.user_id = u.id and  up.status =1
         left join `profiles` as p on p.u_id = u.id  and u_type in (1,3)
@@ -192,11 +214,20 @@ class GetTypeFormController extends AbstractController
                 ];
             }
             if($row['presentation_stauts']){
-                if($row['presentation_stauts']===1)
+                if($row['presentation_stauts']===1){
+                    $avatar="";
+                if($row['picture']!=null)
+                if(!empty($row['picture']))
+                $avatar=$uploads_directory.$row['picture'];
+                
                 $data[$row['id']]['presentations'][] = [
-                    'nickname' => $row['nickname'],
-                    'id' => $row['presentation_id'],
-                ];
+                        'nickname' => $row['nickname'],
+                        'avatar' => $avatar,
+                        'id' => $row['presentation_id'],
+               ];
+                
+                }
+               
             }
           
         }

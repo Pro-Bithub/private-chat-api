@@ -209,22 +209,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, JWTUser
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserRights::class)]
     #[Groups(['read:collection'])]
-    private Collection $userRights;
+    public Collection $userRights;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserPresentations::class)]
     #[Groups(['collection5','read:collection', 'collection6','read108:collection'])]
-    private Collection $userPresentations;
+    public Collection $userPresentations;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserPlanning::class)]
     private Collection $userPlannings;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserPermissions::class)]
     #[Groups(['read:collection'])]
-    private Collection $userPermissions;
+    public Collection $userPermissions;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserNotifications::class)]
     #[Groups(['collection5','read:collection','collection6'])]
-    private Collection $userNotifications;
+    public Collection $userNotifications;
 
     // #[ORM\OneToMany(mappedBy: 'user_id', targetEntity: UserLogs::class)]
     // #[Groups(['read:collection'])]

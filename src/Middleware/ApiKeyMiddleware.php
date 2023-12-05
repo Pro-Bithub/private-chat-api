@@ -5,6 +5,7 @@ namespace App\Middleware;
 use App\Controller\AddcontactformsController;
 use App\Controller\AddlogsController;
 use App\Controller\ContactGuestController;
+use App\Controller\DetailsController;
 use App\Controller\getPlansController;
 use App\Controller\GetTypeFormController;
 use App\Controller\MessageController;
@@ -34,7 +35,7 @@ class PlanUserMiddleware
 
         $object = $controller[0];
 
-        if ($object instanceof VerificationController || $object instanceof getPlansController || $object instanceof AddlogsController || $object instanceof MessageController || $object instanceof AddcontactformsController || $object instanceof SalesController || $object instanceof GetTypeFormController || $object instanceof ContactGuestController || $object instanceof UpdateBalanceController || $object instanceof GetUserAccountController) {
+        if ($object instanceof DetailsController || $object instanceof VerificationController || $object instanceof getPlansController || $object instanceof AddlogsController || $object instanceof MessageController || $object instanceof AddcontactformsController || $object instanceof SalesController || $object instanceof GetTypeFormController || $object instanceof ContactGuestController || $object instanceof UpdateBalanceController || $object instanceof GetUserAccountController) {
             $request = $event->getRequest();
             $key = $request->headers->get('key');
 

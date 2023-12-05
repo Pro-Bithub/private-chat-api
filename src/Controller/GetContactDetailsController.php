@@ -19,6 +19,50 @@ class GetContactDetailsController extends AbstractController
         $this->parameterBag = $parameterBag;
     }
 
+
+    
+
+    #[Route('/getidcontactByprofileID/{id}', name: 'app_getidcontactByprofileID')]
+    public function getidcontactByprofileID(EntityManagerInterface $entityManagerInterface, $id): Response
+    {
+        $sql = "SELECT c.id
+    FROM `profiles` AS p
+    LEFT JOIN `contacts` AS c ON p.u_id = c.id  
+    WHERE p.u_type = 2 and p.id =:id";
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql);
+        $statement->bindValue('id', $id);
+        $profiles = $statement->executeQuery()->fetchAssociative();
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $profiles,
+        ]);
+    }
+
+
+
+    #[Route('/getDetailsNotesBYidContact/{id}', name: 'app_getDetailsNotesBYidContact')]
+    public function getDetailsNotesBYidContact(EntityManagerInterface $entityManagerInterface, $id): Response
+    {
+        $sql = "SELECT n.* , u.firstname , u.lastname , u.id as agent_id
+    FROM `notes` AS n
+    LEFT JOIN `user` AS u ON u.id = n.user_id
+    WHERE n.contact_id =:id  order by n.id desc limit 10";
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql);
+        $statement->bindValue('id', $id);
+        $profiles = $statement->executeQuery()->fetchAllAssociative();
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $profiles,
+        ]);
+    }
+
+
     #[Route('/getProfileByContactId/{id}', name: 'app_get_Profile_By_ContactId_details')]
     public function getProfileByContactId(EntityManagerInterface $entityManagerInterface, $id): Response
     {
@@ -187,7 +231,7 @@ class GetContactDetailsController extends AbstractController
     public function getContactInfoForMonitoring(EntityManagerInterface $entityManagerInterface, $profile_id): Response
     {
         
-        $sql = "SELECT c.id as contact_id , c.gender,SUBSTRING_INDEX(GROUP_CONCAT(uagents.firstname ORDER BY s.id desc), ',', 1) as agents_firstname , SUBSTRING_INDEX(GROUP_CONCAT(s.date_end ORDER BY s.id desc), ',', 1) as last_payment,  SUBSTRING_INDEX(GROUP_CONCAT(pl.currency ORDER BY s.id desc), ',', 1) as currency, SUBSTRING_INDEX(GROUP_CONCAT(pl.tariff ORDER BY s.id desc), ',', 1) as paid_amount, count(s.id) as purchases_numbe , SUBSTRING_INDEX(GROUP_CONCAT(pl.name ORDER BY s.id desc), ',', 1) as plan_name, count(s.id) as purchases_numbe , p.ip_address , p.browser_data , c.date_start , c.phone , c.email , c.country ,c.status , c.firstname , c.lastname
+        $sql = "SELECT c.source  , c.id as contact_id , c.gender,SUBSTRING_INDEX(GROUP_CONCAT(uagents.firstname ORDER BY s.id desc), ',', 1) as agents_firstname , SUBSTRING_INDEX(GROUP_CONCAT(s.date_end ORDER BY s.id desc), ',', 1) as last_payment,  SUBSTRING_INDEX(GROUP_CONCAT(pl.currency ORDER BY s.id desc), ',', 1) as currency, SUBSTRING_INDEX(GROUP_CONCAT(pl.tariff ORDER BY s.id desc), ',', 1) as paid_amount, count(s.id) as purchases_numbe , SUBSTRING_INDEX(GROUP_CONCAT(pl.name ORDER BY s.id desc), ',', 1) as plan_name, count(s.id) as purchases_numbe , p.ip_address , p.browser_data , c.date_start , c.phone , c.email , c.country ,c.status , c.firstname , c.lastname
     FROM `profiles` AS p
     LEFT JOIN `contacts` AS c ON c.id = p.u_id
     LEFT JOIN `sales` AS s ON s.contact_id = c.id and s.status = 1 
@@ -200,11 +244,32 @@ class GetContactDetailsController extends AbstractController
         $statement = $entityManagerInterface->getConnection()->prepare($sql);
         $statement->bindValue('id', $profile_id);
         $profiles = $statement->executeQuery()->fetchAssociative();
+        $preform =[];
+        if ($profiles) {
+            // Access the contact_id
+            $contactId = $profiles['contact_id'];
+            $sql1 = "SELECT cf.id , cf.field_value as value , cf.created_at  ,c.field_name as field , f.friendly_name ,c.field_type
+                FROM contact_custom_fields cf
+                left JOIN `contact_form_fields` AS cff ON cff.id = cf.form_field_id
+                left JOIN contact_forms f ON f.id = cff.form_id
+                left JOIN custom_fields c ON c.id = cff.field_id
+                where cf.contact_id = :contact_id and f.form_type=2
+                GROUP BY cf.id
+            ;";
+            $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+            $statement->bindValue('contact_id', $contactId);
+            $preform = $statement->executeQuery()->fetchAllAssociative();
+        }
+
+
+    
+
 
 
         return new JsonResponse([
             'success' => true,
             'data' => $profiles,
+            'preform'=>$preform
         ]);
     }
     
