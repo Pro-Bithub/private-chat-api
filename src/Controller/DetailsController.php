@@ -210,19 +210,23 @@ class DetailsController extends AbstractController
 
        $resultArray = [];
        foreach ($plansWithSales as $plan) {
+        if($plan->isStatus()=='1'){
 
+            
         $planUsers = $plan->getPlanUsers()->toArray();
     
         $usersArray = [];
         if (count($planUsers) > 0) {
             foreach ($planUsers as $user) {
-                $usersArray[] = [
-                    'id' => $user->getId(),
-                    'status' => $user->status,
-                    'date_start' => $user->getDateStart(),
-                    'date_end' => $user->getDateEnd(),
-                    'user' => $user->getUser(),
-                ];
+                if($user->status=='1'){
+                    $usersArray[] = [
+                        'id' => $user->getId(),
+                        'status' => $user->status,
+                        'date_start' => $user->getDateStart(),
+                        'date_end' => $user->getDateEnd(),
+                        'user' => $user->getUser(),
+                    ];
+              }
             }
         }
 
@@ -231,31 +235,34 @@ class DetailsController extends AbstractController
         if (count($planDiscounts) > 0) {
          
             foreach ($planDiscounts as $discount) {
-
-                $planDiscountUsers = $discount->getPlanDiscountUsers()->toArray();
-                $planDiscountUsersArray = [];
-                if (count($planDiscountUsers) > 0) {
-                    foreach ($planDiscountUsers as $user) {
-                        $planDiscountUsersArray[] = [
-                            'id' => $user->getId(),
-                            'status' => $user->status,
-                            'date_start' => $user->getDateStart(),
-                            'date_end' => $user->getDateEnd(),
-                            'user' => $user->getUser(),
+                if($discount->status=='1'){
+                        $planDiscountUsers = $discount->getPlanDiscountUsers()->toArray();
+                        $planDiscountUsersArray = [];
+                        if (count($planDiscountUsers) > 0) {
+                            foreach ($planDiscountUsers as $user) {
+                                if($user->status=='1'){
+                                    $planDiscountUsersArray[] = [
+                                        'id' => $user->getId(),
+                                        'status' => $user->status,
+                                        'date_start' => $user->getDateStart(),
+                                        'date_end' => $user->getDateEnd(),
+                                        'user' => $user->getUser(),
+                                    ];
+                                }
+                            }
+                        }  
+                    
+                        $discountsArray[] = [
+                            'id' => $discount->getId(),
+                            'name' => $discount->getName(),
+                            'discount_type' => $discount->isDiscountType(),
+                            'discount_value' => $discount->isDiscountValue(),
+                            'status' => $discount->status,
+                            'date_start' => $discount->getDateStart(),
+                            'date_end' => $discount->getDateEnd(),
+                            'planDiscountUsers' =>$planDiscountUsersArray,
                         ];
-                    }
-                }  
-              
-                $discountsArray[] = [
-                    'id' => $discount->getId(),
-                    'name' => $discount->getName(),
-                    'discount_type' => $discount->isDiscountType(),
-                    'discount_value' => $discount->isDiscountValue(),
-                    'status' => $discount->status,
-                    'date_start' => $discount->getDateStart(),
-                    'date_end' => $discount->getDateEnd(),
-                    'planDiscountUsers' =>$planDiscountUsersArray,
-                ];
+                } 
             }
         }
     
@@ -274,6 +281,9 @@ class DetailsController extends AbstractController
             'planDiscounts' => $discountsArray,
 
         ];
+
+        }
+
        }
 
 

@@ -434,6 +434,40 @@ class getPlansController extends AbstractController
         ]);
     }
 
+    #[Route('/presentationUserAll')]
+    public function getpresentationUserall(Request $request, EntityManagerInterface $entityManagerInterface): Response
+    {
+        function addTrailingSlashIfMissing2($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+      
+
+        $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'))."uploads/";
+ 
+        $account_id = $request->attributes->get('account');
+        $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id, p.firstname, p.lastname,  CASE
+        WHEN  pr.picture is not null
+          THEN  concat( '$uploads_directory' , pr.picture )
+            ELSE null
+       END as avatar  ,pr.*
+        FROM `user` AS p
+        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id   and  pr.status =1
+        WHERE p.account_id = :account_id and  DATE(p.date_start) <= CURDATE()    AND (p.date_end IS NULL OR CURDATE() < DATE(p.date_end))     and p.status =1");
+         $stmt->bindValue('account_id', $account_id);
+        $result1 = $stmt->executeQuery()->fetchAllAssociative();
+
+        return new JsonResponse([
+            'success' => 'true',
+            'data' => $result1
+        ]);
+    }
+    
+
     #[Route('/presentationUsers')]
     public function getPresentationByUsers(Request $request, EntityManagerInterface $entityManagerInterface): Response
     {
