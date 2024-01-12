@@ -51,7 +51,34 @@ class UpdateRegistrationsController extends AbstractController
         if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
+        $token = substr($authorizationHeader, 7);
 
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+
+
+        $user = $tokenData->getUser();
+        $RAW_QUERY5 =
+            'SELECT a.folder
+       FROM accounts AS a
+       WHERE a.id = :id
+        ;';
+        $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY5);
+        $stmt->bindValue('id', $user->accountId);
+   
+        $results = $stmt->executeQuery()->fetchAllAssociative();
+
+        if (!empty($results) && isset($results[0]['folder'])) {
+            $folderValue = $results[0]['folder'];
+            if (substr($folderValue, -1) !== '\\') {
+            
+                $folderValue .= '\\';
+            }
+           
         $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
         $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
 
@@ -97,26 +124,26 @@ class UpdateRegistrationsController extends AbstractController
            $fileContentsContact = $fileContact->getContents();
            $fileContentsContact = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContact);
            $fileContentsContact = str_replace('[lang]',  $lang, $fileContentsContact);
-           $filesystem->dumpFile($request->get('slug_url') . '/contact/index.html',  $fileContentsContact);
+           $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/contact/index.html',  $fileContentsContact);
    
            $fileContacterror = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/error.html', '', '');
            $fileContentsContacterror = $fileContacterror->getContents();
            $fileContentsContacterror = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContacterror);
            $fileContentsContacterror = str_replace('[lang]',  $lang, $fileContentsContacterror);
-           $filesystem->dumpFile($request->get('slug_url') . '/contact/error.html',  $fileContentsContacterror);
+           $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/contact/error.html',  $fileContentsContacterror);
    
            $fileContactsuccess = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/success.html', '', '');
            $fileContentsContactsuccess = $fileContactsuccess->getContents();
            $fileContentsContactsuccess = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactsuccess);
            $fileContentsContactsuccess = str_replace('[lang]',  $lang, $fileContentsContactsuccess);
-           $filesystem->dumpFile($request->get('slug_url') . '/contact/success.html',  $fileContentsContactsuccess);
+           $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/contact/success.html',  $fileContentsContactsuccess);
    
            $fileContactrequest = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/request.php', '', '');
            $fileContentsContactrequest = $fileContactrequest->getContents();
            $fileContentsContactrequest = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactrequest);
            $fileContentsContactrequest = str_replace('[lang]',  $lang, $fileContentsContactrequest);
 
-           $filesystem->dumpFile($request->get('slug_url') . '/contact/request.php',  $fileContentsContactrequest);
+           $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/contact/request.php',  $fileContentsContactrequest);
   
 
           //
@@ -144,8 +171,8 @@ class UpdateRegistrationsController extends AbstractController
 
 
 
-        $filesystem->dumpFile($request->get('slug_url') . '/index.html',  $fileContents);
-        $filesystem->dumpFile($request->get('slug_url') . '/forget_password.html',  $fileContentsfgp);
+        $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/index.html',  $fileContents);
+        $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/forget_password.html',  $fileContentsfgp);
     
         
         $file_reset_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/reset_password.html', '', '');
@@ -154,17 +181,17 @@ class UpdateRegistrationsController extends AbstractController
         $fileContentsrestpwd = str_replace('[api-url]',  $APP_URL, $fileContentsrestpwd);
         $fileContentsrestpwd = str_replace('[lang]',$lang, $fileContentsrestpwd);
 
-        $filesystem->dumpFile($request->get('slug_url') . '/reset_password.html',  $fileContentsrestpwd);
+        $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/reset_password.html',  $fileContentsrestpwd);
 
 
 
 
         $json = json_encode(array('data' => $Registrations, 'api_url'=>$APP_URL));
-        $filesystem->dumpFile($request->get('slug_url') . '/data.json', $json);
+        $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/data.json', $json);
 
-        $filesystem->chmod($request->get('slug_url') , 0755);
-        $filesystem->chmod($request->get('slug_url').'/contact' , 0755);
-        $filesystem->chmod($request->get('slug_url').'/contact/request.php' , 0644);
+        $filesystem->chmod($folderValue.$request->get('slug_url') , 0755);
+        $filesystem->chmod($folderValue.$request->get('slug_url').'/contact' , 0755);
+        $filesystem->chmod($folderValue.$request->get('slug_url').'/contact/request.php' , 0644);
 
 
         $entityManagerInterface->persist($Registrations);
@@ -180,9 +207,16 @@ class UpdateRegistrationsController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
         return new JsonResponse([
-            'success' => 'true',
+            'success' => true,
             'data' => $Registrations
         ]);
+        }
+        return new JsonResponse([
+            'success' => false,
+       
+        ]);
+
+
     }
 
     #[Route('/delete/registrations')]

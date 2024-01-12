@@ -88,6 +88,18 @@ class ProfilesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+    public function findAdminProfileById($id,$u_type)
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.u_id = :id')
+            ->Andwhere('u.u_type = :u_type')
+            ->setParameter('id', $id)
+            ->setParameter('u_type', $u_type)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    
 
     public function findContactProfileByemail($login,$account)
     {

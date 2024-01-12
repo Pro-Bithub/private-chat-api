@@ -5,9 +5,12 @@ namespace App\Controller;
 use App\Entity\UserLogs;
 use App\Repository\ContactsRepository;
 use App\Repository\ProfilesRepository;
+use App\Repository\UserPresentationsRepository;
+use App\services\FileUploader;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,6 +65,73 @@ class UpdateProfileController extends AbstractController
         return new JsonResponse([
             'success' => 'true',
             'data' => $profile
+        ]);
+
+    }
+ 
+
+    #[Route('new/update/{id}/profile', name: 'app_update_profile_with_avatar')]
+    public function newupdateprofile( UserPresentationsRepository $userPresentationsRepository,ProfilesRepository $profilesRepository,Request $request, EntityManagerInterface $entityManagerInterface, FileUploader $fileUploader): Response
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+    
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        // $user = $tokenData->getUser();
+        $time =  new \DateTimeImmutable();
+       // $data = json_decode($request->getContent(), true);
+     
+        // dd($data['username']);
+        $profile = $profilesRepository->findProfileById(   $request->get('iduser'));
+        //dd($profile);
+        $profile->username = $request->get('username') ;
+        $profile->login =$request->get('email')  ;
+        $entityManagerInterface->persist($profile);
+        $entityManagerInterface->flush();
+
+        $uploadedFile = $request->files->get('file');
+       if (null !== $uploadedFile) {
+         
+              $user_p=  $userPresentationsRepository->loadActiveUserPresentationByuser($profile->u_id);
+              if($user_p!=null){
+                try {
+                    $file_name = str_replace([' ', '.'], '_', $user_p->nickname . '-' . $user_p->id);
+                    $user_p->picture = $fileUploader->upload($uploadedFile,$file_name);
+                } catch (FileException $e) {
+                }
+              }
+        } 
+
+        $UserLogs = new UserLogs();
+        $UserLogs->user_id =$request->get('iduser') ;
+        $UserLogs->action = 'Update Profile';
+        $UserLogs->element = '30';
+        $UserLogs->element_id = $profile->id;
+        $UserLogs->log_date = $time;
+        $UserLogs->source = '1';
+        $entityManagerInterface->persist($UserLogs);
+        $entityManagerInterface->flush();
+      
+      
+
+        return new JsonResponse([
+            'success' => 'true',
+            'data' => $profile,
+            
         ]);
 
     }
