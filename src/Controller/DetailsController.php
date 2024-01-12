@@ -215,7 +215,7 @@ class DetailsController extends AbstractController
             
         $planUsers = $plan->getPlanUsers()->toArray();
     
-        $usersArray = [];
+        $usersArray = [   'account_id' => $account_id];
         if (count($planUsers) > 0) {
             foreach ($planUsers as $user) {
                 if($user->status=='1'){
@@ -279,6 +279,9 @@ class DetailsController extends AbstractController
             'language' => $plan->getLanguage(),
             'planUsers' => $usersArray, 
             'planDiscounts' => $discountsArray,
+         
+
+        
 
         ];
 

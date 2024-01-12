@@ -75,8 +75,17 @@ class Accounts
 
     #[ORM\Column]
     #[Groups(['read:collection3'])]
-
     public ?string $api_key = null;
+
+
+    #[ORM\Column]
+    #[Groups(['read:collection3'])]
+    public ?string $url = null;
+
+    #[ORM\Column]
+    #[Groups(['read:collection3'])]
+    public ?string $folder = null;
+    
 
     // #[ORM\OneToMany(mappedBy: 'account', targetEntity: User::class)]
     // #[ApiSubresource]

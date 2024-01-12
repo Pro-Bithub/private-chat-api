@@ -39,6 +39,23 @@ class UserPresentationsRepository extends ServiceEntityRepository
         }
     }
 
+    public function loadActiveUserPresentationByuser($id)
+    {
+   
+            
+            return $this->createQueryBuilder('p')
+    ->where('p.user = :user_id')
+    ->andWhere('p.status = :status')
+    ->setParameter('user_id', $id)
+    ->setParameter('status', 1)
+    ->orderBy('p.id', 'DESC') // Assuming there's a 'createdAt' field indicating the creation timestamp
+    ->setMaxResults(1) // Limit the result to only one
+    ->getQuery()
+    ->getOneOrNullResult();
+
+    }
+
+
 //    /**
 //     * @return UserPresentations[] Returns an array of UserPresentations objects
 //     */

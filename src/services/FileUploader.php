@@ -27,11 +27,16 @@ class FileUploader
         // Get uploads directory relative to public path (e.g., "/uploads/")
         $this->relativeUploadsDir = str_replace($publicPath, '', $this->uploadPath) . '/';
     }
-    public function upload(UploadedFile $file)
+    public function upload(UploadedFile $file, $file_name = null)
     {
+        $originalFilename ="";
+        if($file_name==null)
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        else
+        $originalFilename = $file_name;
+
         $safeFilename = $this->slugger->slug($originalFilename);
-        $fileName = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+        $fileName = $safeFilename .'.' . $file->guessExtension();
         // $fileName1 = $id . '.' . $file->guessExtension();
     
         try {
@@ -40,9 +45,6 @@ class FileUploader
             // Handle exception if something happens during file upload
             throw new \Exception('File upload failed: ' . $e->getMessage());
         }
-    
-        // Create a new UploadedFile instance for the second version
-     
     
         return $fileName;
     }

@@ -860,7 +860,9 @@ class CreateUserController extends AbstractController
 
         if (null !== $uploadedFile) {
             try {
-                $userPresentation->picture = $fileUploader->upload($uploadedFile);
+                $file_name = str_replace([' ', '.'], '_', $userPresentation->nickname . '-' . $userPresentation->id);
+
+                $userPresentation->picture = $fileUploader->upload($uploadedFile,$file_name);
             } catch (FileException $e) {
             }
         }
