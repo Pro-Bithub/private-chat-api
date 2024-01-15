@@ -64,14 +64,14 @@ class GetUsersController extends AbstractController
             $filterValues['searchTerm'] = '%' . trim($request->get('search')['value']) . '%';
         }
 
- 
+
         if ($request->get('columns')) {
             foreach ($request->get('columns') as $column) {
                 if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
 
                     if ($column['name'] == 'role' || $column['name'] == 'nickname') {
                         $filters[] = "and (p." . $column['name'] . " LIKE :" . $column['name'] . ")";
-                    }else if( $column['name']  == 'firstname' ){
+                    } else if ($column['name']  == 'firstname') {
                         $filters[] = "and ( LOWER(e.firstname)  LIKE LOWER(:" . $column['name'] . ") OR LOWER(e.lastname)  LIKE LOWER(:" . $column['name'] . ") OR  LOWER(CONCAT(e.firstname, ' ', e.lastname))  LIKE LOWER(:" . $column['name'] . ") )";
                     } else {
                         $filters[] = "and (e." . $column['name'] . " LIKE :" . $column['name'] . ")";
@@ -81,7 +81,7 @@ class GetUsersController extends AbstractController
             }
         }
 
-    
+
 
 
         $sql1 = "SELECT e.* , p.nickname as nickname , p.role as role
@@ -99,6 +99,13 @@ class GetUsersController extends AbstractController
                 " . implode(' ', $filters) . "
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . ";";
 
+        $sqlgetotaluser = "SELECT  e.id , count( DISTINCT e.id) as total_users FROM user e
+                left join user_presentations p on p.user_id = e.id and  p.status =1
+                where e.id != :id and e.account_id = :account_id 
+                " . implode(' ', $filters) . "
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . ";";
+
+
         $sql3 = "SELECT e.* , p.nickname as nickname , p.role as role FROM user e    left join user_presentations p on p.user_id = e.id and  p.status =1 where e.id != :id and e.account_id = :account_id ";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('account_id', $user->accountId);
@@ -113,9 +120,15 @@ class GetUsersController extends AbstractController
         $statement1 = $entityManagerInterface->getConnection()->prepare($sql2);
         $statement1->bindValue('id', $id);
 
+        $statementgetotaluser = $entityManagerInterface->getConnection()->prepare($sqlgetotaluser);
+        $statementgetotaluser->bindValue('id', $id);
+
+
+
         foreach ($filterValues as $key => $value) {
             $statement->bindValue($key, $value);
             $statement1->bindValue($key, $value);
+            $statementgetotaluser->bindValue($key, $value);
         }
         // $statement->bindValue('searchTerm', '%' . $search . '%');
         $statement->bindValue('limit', $length, \PDO::PARAM_INT);
@@ -123,16 +136,29 @@ class GetUsersController extends AbstractController
         $statement->bindValue('account_id', $user->accountId);
         $statement1->bindValue('account_id', $user->accountId);
 
+
+        $statementgetotaluser->bindValue('account_id', $user->accountId);
+
         $results = $statement->executeQuery()->fetchAllAssociative();
         $results1 = $statement1->executeQuery()->rowCount();
+
+        $resultsgetotaluser = $statementgetotaluser->executeQuery()->fetchAllAssociative();
         // $data1 = $this->PredefindTextsRepository->findDataBySearch($search);
         // dd($results);
+        $totalUsers = 0;
+        if (!empty($resultsgetotaluser)) {
+
+            $totalUsers = $resultsgetotaluser[0]['total_users'];
+        }
 
         return new JsonResponse([
             'draw' => $draw,
             'recordsTotal' => $results3,
             'recordsFiltered' => $results1,
-            'data' => $results
+            'data' => $results,
+            'totaleUsers' => $totalUsers,
+
+
         ]);
     }
 
@@ -180,7 +206,7 @@ class GetUsersController extends AbstractController
         if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
-        
+
         // Extract the token value (without the "Bearer " prefix)
         $token = substr($authorizationHeader, 7);
 
@@ -189,17 +215,17 @@ class GetUsersController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
-    
+
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         $user = $tokenData->getUser();
 
         $slug = $request->query->get('email');
         // $account = $request->query->get('account');
-        
+
         $sql3 = "SELECT u.email FROM `user` as u WHERE u.email = :email ";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('email', $slug);
-        
+
         $results3 = $statement3->executeQuery()->fetchAllAssociative();
 
         return new JsonResponse([
@@ -207,5 +233,4 @@ class GetUsersController extends AbstractController
             'data' => $results3,
         ]);
     }
-
 }
