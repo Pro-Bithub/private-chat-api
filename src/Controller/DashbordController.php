@@ -62,18 +62,44 @@ class DashbordController extends AbstractController
         $result12 = $stmt->executeQuery()->fetchAllAssociative();
 
 
+              //VisitorsByCountry
+              $sqlVisitorsByCountry =
+              "SELECT 
+              COALESCE(NULLIF(c.country, ''), 'unknown') AS country,
+              COUNT(DISTINCT c.id) AS visitor
+          FROM 
+              contacts AS c 
+          LEFT JOIN 
+              contact_custom_fields AS cd ON cd.contact_id = c.id
+          WHERE 
+              c.account_id = :id
+              AND c.status = 1
+              AND cd.created_at IS NOT NULL
+              AND c.date_start BETWEEN :startDate AND :endDate
+          GROUP BY 
+              COALESCE(NULLIF(c.country, ''), 'unknown')
+              ";
+          $stmt = $entityManagerInterface->getConnection()->prepare($sqlVisitorsByCountry);
+          $stmt->bindValue('id', $user->accountId);
+          $stmt->bindValue('startDate', $startDate);
+          $stmt->bindValue('endDate', $endDate);
+  
+          $resultVisitorsByCountry = $stmt->executeQuery()->fetchAllAssociative();
+
+
         //getSalesByPlans
 
         $RAW_QUERY1 =
             'SELECT  p.billing_volume , p.billing_type ,p.name, COUNT(p.id) as sales_plans , SUM(p.tariff) as sales_total , p.currency
        FROM `sales` AS s 
        INNER JOIN `plans` AS p ON p.id = s.plan_id
-       WHERE MONTH(s.date_creation) = MONTH(CURRENT_DATE)
-       AND YEAR(s.date_creation) = YEAR(CURRENT_DATE) AND p.account_id = :id and s.status = 1
+       WHERE     s.date_creation BETWEEN :startDate AND :endDate AND p.account_id = :id and s.status = 1
        GROUP BY p.id, p.currency
        ORDER BY sales_plans DESC
        ;';
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY1);
+        $stmt->bindValue('startDate', $startDate);
+        $stmt->bindValue('endDate', $endDate);
         $stmt->bindValue('id', $user->accountId);
         $result = $stmt->executeQuery()->fetchAllAssociative();
 
@@ -312,12 +338,13 @@ class DashbordController extends AbstractController
        INNER JOIN `plans` AS p ON p.id = S.plan_id
        WHERE (p.account_id = :id or c.account_id = :id)
          AND S.status = 1
-         AND MONTH(S.date_creation) = MONTH(CURRENT_DATE)
-         AND YEAR(S.date_creation) = YEAR(CURRENT_DATE)
+         and s.date_creation BETWEEN :startDate AND :endDate
        GROUP BY CAST(S.date_creation AS date)       
        ;';
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY12);
         $stmt->bindValue('id', $user->accountId);
+        $stmt->bindValue('startDate', $startDate);
+        $stmt->bindValue('endDate', $endDate);
         $result11 = $stmt->executeQuery()->fetchAllAssociative();
 
 
@@ -326,6 +353,7 @@ class DashbordController extends AbstractController
             'success' => 'true',
             'SalesByCountry' => $result12,
             'SalesByPlans' => $result,
+            'VisitorsByCountry' => $resultVisitorsByCountry,
             'TotalSalesAmountByPlans' => $result3,
             'TotalSalesAmountByTransactions' => $result2,
             'ConversionRate' => $result4,

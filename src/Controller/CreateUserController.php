@@ -28,6 +28,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Sinergi\BrowserDetector\Os;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\String\Slugger\SluggerInterface;
@@ -105,39 +107,6 @@ class CreateUserController extends AbstractController
         $userPresentations->gender = $request->get('gender');
         $userPresentations->website = $request->get('website');
 
-        /*   if ($request->files->get('file') != null) {
-            $uploadedFile = $request->files->get('file');
-
-            // Upload the original file and get its filename
-            $originalFileName = $fileUploader->upload($uploadedFile);
-
-            // Get the user's ID
-            $userId = $user->id;
-
-            // Extract the original file extension
-            $extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-
-            // Create a new filename by appending the user's ID to the original filename
-            $newFileName = $userId . '.' . $extension;
-
-            // Get the destination directory
-            $destinationDirectory = $fileUploader->getUploadPath();
-
-            // Copy the original file and rename it with the new filename
-            $sourcePath = $destinationDirectory . '/' . $originalFileName;
-            $destinationPath = $destinationDirectory . '/' . $newFileName;
-
-            if (file_exists($sourcePath)) {
-                copy($sourcePath, $destinationPath);
-            } else {
-                // Handle error if the source file doesn't exist
-                throw new \Exception('Source file not found.');
-            }
-
-            $userPresentations->picture = $originalFileName;
-        } */
-
-
         $uploadedFile = $request->files->get('file');
 
         if (null !== $uploadedFile) {
@@ -172,15 +141,7 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->persist($userPresentations);
 
         $entityManagerInterface->flush();
-        // if ($request->files->get('file') != null) {
-        //     $uploadedFile = $request->files->get('file');
 
-        //     // dd(file_exists($uploadedFile->getPathName()));
-
-        //     // $userPresentations->picture = $fileUploader->upload($uploadedFile);
-        //     $fileUploader->uploadProfile($uploadedFile,$user->id);
-
-        // }
         $logs = new UserLogs();
         $logs->user_id = $request->get('user_id');
         $logs->element = 18;
@@ -319,43 +280,37 @@ class CreateUserController extends AbstractController
         }
 
 
-        $client = HttpClient::create();
-        $data = [
-            "nickname" => $userPresentations->nickname,
-            "full_name" => $user->firstname ?? $user->firstname . ' ' . $user->lastname ?? $user->lastname,
-            "role" => "AGENT",
-            "is_active" => false,
-            "is_online" => false,
-            "created_at" =>  date('Y-m-d H:i:s'),
-            "profile_id" => $userPresentations->id,
-            "avatar" => $avatar,
-            "id" => $user->id,
-            "accountId" =>  $user->accountId,
-        ];
-
-
-
-
-
-        $ws_library = addTrailingSlashIfMissing($this->parameterBag->get('ws_library'));
-        $url = $ws_library . 'users';
-
-
-
-        $response = $client->request('POST', $url, [
-            'json' => $data,
-        ]);
-
         $content = null;
+        try {
+            $client = HttpClient::create();
+            $data = [
+                "nickname" => $userPresentations->nickname,
+                "full_name" => $user->firstname ?? $user->firstname . ' ' . $user->lastname ?? $user->lastname,
+                "role" => "AGENT",
+                "is_active" => false,
+                "is_online" => false,
+                "created_at" =>  date('Y-m-d H:i:s'),
+                "profile_id" => $userPresentations->id,
+                "avatar" => $avatar,
+                "id" => $user->id,
+                "accountId" =>  $user->accountId,
+            ];
+            $ws_library = addTrailingSlashIfMissing($this->parameterBag->get('ws_library'));
+            $url = $ws_library . 'users';
+            $response = $client->request('POST', $url, [
+                'json' => $data,
+            ]);
 
+            $status = $response->getStatusCode();
+            if ($status < 400) {
+                $content = $response->getContent();
+            }
+        } catch (\Throwable $e) {
 
-        $status = $response->getStatusCode();
-
-
-
-        if ($status < 400) {
-            $content = $response->getContent();
+            $content = $e->getMessage();
+            $status = 500;
         }
+
 
         return new JsonResponse([
             'success' => true,
@@ -766,44 +721,59 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->flush();
 
 
-        $client = HttpClient::create();
-        $data = [
-            "nickname" =>  $userPresentation->nickname,
-            "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
-            "role" => "AGENT",
-            "is_active" => false,
-            "is_online" => false,
-            "created_at" =>  date('Y-m-d H:i:s'),
-            "presentation_id" => $userPresentation->id,
-            "avatar" => $avatar,
-            "id" => $userid->id,
-            "accountId" =>  $userid->accountId,
-        ];
-
-
-
-
-
-        $ws_library = addTrailingSlashIfMissing2($this->parameterBag->get('ws_library'));
-        $url = $ws_library . 'users';
-
-
-
-        $response = $client->request('POST', $url, [
-            'json' => $data,
-        ]);
-
 
         $content = null;
+        try {
+            $client = HttpClient::create();
+            $data = [
+                "nickname" =>  $userPresentation->nickname,
+                "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
+                "role" => "AGENT",
+                "is_active" => false,
+                "is_online" => false,
+                "created_at" =>  date('Y-m-d H:i:s'),
+                "presentation_id" => $userPresentation->id,
+                "avatar" => $avatar,
+                "id" => $userid->id,
+                "accountId" =>  $userid->accountId,
+            ];
 
 
-        $status = $response->getStatusCode();
+            $ws_library = addTrailingSlashIfMissing2($this->parameterBag->get('ws_library'));
+            $url = $ws_library . 'users';
 
 
 
-        if ($status < 400) {
-            $content = $response->getContent();
+            $response = $client->request('POST', $url, [
+                'json' => $data,
+            ]);
+
+
+
+
+            $content = null;
+
+
+            $status = $response->getStatusCode();
+
+
+
+            if ($status < 400) {
+                $content = $response->getContent();
+            }
+        } catch (\Throwable $e) {
+
+            $content = $e->getMessage();
+            $status = 500;
         }
+
+
+
+
+
+
+
+
 
 
         return new JsonResponse([
@@ -862,7 +832,7 @@ class CreateUserController extends AbstractController
             try {
                 $file_name = str_replace([' ', '.'], '_', $userPresentation->nickname . '-' . $userPresentation->id);
 
-                $userPresentation->picture = $fileUploader->upload($uploadedFile,$file_name);
+                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name);
             } catch (FileException $e) {
             }
         }
