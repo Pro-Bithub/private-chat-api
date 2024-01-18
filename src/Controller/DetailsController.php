@@ -265,6 +265,31 @@ class DetailsController extends AbstractController
                 } 
             }
         }
+
+
+        $plantarriffs = $plan->getPlanTariffs()->toArray();
+        $plantarriffsArray = [];
+        if (count($plantarriffs) > 0) {
+         
+            foreach ($plantarriffs as $plantarriff) {
+                if($plantarriff->status=='1'){
+                     
+                        $plantarriffsArray[] = [
+                            'id' => $plantarriff->id,
+                            'status' => $plantarriff->status,
+                            'date_start' => $plantarriff->date_start,
+                            'date_end' => $plantarriff->date_end,
+                            'price' => $plantarriff->price,
+                            'currency' => $plantarriff->currency,
+                            'language' => $plantarriff->language,
+                        ]; 
+                } 
+            }
+        }
+
+   
+
+
     
         $resultArray[] = [
             'id' => $plan->getId(),
@@ -279,7 +304,7 @@ class DetailsController extends AbstractController
             'language' => $plan->getLanguage(),
             'planUsers' => $usersArray, 
             'planDiscounts' => $discountsArray,
-         
+            'tariffs' => $plantarriffsArray,
 
         
 

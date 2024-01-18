@@ -128,6 +128,10 @@ class Plans
     #[Groups(['read4:collection' ,'read19:collection'])]
     public Collection $planUsers;
 
+    #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanTariffs::class)]
+    #[Groups(['read4:collection' ,'read19:collection'])]
+    public Collection $planTariffs;
+
     #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanDiscounts::class)]
     #[Groups(['write5:collection', 'read19:collection' ])]
     public Collection $planDiscounts;
@@ -144,6 +148,7 @@ class Plans
         $this->planUsers = new ArrayCollection();
         $this->planDiscounts = new ArrayCollection();
         $this->sales = new ArrayCollection();
+        $this->planTariffs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -283,6 +288,37 @@ class Plans
             // set the owning side to null (unless already changed)
             if ($planUser->getPlan() === $this) {
                 $planUser->setPlan(null);
+            }
+        }
+
+        return $this;
+    }
+
+
+        /**
+     * @return Collection<int, PlanTariffs>
+    */
+    public function getPlanTariffs(): collection
+    {
+        return $this->planTariffs;
+    }
+
+    public function addplanTariff(PlanTariffs $planTariff): self
+    {
+        if (!$this->planTariffs->contains($planTariff)) {
+            $this->planTariffs->add($planTariff);
+            $planTariff->setPlan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeplanTariff(PlanTariffs $planTariff): self
+    {
+        if ($this->planTariffs->removeElement($planTariff)) {
+            // set the owning side to null (unless already changed)
+            if ($planTariff->getPlan() === $this) {
+                $planTariff->setPlan(null);
             }
         }
 

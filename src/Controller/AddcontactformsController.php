@@ -206,33 +206,9 @@ class AddcontactformsController extends AbstractController
     #[Route('/plan_client')]
     public function getPlanclient(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
     {
-        // $authorizationHeader = $request->headers->get('Authorization');
-
-        // // Check if the token is present and in the expected format (Bearer TOKEN)
-        // if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
-        //     throw new AccessDeniedException('Invalid or missing authorization token.');
-        // }
-
-        // // Extract the token value (without the "Bearer " prefix)
-        // $token = substr($authorizationHeader, 7);
-
-        // $tokenData = $this->get('security.token_storage')->getToken();
-
-        // if ($tokenData === null) {
-        //     throw new AccessDeniedException('Invalid token.');
-        // }
-
-        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
-        //  $user = $tokenData->getUser();
-        // dd($request->headers->get('account'));
+   
         $data = json_decode($request->getContent(), true);
-        // $key = $request->headers->get('key');
-
-        // $RAW_QUERY1 = 'SELECT * FROM accounts WHERE app_key = :key';
-        // $stmt1 = $entityManagerInterface->getConnection()->prepare($RAW_QUERY1);
-        // $stmt1->bindValue('key', $key);
-        // $result = $stmt1->executeQuery()->fetchAllAssociative();
-
+    
 
 
         $RAW_QUERY2 = "SELECT p.*
@@ -247,9 +223,34 @@ class AddcontactformsController extends AbstractController
         $stmt->bindValue('account', $request->attributes->get('account'));
 
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
+
+
+            $data=[];
+
+        foreach ($result1 as $row) {
+          
+            $RAW_QUERY2 = "SELECT t.*
+            FROM `plan_tariffs` AS t
+            WHERE t.status = 1 and t.plan_id = :id
+            ;";
+            $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
+            $stmt->bindValue('id', $row['id']);
+            $result2 = $stmt->executeQuery()->fetchAllAssociative();
+
+            $row['tariffs'] =$result2;
+            $data[]=  $row;
+        }
+
+
+
         return new JsonResponse([
+            'success' =>  'true',
+            'data' =>  $data,
+        ]);
+
+   /*      return new JsonResponse([
             'success' => 'true',
             'data' => $result1
-        ]);
+        ]); */
     }
 }
