@@ -5,12 +5,14 @@ namespace App\Controller;
 use App\Entity\PlanDiscounts;
 use App\Entity\PlanDiscountUsers;
 use App\Entity\Plans;
+use App\Entity\PlanTariffs;
 use App\Entity\PlanUsers;
 use App\Entity\UserLogs;
 use App\Repository\AccountsRepository;
 use App\Repository\PlanDiscountsRepository;
 use App\Repository\PlanDiscountUsersRepository;
 use App\Repository\PlansRepository;
+use App\Repository\PlanTariffsRepository;
 use App\Repository\PlanUsersRepository;
 use App\Repository\UserRepository;
 use DateTime;
@@ -66,9 +68,9 @@ class AddPlanContollerController extends AbstractController
             $plans->date_end = $data['dateEnd'];
         }
         $plans->status = "1";
-        $plans->language = $data['language'];
+    /*     $plans->language = $data['language'];
         $plans->currency = $data['currency'];
-        $plans->tariff = $data['tariff'];
+        $plans->tariff = $data['tariff']; */
         $plans->billing_type = $data['billingType'];
         $plans->billing_volume = $data['billingVolume'];
         $planUserData = $data['planUser'];
@@ -76,6 +78,32 @@ class AddPlanContollerController extends AbstractController
 
         $entityManagerInterface->persist($plans);
         $entityManagerInterface->flush();
+
+        
+        $tariffs = $data['tariffs'];
+
+
+        if (!empty($tariffs)) {
+            $iterationCount = 0;
+
+            foreach ($tariffs as $tariff) {
+                $planTariffs = new PlanTariffs();
+                $planTariffs->country = $tariff['country'];
+                $planTariffs->currency = $tariff['currency'];
+                $planTariffs->language = $tariff['language'];
+                $planTariffs->date_start = new \DateTimeImmutable();
+                $planTariffs->status = 1;
+                $planTariffs->price = $tariff['price']; 
+                $planTariffs->plan = $plans;
+                $entityManagerInterface->persist($planTariffs);
+                $iterationCount++;
+                if ($iterationCount >= 100) {
+                    break;
+                }
+            }
+            $entityManagerInterface->flush();
+        }
+
 
         $logs = new UserLogs();
         $logs->user_id = $data['user_id'];
@@ -193,6 +221,7 @@ class AddPlanContollerController extends AbstractController
         PlansRepository $plansRepository,
         PlanUsersRepository $planUsersRepository,
         PlanDiscountsRepository $planDiscountsRepository,
+        PlanTariffsRepository $planTariffsRepository,
         PlanDiscountUsersRepository $planDiscountUsersRepository
     ): Response {
          
@@ -211,38 +240,16 @@ class AddPlanContollerController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
-    
-        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
-        // $user = $tokenData->getUser();
+
         $plans = $plansRepository->find($id);
 
         $data = json_decode($request->getContent(), true);
-        //$date = DateTime::createFromFormat('Y-m-d', $data['dateStart']);
-        // $datediscount = DateTime::createFromFormat('Y-m-d', $data['statusplandiscount']);
-        // dd($data);
+    
         if ($data['discountdateStart'] != null) {
-            // $datetime1 = new DateTime($data['discountdateStart']);
-
-            // Format the DateTime object to the desired date format
-            // $date1 = $datetime1->format('Y-m-d');
-            // //$date2 = DateTime::createFromFormat('Y-m-d', $date);
-
-            // //dd($date);
-            // $dateStartString1 = $date1;
-            // $datediscount = DateTime::createFromFormat('Y-m-d', $dateStartString1);
+         
         }
 
-        // $datetime = new DateTime($data['dateStart']);
-
-        // // Format the DateTime object to the desired date format
-        // $date = $datetime->format('Y-m-d');
-        // //$date2 = DateTime::createFromFormat('Y-m-d', $date);
-
-        // //dd($date);
-        // $dateStartString = $date;
-
-        // // Convert the string input to a DateTime object
-        // $dateStart = DateTime::createFromFormat('Y-m-d', $dateStartString);
+ 
 
         $plans->date_start = new DateTime($data['dateStart']);
 
@@ -255,12 +262,10 @@ class AddPlanContollerController extends AbstractController
             $plans->date_end = $data['dateEnd'];
         }
         $plans->status = $data['status'];
-        $plans->language = $data['language'];
-        $plans->currency = $data['currency'];
-        $plans->tariff = $data['tariff'];
+   
         $plans->billing_type = $data['billingType'];
         $plans->billing_volume = $data['billingVolume'];
-        //$planUserData = $data['planUser'];
+   
 
         $entityManagerInterface->persist($plans);
         $entityManagerInterface->flush();
@@ -280,6 +285,40 @@ class AddPlanContollerController extends AbstractController
         $statement4 = $entityManagerInterface->getConnection()->prepare($sql4);
         $statement4->bindValue('id', $plans->id);
         $discount = $statement4->executeQuery()->fetchAllAssociative();
+        
+
+        $sqldelete = "UPDATE `plan_tariffs` SET `status` = '0' ,  `date_end` = CURDATE()  WHERE `plan_tariffs`.`plan_id` =  :id ";
+        $statementdelete = $entityManagerInterface->getConnection()->prepare($sqldelete);
+        $statementdelete->bindValue('id', $plans->id);
+        $deletetariffs= $statementdelete->executeQuery();
+
+
+        
+
+        $tariffs = $data['tariffs'];
+
+            if (!empty($tariffs)) {
+                $iterationCount = 0;
+
+                foreach ($tariffs as $tariff) {
+            
+                    $planTariffs = new PlanTariffs();
+                    $planTariffs->country = $tariff['country'];
+                    $planTariffs->currency = $tariff['currency'];
+                    $planTariffs->language = $tariff['language'];
+                   $planTariffs->date_start = new \DateTimeImmutable();
+                    $planTariffs->status = 1;
+                    $planTariffs->price = $tariff['price']; 
+                    $planTariffs->plan = $plans;
+                    $entityManagerInterface->persist($planTariffs);
+                    $iterationCount++;
+                    if ($iterationCount >= 100) {
+                        break;
+                    }
+                }
+                $entityManagerInterface->flush();
+            }
+
 
       
         if ($data['discountname'] != null || $data['discounttype'] != null || $data['discountvalue'] != null || ($data['plandiscountUser'] != null && (is_array($data['plandiscountUser']) && count($data['plandiscountUser']) > 0)) || $data['discountdateStart'] != null) {
@@ -638,4 +677,171 @@ class AddPlanContollerController extends AbstractController
             'data' => $plans,
         ]);
     }
+
+
+    #[Route('/tariff/{id}', name: 'app_get_tariff_plan_controller')]
+    public function tariffbyid(
+        $id,
+        Request $request,
+        PlanTariffsRepository $planTariffsRepository,
+
+    ): Response {
+
+         
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+    
+        $Tariffs = $planTariffsRepository->find($id);
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $Tariffs,
+        ]);
+    }
+
+    #[Route('/delete_tariff/{id}', name: 'app_delete_plan_controller')]
+    public function deleteTariff(
+        $id,
+        Request $request,
+        EntityManagerInterface $entityManagerInterface,
+        PlanTariffsRepository $planTariffsRepository,
+
+    ): Response {
+
+         
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+    
+        $data = json_decode($request->getContent(), true);
+
+        $Tariffs = $planTariffsRepository->find($id);
+        $Tariffs->status = "0";
+        $Tariffs->date_end = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($Tariffs);
+        $entityManagerInterface->flush();
+
+
+        
+        $logs = new UserLogs();
+        $logs->user_id = $data['user_id'];
+        $logs->element = 4;
+        $logs->action = 'delete';
+        $logs->element_id = $Tariffs->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $Tariffs,
+        ]);
+    }
+
+
+
+    #[Route('/update_tariff', name: 'app_tariff_plan_controller')]
+    public function update_tariff(
+   
+        Request $request,
+        EntityManagerInterface $entityManagerInterface,
+        PlanTariffsRepository $planTariffsRepository,
+
+    ): Response {
+
+         
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+    
+    
+   
+
+        $data = json_decode($request->getContent(), true);
+
+        $Tariffs = $planTariffsRepository->find($data['id']);
+        $Tariffs->status = "0";
+        $Tariffs->date_end = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($Tariffs);
+        $entityManagerInterface->flush();
+
+
+
+        $newTariffs =new PlanTariffs();
+        $newTariffs->status = "1";
+        $newTariffs->plan = $Tariffs->plan;
+        $newTariffs->price = $data['price'];
+        $newTariffs->country = $data['country'];
+        $newTariffs->currency = $data['currency'];
+        $newTariffs->language = $data['language'];
+     
+        $newTariffs->date_start = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($newTariffs);
+        $entityManagerInterface->flush();
+
+
+
+        $logs = new UserLogs();
+        $logs->user_id = $data['user_id'];
+        $logs->element = 4;
+        $logs->action = 'updated';
+        $logs->element_id = $Tariffs->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $Tariffs,
+        ]);
+    }
+
 }

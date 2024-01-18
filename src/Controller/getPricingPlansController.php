@@ -80,25 +80,7 @@ class getPricingPlansController extends AbstractController
 
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         $user = $tokenData->getUser();
-        //  dd($user->accountId);
-        // ... Your code to handle the $user object ...
-
-        //   return new Response('Token decoded successfully.');
-        // dd($token);
-        // Get the user ID from the token using the custom function
-        // $userId = $this->getUserIdFromToken($token, $this->jwtManager);
-
-        // if (!$userId) {
-        //     throw new AccessDeniedException('Invalid or expired authorization token.');
-        // }
-        // dd($userId);
-        // Validate the token using the custom function
-        // $isValidToken = $this->isValidToken($token, $this->jwtManager);
-
-        // if (!$isValidToken) {
-        //     throw new AccessDeniedException('Invalid or expired authorization token.');
-        // }
-
+    
         $draw = (int) $request->get('draw', 1);
         $start = (int) $request->get('start', 0);
         $length = (int) $request->get('length', 5);
@@ -137,10 +119,11 @@ class getPricingPlansController extends AbstractController
          
         ]); */
         
-        $sql1 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name
+        $sql1 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name , count(DISTINCT tf.id)as tariff_counts
             FROM plans e
            left JOIN plan_users r ON r.plan_id = e.id and r.status = 1
            left JOIN plan_discounts d ON d.plan_id = e.id
+           left JOIN plan_tariffs tf ON tf.plan_id = e.id and tf.status = 1
                  " . (!empty($filters) ? 'where e.account_id = :account_id and' : '') . implode(' AND', $filters) . "
                 GROUP BY e.id
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
@@ -149,19 +132,21 @@ class getPricingPlansController extends AbstractController
 
 
         // dd($sql1,$filters,$filterValues);
-        $sql2 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name
+        $sql2 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name , count(DISTINCT tf.id)as tariff_counts
                 FROM plans e
                 left  JOIN plan_users r ON r.plan_id = e.id and r.status = 1
                 left JOIN plan_discounts d ON d.plan_id = e.id
+                left JOIN plan_tariffs tf ON tf.plan_id = e.id and tf.status = 1
                 " . (!empty($filters) ? 'where e.account_id = :account_id and' : '') . implode(' AND', $filters) . "
                 GROUP BY e.id
                 " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
                 ;";
 
-        $sql3 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name
+        $sql3 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name , count(DISTINCT tf.id)as tariff_counts
         FROM plans e
         left  JOIN plan_users r ON r.plan_id = e.id and r.status = 1
         left JOIN plan_discounts d ON d.plan_id = e.id
+        left JOIN plan_tariffs tf ON tf.plan_id = e.id and tf.status = 1
          where e.account_id = :account_id 
         GROUP BY e.id
         ;";
@@ -201,5 +186,167 @@ class getPricingPlansController extends AbstractController
     }
 
 
+    
+    #[Route('/get_plan_tariffs/{id}', name: 'app_get_plan_tariffs_controller')]
+    public function get_plan_tariffs($id,Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        $user = $tokenData->getUser();
+    
+        $draw = (int) $request->get('draw', 1);
+        $start = (int) $request->get('start', 0);
+        $length = (int) $request->get('length', 5);
+        $columns = $request->get('columns');
+
+        $order = $request->get('order');
+
+        $sort = [];
+        foreach ($order as  $orders) {
+            if (isset($columns[$orders['column']]['name'])) {
+                $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
+            }
+        }
+        $filters = [];
+        $filterValues = [];
+        if ($request->get('search')['value'] &&  trim($request->get('search')['value']) != '') {
+            $filters[] = "(tf.id LIKE :searchTerm OR tf.price LIKE :searchTerm OR tf.currency LIKE :searchTerm OR tf.country LIKE :searchTerm OR tf.language LIKE :searchTerm )";
+            $filterValues['searchTerm'] = '%' . trim($request->get('search')['value']) . '%';
+        }
+       
+        if ($request->get('columns')) {
+            foreach ($request->get('columns') as $column) {
+                if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
+                    $filters[] = "(" . $column['name'] . " LIKE :" . str_replace('.', '_', $column['name']) . ")";
+                    $filterValues[str_replace('.', '_', $column['name'])] = $column['search']['value'];
+                }
+            }
+        }
+
+        if(empty($filters)){
+            $filters[] = ' 1=1';
+        }
+      /*   return new JsonResponse([
+         
+            'filterValues' => $filterValues,
+         
+        ]); */
+        
+        $sql1 = "SELECT tf.*
+            FROM plans e
+           left JOIN plan_tariffs tf ON tf.plan_id = e.id 
+                 " . (!empty($filters) ? 'where e.account_id = :account_id and  tf.plan_id = :id and' : '') . implode(' AND', $filters) . "
+                GROUP BY tf.id
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
+                LIMIT :limit OFFSET :offset             
+                ;";
+
+
+        // dd($sql1,$filters,$filterValues);
+        $sql2 = "SELECT tf.*
+                FROM plans e
+         
+                left JOIN plan_tariffs tf ON tf.plan_id = e.id 
+                " . (!empty($filters) ? 'where e.account_id = :account_id and  tf.plan_id = :id and' : '') . implode(' AND', $filters) . "
+                GROUP BY tf.id
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
+                ;";
+
+        $sql3 = "SELECT tf.*
+        FROM plans e
+    
+        left JOIN plan_tariffs tf ON tf.plan_id = e.id 
+         where e.account_id = :account_id   and  tf.plan_id = :id
+        GROUP BY tf.id
+        ;";
+        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+        $statement3->bindValue('account_id', $user->accountId);
+        $statement3->bindValue('id', $id);
+
+        $results3 = $statement3->executeQuery()->rowCount();
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+        $statement1 = $entityManagerInterface->getConnection()->prepare($sql2);
+      
+      
+        foreach ($filterValues as $key => $value) {
+            $statement->bindValue($key, $value);
+            $statement1->bindValue($key, $value);
+        }
+        
+      
+        // $statement->bindValue('searchTerm', '%' . $search . '%');
+        $statement->bindValue('limit', $length, \PDO::PARAM_INT);
+        $statement->bindValue('offset', $start, \PDO::PARAM_INT);
+        $statement->bindValue('account_id', $user->accountId);
+        $statement->bindValue('id', $id);
+        $statement1->bindValue('account_id', $user->accountId);
+        $statement1->bindValue('id', $id);
+        $results = $statement->executeQuery()->fetchAllAssociative();
+        $results1 = $statement1->executeQuery()->rowCount();
+        // $data1 = $this->PredefindTextsRepository->findDataBySearch($search);
+        // dd($results);
+
+        return new JsonResponse([
+            'draw' => $draw,
+            'recordsTotal' => $results3,
+            'recordsFiltered' => $results1,
+            'data' => $results
+     
+        ]);
+    }
+
+
+    #[Route('/tariffs/get/country', name: 'app_get_country_tariffs_controller')]
+    public function getcounrty(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+
+
+        $sql1 = "SELECT DISTINCT  UPPER( c.country) as country
+        FROM plan_tariffs c
+        where  c.country is not null and  trim(c.country) <> ''
+            ;";
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+        $results = $statement->executeQuery()->fetchAllAssociative();
+
+        return new JsonResponse([
+            'data' => $results,
+
+        ]);
+    }
 
 }
