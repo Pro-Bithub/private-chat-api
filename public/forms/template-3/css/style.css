@@ -1511,3 +1511,67 @@ span.error:after {
     }
   
   }
+  .mh-125px {
+    max-height: 125px!important;
+  }
+  .text-dark {
+    color: #181C32 !important;
+  }
+  
+  .text-start {
+    text-align: left!important;
+  }
+  .fw-bold {
+    font-weight: 600!important;
+  }
+  .fs-6 {
+    font-size: 1.075rem!important;
+  }
+  .ms-1 {
+    margin-left: 0.25rem!important;
+  }
+  .mb-1 {
+    margin-bottom: 0.25rem!important;
+  }
+  
+  .form-control {
+    color: #5E6278;
+    background-color: #ffffff;
+    border: 1px solid #E4E6EF;
+    box-shadow: none!important;
+  }
+  
+  .my-2 {
+    margin-top: 0.5rem!important;
+    margin-bottom: 0.5rem!important;
+  }
+  
+  .mx-1 {
+    margin-right: 0.25rem!important;
+    margin-left: 0.25rem!important;
+  }
+  .h-60px {
+    height: 60px!important;
+  }
+  .w-60px {
+    width: 60px!important;
+  }
+  @media (min-width: 1200px){
+    .fs-2qx {
+      font-size: 2.25rem!important;
+  }
+  }
+  
+  .fs-13qx{
+    font-size: 13px!important;
+  }
+  
+  .flex-center {
+    justify-content: center;
+    align-items: center;
+  }
+  .mb-btn {
+    margin-bottom: 1.25rem!important;
+    margin-top: 20px;
+  }
+  .indicator-progress{display:none}

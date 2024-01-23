@@ -216,12 +216,12 @@ class AddPlanContollerController extends AbstractController
         $id,
         Request $request,
         EntityManagerInterface $entityManagerInterface,
-        AccountsRepository $accountsRepository,
+    
         UserRepository $userRepository,
         PlansRepository $plansRepository,
         PlanUsersRepository $planUsersRepository,
         PlanDiscountsRepository $planDiscountsRepository,
-        PlanTariffsRepository $planTariffsRepository,
+     
         PlanDiscountUsersRepository $planDiscountUsersRepository
     ): Response {
          
@@ -241,10 +241,29 @@ class AddPlanContollerController extends AbstractController
             throw new AccessDeniedException('Invalid token.');
         }
 
-        $plans = $plansRepository->find($id);
+
 
         $data = json_decode($request->getContent(), true);
     
+         $plans = $plansRepository->find($id);
+
+         $oldplans = new plans();
+         $oldplans->planUsers = $plans->planUsers ;
+         $oldplans->planDiscounts = $plans->planDiscounts;
+         $oldplans->sales = $plans->sales;
+         $oldplans->name = $plans->name;
+         $oldplans->billing_type = $plans->billing_type;
+         $oldplans->billing_volume = $plans->billing_volume;
+         $oldplans->planTariffs = $plans->planTariffs;
+         $oldplans->date_end = new \DateTimeImmutable();
+         $oldplans->date_start =$plans->date_start ;
+         $oldplans->account =$plans->account ;
+         $oldplans->planTariffs =$plans->planTariffs ;
+         $oldplans->status = '0';
+         $entityManagerInterface->persist($oldplans);
+         $entityManagerInterface->flush();
+
+
         if ($data['discountdateStart'] != null) {
          
         }
@@ -254,7 +273,7 @@ class AddPlanContollerController extends AbstractController
         $plans->date_start = new DateTime($data['dateStart']);
 
         $plans->name = $data['name'];
-        //$plans->date_start = $date;
+    
         if ($data['dateEnd'] != null) {
             $date_end = new DateTime($data['dateEnd']);
             $plans->date_end = $date_end;
@@ -539,10 +558,7 @@ class AddPlanContollerController extends AbstractController
         $statement3->bindValue('id', $plans->id);
 
         $PlanUserIds = $statement3->executeQuery()->fetchAllAssociative();
-        // $sql3="SELECT t.user_id FROM `predefined_text_users` as t WHERE t.text_id = :id and t.status = 1";
-        //     $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
-        //     $statement3->bindValue('id', $predefindText->id);
-        //     $predefinedTextUserIds = $statement3->executeQuery()->fetchAllAssociative();
+    
         $result = array_column($PlanUserIds, 'user_id');
 
         $difference2 = array_diff($result, $planUserData);

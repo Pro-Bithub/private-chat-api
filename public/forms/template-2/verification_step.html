@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <title data-i18n="demo.accountverification">Private-chat | Account Verification </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <!-- External CSS libraries -->
+
+    <link rel="shortcut icon" href="[base-href]assets/favicon.png" type="image/x-icon">
+    <link type="text/css" rel="stylesheet" href="[base-href]assets/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="[base-href]assets/fonts/font-awesome/css/font-awesome.min.css">
+    <link type="text/css" rel="stylesheet" href="[base-href]assets/fonts/flaticon/font/flaticon.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="[base-href]assets/css/style.css">
+    <link href="[base-href]assets/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body id="top">
+    <div class="page_loader"></div>
+
+    <div class="login-29">
+        <div class="container">
+            <div class="row login-box">
+                <div class="col-lg-6 bg-img">
+                    <div class="info clearfix align-self-center">
+                        <div class="animated-text">
+                           <h1 data-i18n="demo.welcomeMessage">Welcome to</h1> <h1 id="name"></h1>
+                        </div>
+                        <p id="comment"></p>
+                    </div>
+                </div>
+                <div class="col-lg-6 form-section">
+                    <div class="formify_box form-inner">
+                        <div class="formify_header text-center">
+                            <a href="#" class="formify_logo">
+                                <img src="[base-href]assets/logo.png" alt="" width="300px">
+                            </a>
+                        </div>
+                       
+                        <div class="tab-content" id="myTabContent">
+                            <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+                                <div class="w-lg-500px p-10">
+                                    <form class="form w-100 mb-13"        action="#" id="kt_sing_in_two_steps_form">
+                                        <div class="text-center mb-10">
+                                            <img alt="Logo" class="mh-125px" src="[base-href]assets/smartphone-2.svg" />
+                                        </div>
+                                        <div class="text-center mb-10">
+                                            <h1 class="text-dark mb-3 fs-13qx" data-i18n="demo.TwoStepVerification"  >Two Step Verification</h1>
+                                            <div class="text-muted fw-semibold fs-5 fs-13qx" style="    font-size: 13px;" data-i18n="demo.sentcode">Enter the verification code we sent to</div>
+                                            <div class="fw-bold text-dark fs-3 mb-5 fs-13qx" id="maskedEmailContainer">
+                                          
+                                            </div>
+                                            <input type="hidden" name="email" id="originalEmail">
+                                       
+
+
+                                        </div>
+                                        <div class="mb-10">
+                                            <div  data-i18n="demo.securitycode"    class="fw-bold text-start text-dark fs-6 mb-1 ms-1 fs-13qx">Type your 6 digit security code</div>
+                                            <div class="d-flex flex-wrap flex-stack" id="codeFields">
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_1" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_2" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_3" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_4" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_5" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                                <input type="text" style="    border: 1px solid #e4e6ef !important;" name="code_6" data-inputmask="'mask': '9', 'placeholder': ''" maxlength="1" class="form-control bg-transparent h-60px w-60px fs-2qx text-center mx-1 my-2" value="" />
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-center">
+                                            <button
+                                            type="submit" 
+                                           id="kt_sing_in_two_steps_submit" class="btn btn-lg mb-btn btn-primary fw-bold fs-6" style="background-image: none">
+                                                <span  data-i18n="demo.submit" class="indicator-label">Submit</span>
+                                                <span    class="indicator-progress">  <span data-i18n="demo.pleasewait"> Please wait...</span>
+                                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div class="text-center fw-semibold fs-5">
+                                        <span class="text-muted me-1 fs-13qx"    data-i18n="demo.codeNotReceived" >Didn&rsquo;t get the code ?</span>
+                                        <button   data-i18n="demo.resend"    style="    border: none; background-color: transparent;" id="resendLink" class="link-primary fs-5 me-1 fs-13qx">Resend</button>
+                                        <div id="timer" class="text-muted me-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class=" col-lg-12" style="
+                right: 0;
+                text-align: center;
+            ">
+                        <ul style="
+                max-width: 536px;
+                width: 100%;
+                z-index: 999;
+                margin-left: auto;
+                margin-bottom: 3px;
+                margin-top: 13px;
+            ">
+                          <li style="
+              display: contents;
+            "><a href="" data-i18n="demo.termsAndConditions" style="color: #6c6c6c;padding-right: 10px;" class="fs-13qx">Terms &amp; Conditions</a></li>
+                          <li style="
+              display: contents;
+              color: #6c6c6c;
+            "><a href="./contact/" data-i18n="demo.contactUs" class="fs-13qx" style="
+              color: #6c6c6c;
+            ">Contact us</a></li>
+                      </ul><div style="max-width: 515px;width: 100%;z-index: 999;margin-left: auto;" class="fs-13qx">
+                © Private-chat.pro - All Rights Reserved.
+              </div>
+                      </div>
+                      
+            </div>
+        </div>
+    </div>
+    <div class="backdrop spinner1 d-none">
+        <div class="spinner"></div>
+        <div class="logo">loading...</div>
+      </div>
+    <!-- External JS libraries -->
+    <script>
+        var HI = 'Hello World';
+        var apiurl = '[api-url]';
+       </script>
+   
+    <script src="[base-href]assets/js/jquery-3.6.0.min.js"></script>
+    <script src="[base-href]assets/js/bootstrap.bundle.min.js"></script>
+    <script src="[base-href]assets/js/jquery.validate.min.js"></script>
+    <script src="[base-href]assets/js/data.js"></script>
+    <script src="[base-href]assets/sweetalert2/sweetalert2.min.js"></script>
+    <script src="[base-href]assets/js/i18n.js"></script>
+
+    <script>
+        $(function() {
+            
+            var i18n = new I18n();
+          i18n.localize();
+          var  lang ='[lang]'
+          i18n.lang(lang);
+  
+          });
+          $(document).ready(function() {
+     
+        var email = getParameterByName('email');
+
+    
+
+        var code = getParameterByName('code');
+			var codeFields = document.querySelectorAll('#codeFields input');
+
+			// Remplir les champs avec les valeurs du code
+			for (var i = 0; i < code.length; i++) {
+				codeFields[i].value = code.charAt(i);
+			}
+
+
+        if (email !== null && validateEmail(email)) {
+            var maskedEmail = maskEmail(email);
+            $('#maskedEmailContainer').text(maskedEmail);
+            $('#originalEmail').val(email);
+
+        }
+
+  
+        function maskEmail(email) {
+            var parts = email.split('@');
+            var username = parts[0];
+            var domain = parts[1];
+
+            var maskedUsername = username.substr(0, 3) + '*'.repeat(Math.max(0, username.length - 3));
+
+            var dotPosition = domain.indexOf('.');
+            var maskedDomain = domain.substr(0, 1) + '*'.repeat(Math.max(0, dotPosition - 1));
+            var maskedTLD = domain.substr(dotPosition);
+
+            return maskedUsername + '@' + maskedDomain + maskedTLD;
+        }
+
+
+        function validateEmail(email) {
+            var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+ 
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+    });
+        
+    </script>
+    <!-- Custom JS Script -->
+</body>
+
+</html>

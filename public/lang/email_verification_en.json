@@ -1,0 +1,14 @@
+{
+    "lang": "en",
+    "sender": "PRIVATE CHAT",
+    "subject": "Account verification",
+    "content": {
+        "header": "Welcome ",
+        "body": "Please use the following code for secure accessing  in to PRIVATE-CHAT app:",
+        "footer": {
+            "greeting": "Best regards,",
+            "brand": "PRIVATE CHAT",
+            "team":"Team"
+        }
+    }
+}

@@ -59,7 +59,7 @@ class GetContactsController extends AbstractController
         $filters = [];
         $filterValues = [];
 
-        $filtershaving = ['  created_at IS NOT NULL'];
+        $filtershaving = ['  ( created_at IS NOT NULL OR  source_type IS NOT NULL ) '];
         $filterValueshaving = [];
         if ($request->get('search')['value'] &&  trim($request->get('search')['value']) != '') {
             $filters[] = "(e.id LIKE :searchTerm OR e.name LIKE :searchTerm OR e.email LIKE :searchTerm OR e.lastname LIKE :searchTerm OR e.firstname LIKE :searchTerm OR e.country LIKE :searchTerm OR e.phone LIKE :searchTerm)";
@@ -172,6 +172,7 @@ class GetContactsController extends AbstractController
             'recordsTotal' => $results3,
             'recordsFiltered' => $results1,
             'data' => $results,
+            'sql1'=>$sql1
 
         ]);
     }
