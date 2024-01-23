@@ -1,0 +1,15 @@
+{
+    "lang": "fr",
+    "sender": "PRIVATE CHAT",
+    "subject": "Vérification du compte",
+    "content": {
+        "header": "Bienvenue ",
+        "body": "Veuillez utiliser le code suivant pour accéder de manière sécurisée à l’application PRIVATE-CHAT :",
+        "footer": {
+
+            "greeting": "Cordialement,",
+            "brand": "PRIVATE CHAT",
+            "team":"Équipe"
+        }
+    }
+}

@@ -53,6 +53,23 @@ class ContactFormFieldsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+         /**
+     * @return ContactFormFields[] Returns an array of PredefinedTextUsers objects
+     */
+    public function findByidform($idfrom): array
+    {
+        return $this->createQueryBuilder('u')
+             ->leftJoin('u.field', 'f')  
+            ->where('u.status = 1')
+            ->Andwhere('u.form = :idfrom')
+            ->setParameter('idfrom', $idfrom)
+            ->getQuery()
+            ->getArrayResult();
+    }
+
+    
+
+
 //    /**
 //     * @return ContactFormFields[] Returns an array of ContactFormFields objects
 //     */

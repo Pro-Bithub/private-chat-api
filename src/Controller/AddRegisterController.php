@@ -153,6 +153,17 @@ class AddRegisterController extends AbstractController
             $filesystem->dumpFile($folderValue.$data['slug_url'] . '/reset_password.html',  $fileContentsrestpwd);
 
 
+            $fileverification_step = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/verification_step.html', '', '');
+            $fileContentsverification_step = $fileverification_step->getContents();
+            $fileContentsverification_step = str_replace('[base-href]',  $newBaseHref, $fileContentsverification_step);
+            $fileContentsverification_step = str_replace('[api-url]',  $APP_URL, $fileContentsverification_step);
+            $fileContentsverification_step = str_replace('[lang]',  $lang, $fileContentsverification_step);
+            
+            $filesystem->dumpFile($folderValue.$data['slug_url']. '/verification_step.html',  $fileContentsverification_step);
+
+            
+
+
 
             $json = json_encode(array('data' => $Registrations, 'api_url' => $APP_URL));
             $filesystem->dumpFile($folderValue.$data['slug_url']  . '/data.json', $json);

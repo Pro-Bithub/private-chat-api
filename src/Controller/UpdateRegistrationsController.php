@@ -120,6 +120,10 @@ class UpdateRegistrationsController extends AbstractController
            //for page contact
            $formstemplateContact = 'forms/template-contact';
            $newBaseContactHref = $APP_URL . $formstemplateContact . '/';
+
+
+
+
            $fileContact = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/index.html', '', '');
            $fileContentsContact = $fileContact->getContents();
            $fileContentsContact = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContact);
@@ -153,6 +157,17 @@ class UpdateRegistrationsController extends AbstractController
         $newBaseHref = $APP_URL . $formstemplate . '/';
 
    
+
+
+
+        
+        $fileverification_step = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/verification_step.html', '', '');
+        $fileContentsverification_step = $fileverification_step->getContents();
+        $fileContentsverification_step = str_replace('[base-href]',  $newBaseHref, $fileContentsverification_step);
+        $fileContentsverification_step = str_replace('[api-url]',  $APP_URL, $fileContentsverification_step);
+        $fileContentsverification_step = str_replace('[lang]',  $lang, $fileContentsverification_step);
+        
+        $filesystem->dumpFile($folderValue.$request->get('slug_url') . '/verification_step.html',  $fileContentsverification_step);
 
 
 

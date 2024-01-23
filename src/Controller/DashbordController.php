@@ -74,7 +74,7 @@ class DashbordController extends AbstractController
           WHERE 
               c.account_id = :id
               AND c.status = 1
-              AND cd.created_at IS NOT NULL
+              AND ( cd.created_at IS NOT NULL OR  c.source_type IS NOT NULL ) 
               AND c.date_start BETWEEN :startDate AND :endDate
           GROUP BY 
               COALESCE(NULLIF(c.country, ''), 'unknown')
@@ -177,7 +177,7 @@ class DashbordController extends AbstractController
 
         $RAW_QUERY5 =
             'SELECT count(DISTINCT c.id) as count_contact,
-            ROUND( (COUNT(DISTINCT c.id) / (SELECT COUNT(DISTINCT contacts.id) FROM contacts   LEFT JOIN contact_custom_fields cd ON cd.contact_id = contacts.id where  contacts.account_id= :id  and cd.created_at IS NOT NULL and contacts.date_start BETWEEN :startDate AND :endDate )) * 100,1) AS percentage_contacts_with_sales
+            ROUND( (COUNT(DISTINCT c.id) / (SELECT COUNT(DISTINCT contacts.id) FROM contacts   LEFT JOIN contact_custom_fields cd ON cd.contact_id = contacts.id where  contacts.account_id= :id  and ( cd.created_at IS NOT NULL OR  contacts.source_type IS NOT NULL )  and contacts.date_start BETWEEN :startDate AND :endDate )) * 100,1) AS percentage_contacts_with_sales
            FROM sales AS s
            INNER JOIN contacts AS c ON c.id = s.contact_id
            INNER JOIN plans AS p ON p.id = s.plan_id
@@ -239,7 +239,7 @@ class DashbordController extends AbstractController
        FROM
        `contacts` AS c
        LEFT JOIN contact_custom_fields cd ON cd.contact_id = c.id
-        WHERE  c.account_id = :id and c.status = 1 and cd.created_at IS NOT NULL
+        WHERE  c.account_id = :id and c.status = 1 and ( cd.created_at IS NOT NULL OR  c.source_type IS NOT NULL ) 
         and c.date_start BETWEEN :startDate AND :endDate
        ;';
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY7);

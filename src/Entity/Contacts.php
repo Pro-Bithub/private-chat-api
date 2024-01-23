@@ -142,6 +142,16 @@ class Contacts
     public ?int $source_id = null;
 
 
+    #[ORM\Column(length: 3)]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $country_detected = null;
+
+    #[ORM\Column(length: 3)]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $country_card = null;
+
+
+
 
     // #[ORM\OneToMany(mappedBy: 'contact', targetEntity: ContactCustomFields::class)]
     // #[Groups(['read:collection'])]

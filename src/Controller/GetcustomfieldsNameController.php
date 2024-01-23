@@ -35,7 +35,7 @@ class GetcustomfieldsNameController extends AbstractController
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         $user = $tokenData->getUser();
 
-        $sql3 = "SELECT c.id , c.field_name , c.field_type FROM `custom_fields` as c WHERE c.account_id = :id and c.status = 1";
+        $sql3 = "SELECT c.id , c.field_name , c.field_type FROM `custom_fields` as c WHERE (c.account_id = :id or c.account_id  is null )and c.status = 1";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('id', $user->accountId);
         $results3 = $statement3->executeQuery()->fetchAllAssociative();

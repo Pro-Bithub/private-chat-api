@@ -565,4 +565,121 @@ class AddFormController extends AbstractController
             'data' => $ContactForms,
         ]);
     }
+
+    #[Route('/duplicate_form/{id}', name: 'app_duplicate_form_controller')]
+    public function duplicateform(
+        $id,
+        ContactFormsRepository $contactFormsRepository,
+        Request $request,
+        EntityManagerInterface $entityManagerInterface,
+        AccountsRepository $accountsRepository,
+        ContactFormFieldsRepository $contactFormFieldsRepository,
+    ): Response {
+
+
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+
+        $existingContactForms = $contactFormsRepository->find($id);
+        $user = $tokenData->getUser();
+        $account = $accountsRepository->find( $user->accountId);
+
+        $newContactForms = new ContactForms();
+        $reflectionClass = new \ReflectionClass(ContactForms::class);
+        foreach ($reflectionClass->getProperties() as $property) {
+            $property->setAccessible(true);
+            $propertyName = $property->getName();
+            $propertyValue = $property->getValue($existingContactForms);
+            $property->setValue($newContactForms, $propertyValue);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $newContactForms->date_start = new \DateTimeImmutable();
+        $newContactForms->status = '1';
+        $newContactForms->setAccount( $account);
+       
+
+        
+
+        //dd($clickableLinksUser);
+        $entityManagerInterface->persist($newContactForms);
+        $entityManagerInterface->flush();
+        //$contactFormFields= $contactFormFieldsRepository->findByidform($id)  ;
+ /*        if (!empty($contactFormFields)) {
+        foreach ($contactFormFields as $oldcontactFormField) {
+            $newContactFormFields = new ContactFormFields();
+            $newContactFormFields->date_start= new \DateTimeImmutable();
+            $newContactFormFields->status = '1';
+            $newContactFormFields->setField($oldcontactFormField->getField());
+            $newContactFormFields->setForm($newContactForms);
+            $entityManagerInterface->persist($newContactFormFields);
+            $entityManagerInterface->flush();
+        }   }
+ */
+
+        $sql3 = "SELECT c.field_id as field_id FROM `contact_form_fields` as c WHERE c.form_id = :id and c.status = 1";
+        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+        $statement3->bindValue('id', $id);
+        $results3 = $statement3->executeQuery()->fetchAllAssociative();
+        if (!empty($results3)) {
+            foreach ($results3 as $oldcontactFormField) {
+                $sql = "INSERT INTO contact_form_fields (date_start, status, field_id, form_id) 
+                VALUES (CURRENT_TIMESTAMP, '1', :field_id, :form_id)";
+        
+          
+
+                $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+                // $stmt4->bindValue('account', $data['account']);
+
+                $stmt4->bindValue('field_id', $oldcontactFormField['field_id']);
+                $stmt4->bindValue('form_id',$newContactForms->getId());
+        
+                $result = $stmt4->executeQuery();
+
+       
+         /*        $newContactFormFields = new ContactFormFields();
+                $newContactFormFields->date_start= new \DateTimeImmutable();
+                $newContactFormFields->status = '1';
+                $newContactFormFields->setField($oldcontactFormField['field_id']);
+                $newContactFormFields->setForm($newContactForms);
+                $entityManagerInterface->persist($newContactFormFields);
+                $entityManagerInterface->flush(); */
+            }   }
+
+        
+
+
+        $logs = new UserLogs();
+        $logs->user_id = $data['user_id'];
+        $logs->element = 21;
+        $logs->action = 'duplicated';
+        $logs->element_id = $newContactForms->id;
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+
+   
+
+        return new JsonResponse([
+            'success' => true,
+            'data' => $newContactForms,
+      
+        ]);
+    }
 }
