@@ -62,9 +62,13 @@ class AddcontactformsController extends AbstractController
         $country = "";
         $name = "";
         $gender = '';
+        $language = '';
+        $currency = '';
+
+
         $date_birth = null;
 
-   
+
         //$fieldid = $data['forms']['fieldId'];
         //dd($data,$contactforms, $contactid);
         foreach ($contactforms  as $i => $value) {
@@ -120,21 +124,27 @@ class AddcontactformsController extends AbstractController
                     case 8:
                         $country = $value['value'];
                         break;
+                    case 16:
+                        $language = $value['value'];
+                        break;
+                    case 17:
+                        $currency = $value['value'];
+                        break;
                     case 13:
-                            $input = $value['value'];
-                            $inputAsInt = intval($input);
-                            if ($inputAsInt === 0) {
-                                $gender = 'M';
-                            } elseif ($inputAsInt === 1) {
-                                $gender = 'W';
-                            }
-                      
-                            /*   if (strcasecmp(substr($input, 0, 1), 'H') === 0 || strcasecmp(substr($input, 0, 1), 'M') === 0) {
+                        $input = $value['value'];
+                        $inputAsInt = intval($input);
+                        if ($inputAsInt === 0) {
+                            $gender = 'M';
+                        } elseif ($inputAsInt === 1) {
+                            $gender = 'W';
+                        }
+
+                        /*   if (strcasecmp(substr($input, 0, 1), 'H') === 0 || strcasecmp(substr($input, 0, 1), 'M') === 0) {
                                 $gender = 'H';
                             } else {
                                 $gender = 'F';
                             } */
-                    
+
                         break;
                     case 14:
                         $dateOfBirth =  \DateTimeImmutable::createFromFormat('Y-m-d',  date('Y-m-d', strtotime($value['value'])));
@@ -147,7 +157,6 @@ class AddcontactformsController extends AbstractController
                         break;
                 }
             }
-
         }
 
         $contact = $contactsRepository->find($contactId);
@@ -167,21 +176,29 @@ class AddcontactformsController extends AbstractController
             $contact->name = $name;
         if (!empty($gender))
             $contact->gender = $gender;
+
+
+        if (!empty($currency))
+            $contact->currency = $currency;
+
+        if (!empty($language))
+            $contact->language = $language;
+
         $entityManagerInterface->persist($contact);
         $entityManagerInterface->flush();
 
         $profile = $profilesRepository->find($profileId);
-        $dateTime = new \DateTime('@'.strtotime('now')); 
+        $dateTime = new \DateTime('@' . strtotime('now'));
         $timestamp = $dateTime->getTimestamp(); // Get the timestamp
-        if ( isset($contact->email)   ) {
+        if (isset($contact->email)) {
             $profile->login =  $contact->email;
-        }else{
-                $login = $contact->id.$timestamp; 
+        } else {
+            $login = $contact->id . $timestamp;
             $profile->login =  $login;
         }
 
-        $password = bin2hex(random_bytes(8)); 
-        $profile->password = $userPasswordHasher->hashPassword($profile,$password);
+        $password = bin2hex(random_bytes(8));
+        $profile->password = $userPasswordHasher->hashPassword($profile, $password);
 
         $entityManagerInterface->persist($profile);
         $entityManagerInterface->flush();
@@ -197,8 +214,8 @@ class AddcontactformsController extends AbstractController
         return new JsonResponse([
             'success' => 'true',
             'data' => $data,
-         
-         
+
+
         ]);
     }
 
@@ -206,29 +223,49 @@ class AddcontactformsController extends AbstractController
     #[Route('/plan_client')]
     public function getPlanclient(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
     {
-   
+
         $data = json_decode($request->getContent(), true);
-    
+        $currency = $data['currency'];
+        $country = $data['country'];
 
 
-        $RAW_QUERY2 = "SELECT p.*
+        $RAW_QUERY2 = "SELECT p.* , t.price as tariff_price , t.id as tariff_id ,  t.currency as   tariff_currency
         FROM `plans` AS p
+        LEFT JOIN  `plan_tariffs` AS t ON t.plan_id = p.id  and t.status = 1
         LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
         LEFT JOIN `profiles` AS pr ON pr.u_id = pu.user_id
-        WHERE p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
+        WHERE   t.currency like :currency and  t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
         group by p.id
         ;";
 
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
         $stmt->bindValue('account', $request->attributes->get('account'));
-
+        $stmt->bindValue('currency', $currency);
+        $stmt->bindValue('country', $country);
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
 
+    
+        if (empty($result1)) {
+            $RAW_QUERY2 = "SELECT p.* , t.price as tariff_price , t.id as tariff_id ,  t.currency as   tariff_currency
+            FROM `plans` AS p
+            LEFT JOIN  `plan_tariffs` AS t ON t.plan_id = p.id  and t.status = 1
+            LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
+            LEFT JOIN `profiles` AS pr ON pr.u_id = pu.user_id
+            WHERE   t.currency like :currency and  t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
+            group by p.id
+            ;";
+    
+            $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
+            $stmt->bindValue('account', $request->attributes->get('account'));
+            $stmt->bindValue('currency', $currency);
+            $stmt->bindValue('country', '');
+            $result1 = $stmt->executeQuery()->fetchAllAssociative();
+        }
 
-            $data=[];
+//
 
-        foreach ($result1 as $row) {
-          
+        /*    foreach ($result1 as $row) {
+
             $RAW_QUERY2 = "SELECT t.*
             FROM `plan_tariffs` AS t
             WHERE t.status = 1 and t.plan_id = :id
@@ -237,18 +274,18 @@ class AddcontactformsController extends AbstractController
             $stmt->bindValue('id', $row['id']);
             $result2 = $stmt->executeQuery()->fetchAllAssociative();
 
-            $row['tariffs'] =$result2;
-            $data[]=  $row;
-        }
+            $row['tariffs'] = $result2;
+            $data[] =  $row;
+        } */
 
 
 
         return new JsonResponse([
             'success' =>  'true',
-            'data' =>  $data,
+            'data' =>  $result1,
         ]);
 
-   /*      return new JsonResponse([
+        /*      return new JsonResponse([
             'success' => 'true',
             'data' => $result1
         ]); */

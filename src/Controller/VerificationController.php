@@ -23,8 +23,9 @@ class VerificationController extends AbstractController
 
         $receiver = $data['receiver'];
 
-        
-        $account_id = $request->attributes->get('account');
+        $account_id = isset($data['account_id']) ? $data['account_id'] :  $request->attributes->get('account');
+
+   
 
         $method = 1;
 
@@ -125,7 +126,8 @@ class VerificationController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        $account_id = $request->attributes->get('account');
+        $account_id = isset($data['account_id']) ? $data['account_id'] :  $request->attributes->get('account');
+
         $method = 1;
         $receiver = $data['receiver'];
         $code = $data['code'];

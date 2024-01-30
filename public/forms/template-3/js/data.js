@@ -163,7 +163,7 @@ fetch(AssetsUrl)
                 icon: "error",
                 title: demoJson.demo.popupAlert.errorAlert[lang],
                 text: demoJson.demo.popupAlert[
-                  responseathu.error_type.toLowerCase()
+                  responcreat.error_type.toLowerCase()
                 ][lang],
                 showConfirmButton: false,
                 timer: 1500,
@@ -301,6 +301,9 @@ fetch(AssetsUrl)
                   if (!/^https?:\/\//i.test(redirectUrl)) {
                     redirectUrl = "http://" + redirectUrl;
                   }
+                  if (!redirectUrl.endsWith("/")) 
+                  redirectUrl += "/";
+                
                   const id =
                     responseathu.data.username != null
                       ? responseathu.data.id
@@ -590,12 +593,15 @@ fetch(AssetsUrl)
                   if (!/^https?:\/\//i.test(redirectUrl)) {
                     redirectUrl = "http://" + redirectUrl;
                   }
+                  if (!redirectUrl.endsWith("/")) 
+                  redirectUrl += "/";
+
                   const id =
-                    responseathu.data.username != null
+                    responseathu.data.id != null
                       ? responseathu.data.id
                       : null;
                   const accountId =
-                    responseathu.data.username != null
+                    responseathu.data.accountId != null
                       ? responseathu.data.accountId
                       : null;
                   const username =
@@ -606,8 +612,12 @@ fetch(AssetsUrl)
                     responseathu.data.login != null
                       ? encodeURIComponent(responseathu.data.login)
                       : null;
+                      const contact =
+                    responseathu.data.u_id != null
+                      ? encodeURIComponent(responseathu.data.u_id)
+                      : null;
 
-                  const updatedUrl = `${redirectUrl}?id=${id}&accountId=${accountId}&username=${username}&login=${login}&action=login`;
+                  const updatedUrl = `${redirectUrl}?id=${id}&contact=${contact}&accountId=${accountId}&username=${username}&login=${login}&action=login`;
 
                   window.location.href = updatedUrl;
 
@@ -674,6 +684,7 @@ fetch(AssetsUrl)
         var formdata = new FormData();
         formdata.append("account", data.data.accountId);
         formdata.append("receiver", email);
+        formdata.append("lang", lang );
         $.ajax({
           type: "POST",
           dataType: "json",
@@ -734,6 +745,9 @@ fetch(AssetsUrl)
 
   var form = document.querySelector("#kt_sing_in_two_steps_form");
 
+  
+if (form) {
+
 // Focus and keyup events for input fields for verification_step
 var inputs = [
   form.querySelector("[name=code_1]"),
@@ -761,4 +775,4 @@ inputs[inputs.length - 1].addEventListener("keyup", function () {
   }
 });
 
-
+}

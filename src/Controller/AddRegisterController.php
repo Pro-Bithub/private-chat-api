@@ -95,6 +95,19 @@ class AddRegisterController extends AbstractController
             $formstemplate = 'forms/template-' . $data['template'];
             $newBaseHref = $APP_URL . $formstemplate . '/';
 
+            if (in_array(substr($folderValue, -1), ['/', '\\'])) {
+                $folderValue = rtrim($folderValue, '/\\');
+            }
+            $slug_url = $data['slug_url'];
+            if (in_array(substr($slug_url, 0, 1), ['/', '\\'])) {
+                $slug_url = ltrim($slug_url, '/\\');
+            }
+            if (in_array(substr($slug_url, 0, -1), ['/', '\\'])) {
+                $slug_url = rtrim($slug_url, '/\\');
+            }
+            $distUplodaingFolder = $folderValue . '/' . $slug_url;
+
+
 
             //for page contact
             $formstemplateContact = 'forms/template-contact';
@@ -102,22 +115,22 @@ class AddRegisterController extends AbstractController
             $fileContact = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/index.html', '', '');
             $fileContentsContact = $fileContact->getContents();
             $fileContentsContact = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContact);
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/contact/index.html',  $fileContentsContact);
+            $filesystem->dumpFile($distUplodaingFolder  . '/contact/index.html',  $fileContentsContact);
 
             $fileContacterror = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/error.html', '', '');
             $fileContentsContacterror = $fileContacterror->getContents();
             $fileContentsContacterror = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContacterror);
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/contact/error.html',  $fileContentsContacterror);
+            $filesystem->dumpFile($distUplodaingFolder  . '/contact/error.html',  $fileContentsContacterror);
 
             $fileContactsuccess = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/success.html', '', '');
             $fileContentsContactsuccess = $fileContactsuccess->getContents();
             $fileContentsContactsuccess = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactsuccess);
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/contact/success.html',  $fileContentsContactsuccess);
+            $filesystem->dumpFile($distUplodaingFolder  . '/contact/success.html',  $fileContentsContactsuccess);
 
             $fileContactrequest = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/request.php', '', '');
             $fileContentsContactrequest = $fileContactrequest->getContents();
             $fileContentsContactrequest = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactrequest);
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/contact/request.php',  $fileContentsContactrequest);
+            $filesystem->dumpFile($distUplodaingFolder  . '/contact/request.php',  $fileContentsContactrequest);
             //
 
             $lang = ($Registrations->lang == 1) ? 'en' : 'fr';
@@ -140,9 +153,9 @@ class AddRegisterController extends AbstractController
 
 
 
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/index.html',  $fileContents);
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/forget_password.html',  $fileContentsfgp);
-            // $filesystem->dumpFile($folderValue.$data['slug_url'].'/reset_password.html', $file_reset_password1->getContents());
+            $filesystem->dumpFile($distUplodaingFolder  . '/index.html',  $fileContents);
+            $filesystem->dumpFile($distUplodaingFolder  . '/forget_password.html',  $fileContentsfgp);
+            // $filesystem->dumpFile($distUplodaingFolder .'/reset_password.html', $file_reset_password1->getContents());
 
             $file_reset_password = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/reset_password.html', '', '');
             $fileContentsrestpwd = $file_reset_password->getContents();
@@ -150,7 +163,7 @@ class AddRegisterController extends AbstractController
             $fileContentsrestpwd = str_replace('[api-url]',  $APP_URL, $fileContentsrestpwd);
             $fileContentsrestpwd = str_replace('[lang]', $lang, $fileContentsrestpwd);
 
-            $filesystem->dumpFile($folderValue.$data['slug_url'] . '/reset_password.html',  $fileContentsrestpwd);
+            $filesystem->dumpFile($distUplodaingFolder  . '/reset_password.html',  $fileContentsrestpwd);
 
 
             $fileverification_step = new SplFileInfo($APP_PUBLIC_DIR . $formstemplate . '/verification_step.html', '', '');
@@ -159,21 +172,21 @@ class AddRegisterController extends AbstractController
             $fileContentsverification_step = str_replace('[api-url]',  $APP_URL, $fileContentsverification_step);
             $fileContentsverification_step = str_replace('[lang]',  $lang, $fileContentsverification_step);
             
-            $filesystem->dumpFile($folderValue.$data['slug_url']. '/verification_step.html',  $fileContentsverification_step);
+            $filesystem->dumpFile($distUplodaingFolder . '/verification_step.html',  $fileContentsverification_step);
 
             
 
 
 
             $json = json_encode(array('data' => $Registrations, 'api_url' => $APP_URL));
-            $filesystem->dumpFile($folderValue.$data['slug_url']  . '/data.json', $json);
+            $filesystem->dumpFile($distUplodaingFolder   . '/data.json', $json);
 
 
 
 
-            $filesystem->chmod($folderValue.$data['slug_url'], 0755);
-            $filesystem->chmod($folderValue.$data['slug_url'] . '/contact', 0755);
-            $filesystem->chmod($folderValue.$data['slug_url'] . '/contact/request.php', 0644);
+            $filesystem->chmod($distUplodaingFolder , 0755);
+            $filesystem->chmod($distUplodaingFolder  . '/contact', 0755);
+            $filesystem->chmod($distUplodaingFolder  . '/contact/request.php', 0644);
 
 
 
@@ -195,8 +208,7 @@ class AddRegisterController extends AbstractController
 
             return new JsonResponse([
                 'success' => true,
-                'data' => $Registrations,
-                'cc'=>$folderValue.$data['slug_url']
+                'data' => $Registrations
             ]);
 
         }

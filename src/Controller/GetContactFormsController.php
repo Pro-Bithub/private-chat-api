@@ -116,7 +116,7 @@ class GetContactFormsController extends AbstractController
        
                $results3 = $statement3->executeQuery() */
 
-        if ((isset($filterValues['status']) && $filterValues['status'] == "1")) {
+        if ((isset($filterValues['status']) && $filterValues['status'] == "1") && $start ==0) {
             $onlyRegistration = false;
             if (isset($filterValues['form_type'])) {
                 if ($filterValues['form_type'] == "1")
