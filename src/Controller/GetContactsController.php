@@ -98,7 +98,7 @@ class GetContactsController extends AbstractController
             FROM contacts e
              LEFT JOIN (
                 SELECT contact_id, COUNT(*) as total_sales
-                FROM sales
+                FROM sales where  sales.status = 1
                 GROUP BY contact_id
             ) subquery ON subquery.contact_id = e.id
                         LEFT JOIN contact_custom_fields cd ON cd.contact_id = e.id

@@ -729,7 +729,7 @@ class AddPlanContollerController extends AbstractController
         ]);
     }
 
-    #[Route('/delete_tariff/{id}', name: 'app_delete_plan_controller')]
+    #[Route('/delete_tariff/{id}', name: 'app_delete_tariff_controller')]
     public function deleteTariff(
         $id,
         Request $request,

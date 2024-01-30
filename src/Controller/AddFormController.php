@@ -12,14 +12,25 @@ use App\Repository\CustomFieldsRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\HttpClient\HttpClient;
+
 
 class AddFormController extends AbstractController
 {
+
+    protected $parameterBag;
+
+    public function __construct(ParameterBagInterface $parameterBag)
+    {
+        $this->parameterBag = $parameterBag;
+    }
+
     public function __invoke(Request $request, ContactFormsRepository $contactFormsRepository, CustomFieldsRepository $customFieldsRepository, EntityManagerInterface $entityManagerInterface, AccountsRepository $accountsRepository, UserRepository $userRepository): Response
     {
         // account: new FormControl('api/accounts/' + this.userdata.account_id),
@@ -53,7 +64,7 @@ class AddFormController extends AbstractController
 
 
         $data = json_decode($request->getContent(), true);
-/* 
+        /* 
         if ($data['formType'] != 4 && $data['formType'] != "4") {
             $sql = "SELECT c.*
             FROM `contact_forms` AS c
@@ -77,7 +88,7 @@ class AddFormController extends AbstractController
             }
         }
          */
-     
+
 
 
         $ContactForms = new ContactForms();
@@ -89,7 +100,7 @@ class AddFormController extends AbstractController
 
         // $date = DateTime::createFromFormat('Y-m-d', $data['dateStart']);
         // $datediscount = DateTime::createFromFormat('Y-m-d', $data['discountdateStart']);
-     
+
         $ContactForms->source = $data['source'];
         $ContactForms->agent_status = $data['agentStatus'];
         $ContactForms->button = $data['button'];
@@ -101,9 +112,9 @@ class AddFormController extends AbstractController
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
-      //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
+        //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
         $ContactForms->introduction = $data['introduction'];
-        
+
         $ContactForms->date_start = new \DateTimeImmutable();
         $ContactForms->status = "1";
 
@@ -188,7 +199,7 @@ class AddFormController extends AbstractController
         // //         'field_type' => $file['field_type'],
         // //     ];
         // // }
-        
+
         // $combinedData['fields'][] = [
         //     'field_id' => $result['field_id'],
         //     'field_name' => $result['field_name'],
@@ -219,16 +230,29 @@ class AddFormController extends AbstractController
                     'fields' => [],
                 ];
             }
-      
-   
-        
-     
+
+
+
+
             $combinedData[$formId]['fields'][] = [
                 'field_id' => $row['field_id'],
                 'field_name' => $row['field_name'],
                 'field_type' => $row['field_type'],
             ];
         }
+
+
+        
+
+        $content = null;
+        if ($ContactForms->form_type == "1") {
+      
+     $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
+
+        }
+
+
+
 
 
 
@@ -238,6 +262,7 @@ class AddFormController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'data' => $combinedData,
+            'content' => $content,
         ]);
     }
 
@@ -271,8 +296,8 @@ class AddFormController extends AbstractController
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
         $data = json_decode($request->getContent(), true);
-        
-   /*      if ($data['formType'] != 4 && $data['formType'] != "4" && ($data['status'] === "1" ||$data['status'] === 1  )  ) {
+
+        /*      if ($data['formType'] != 4 && $data['formType'] != "4" && ($data['status'] === "1" ||$data['status'] === 1  )  ) {
             $sql = "SELECT c.*
             FROM `contact_forms` AS c
             WHERE c.form_type = :form_type AND c.status = 1 and c.account_id = :account_id and c.id !=:id
@@ -297,7 +322,7 @@ class AddFormController extends AbstractController
         } */
 
         $ContactForms = $contactFormsRepository->find($id);
-   
+
         $ContactForms->source = $data['source'];
         $ContactForms->agent_status = $data['agentStatus'];
         $ContactForms->button = $data['button'];
@@ -308,7 +333,7 @@ class AddFormController extends AbstractController
         $ContactForms->sendable_agents = $data['sendableAgents'];
         $ContactForms->waiting_time = $data['waitingTime'];
         $ContactForms->text_capture = $data['textCapture'];
-      //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
+        //  $ContactForms->text_capture_before = $data['textCaptureBefore'];
         $ContactForms->introduction = $data['introduction'];
         $ContactForms->status = $data['status'];
 
@@ -339,14 +364,14 @@ class AddFormController extends AbstractController
         //     $predefinedTextUserIds = $statement3->executeQuery()->fetchAllAssociative();
         $resultold = array_column($predefinedTextUserIds, 'field_id');
 
-     /*    $difference2 = array_diff($resultold, $contactFormField); */
+        /*    $difference2 = array_diff($resultold, $contactFormField); */
         //dd($difference2, $result, $clickableLinksUser);
 
         // Find added items
         $added_items = array_diff($contactFormField, $resultold);
         // Find removed items
-         $removed_items = array_diff($resultold, $contactFormField);
-         if (!empty($added_items)) {
+        $removed_items = array_diff($resultold, $contactFormField);
+        if (!empty($added_items)) {
             foreach ($added_items as $user_id) {
                 $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $user_id);
                 if (empty($form_field_data)) {
@@ -369,21 +394,21 @@ class AddFormController extends AbstractController
                     $entityManagerInterface->flush();
                 }
             }
-         }
-         if (!empty($removed_items)) {
+        }
+        if (!empty($removed_items)) {
             foreach ($removed_items as $difference) {
-                    $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $difference);
-                    if (!empty($form_field_data)) {
-                        $form_field = $form_field_data[0];
-                        $form_field->status = '0';
-                        $form_field->date_end = new \DateTimeImmutable();
-                        $entityManagerInterface->persist($form_field);
-                        $entityManagerInterface->flush();
-                    }
+                $form_field_data = $contactFormFieldsRepository->loadfromByFieldData1($ContactForms->id, $difference);
+                if (!empty($form_field_data)) {
+                    $form_field = $form_field_data[0];
+                    $form_field->status = '0';
+                    $form_field->date_end = new \DateTimeImmutable();
+                    $entityManagerInterface->persist($form_field);
+                    $entityManagerInterface->flush();
+                }
             }
-         }
+        }
 
-      /*   $trak="start";
+        /*   $trak="start";
         if (!empty($difference2)) {
             foreach ($difference2 as $difference) {
                 $trak.="is deffirance";
@@ -499,16 +524,65 @@ class AddFormController extends AbstractController
             ];
         }
 
-       
-         
 
-     
+
+
+
+        $content = null;
+        if ($ContactForms->form_type == "1") {
+      
+     $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
+
+        }
+
+
+
+
+
 
         return new JsonResponse([
             'success' => true,
             'data' => $combinedData,
+            'content' => $content,
+
         ]);
     }
+
+
+    function fetchDataFromWebService($parameterBag,$urlparam)
+    {
+        function addTrailingSlashIfMissing($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $content = null;
+
+
+        try {
+            $client = HttpClient::create();
+
+
+            $ws_library = addTrailingSlashIfMissing($parameterBag->get('ws_library'));
+
+            $url = $ws_library .$urlparam ;
+            $response = $client->request('GET', $url);
+
+            $status = $response->getStatusCode();
+            if ($status < 400) {
+                $content = $response->getContent();
+            }
+        } catch (\Throwable $e) {
+            $content = $e->getMessage();
+        }
+
+        return $content;
+    }
+
+
 
     #[Route('/delete_form/{id}', name: 'app_delete_form_controller')]
     public function deleteForm(
@@ -596,7 +670,7 @@ class AddFormController extends AbstractController
 
         $existingContactForms = $contactFormsRepository->find($id);
         $user = $tokenData->getUser();
-        $account = $accountsRepository->find( $user->accountId);
+        $account = $accountsRepository->find($user->accountId);
 
         $newContactForms = new ContactForms();
         $reflectionClass = new \ReflectionClass(ContactForms::class);
@@ -610,16 +684,16 @@ class AddFormController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $newContactForms->date_start = new \DateTimeImmutable();
         $newContactForms->status = '1';
-        $newContactForms->setAccount( $account);
-       
+        $newContactForms->setAccount($account);
 
-        
+
+
 
         //dd($clickableLinksUser);
         $entityManagerInterface->persist($newContactForms);
         $entityManagerInterface->flush();
         //$contactFormFields= $contactFormFieldsRepository->findByidform($id)  ;
- /*        if (!empty($contactFormFields)) {
+        /*        if (!empty($contactFormFields)) {
         foreach ($contactFormFields as $oldcontactFormField) {
             $newContactFormFields = new ContactFormFields();
             $newContactFormFields->date_start= new \DateTimeImmutable();
@@ -639,28 +713,29 @@ class AddFormController extends AbstractController
             foreach ($results3 as $oldcontactFormField) {
                 $sql = "INSERT INTO contact_form_fields (date_start, status, field_id, form_id) 
                 VALUES (CURRENT_TIMESTAMP, '1', :field_id, :form_id)";
-        
-          
+
+
 
                 $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
                 // $stmt4->bindValue('account', $data['account']);
 
                 $stmt4->bindValue('field_id', $oldcontactFormField['field_id']);
-                $stmt4->bindValue('form_id',$newContactForms->getId());
-        
+                $stmt4->bindValue('form_id', $newContactForms->getId());
+
                 $result = $stmt4->executeQuery();
 
-       
-         /*        $newContactFormFields = new ContactFormFields();
+
+                /*        $newContactFormFields = new ContactFormFields();
                 $newContactFormFields->date_start= new \DateTimeImmutable();
                 $newContactFormFields->status = '1';
                 $newContactFormFields->setField($oldcontactFormField['field_id']);
                 $newContactFormFields->setForm($newContactForms);
                 $entityManagerInterface->persist($newContactFormFields);
                 $entityManagerInterface->flush(); */
-            }   }
+            }
+        }
 
-        
+
 
 
         $logs = new UserLogs();
@@ -674,12 +749,24 @@ class AddFormController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-   
+
+        
+        $content = null;
+        if ($newContactForms->form_type == "1") {
+      
+     $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
+
+        }
+
+
+
+
 
         return new JsonResponse([
             'success' => true,
             'data' => $newContactForms,
-      
+            'content' => $content,
+
         ]);
     }
 }

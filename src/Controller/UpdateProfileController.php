@@ -111,6 +111,8 @@ class UpdateProfileController extends AbstractController
                 try {
                     $file_name = str_replace([' ', '.'], '_', $user_p->nickname . '-' . $user_p->id);
                     $user_p->picture = $fileUploader->upload($uploadedFile,$file_name);
+                    $entityManagerInterface->persist($user_p);
+                    $entityManagerInterface->flush();
                 } catch (FileException $e) {
                 }
               }

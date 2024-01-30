@@ -36,12 +36,11 @@ class SalesController extends AbstractController
 
         if ($data['agent_id'] != null) {
 
-            $sql2 = "SELECT * FROM `profiles` as p WHERE p.id = :id";
+            $sql2 = "SELECT * FROM `user` as p WHERE p.id = :id";
             $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
             $statement2->bindValue('id', $data['agent_id']);
             $user1 = $statement2->executeQuery()->fetchAssociative();
-            $user = $userRepository->find($user1['u_id']);
-
+            $user = $userRepository->find($user1['id']);
 
 
 

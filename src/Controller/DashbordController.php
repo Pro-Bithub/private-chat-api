@@ -332,14 +332,14 @@ class DashbordController extends AbstractController
 
         //SalesChart
         $RAW_QUERY12 =
-            'SELECT CAST(S.date_creation AS date) AS DateOnly, COUNT(*) as total_sales
-       FROM `sales` AS S
-       INNER JOIN `contacts` AS c ON c.id = S.contact_id
-       INNER JOIN `plans` AS p ON p.id = S.plan_id
+            'SELECT CAST(s.date_creation AS date) AS DateOnly, COUNT(*) as total_sales
+       FROM `sales` AS s
+       INNER JOIN `contacts` AS c ON c.id = s.contact_id
+       INNER JOIN `plans` AS p ON p.id = s.plan_id
        WHERE (p.account_id = :id or c.account_id = :id)
-         AND S.status = 1
+         AND s.status = 1
          and s.date_creation BETWEEN :startDate AND :endDate
-       GROUP BY CAST(S.date_creation AS date)       
+       GROUP BY CAST(s.date_creation AS date)       
        ;';
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY12);
         $stmt->bindValue('id', $user->accountId);

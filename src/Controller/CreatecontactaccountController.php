@@ -193,8 +193,7 @@ class CreatecontactaccountController extends AbstractController
         $entityManagerInterface->flush();
 
 
-        $applicationName = $request->get('applicationName');
-        $key = "gcsit";
+     
 
         $email = urlencode($request->get('email'));
 
@@ -267,6 +266,7 @@ class CreatecontactaccountController extends AbstractController
             'success' => true,
             'data' => $profiles,
             'account_id' => $contact->accountId,
+            'password'=> $request->get('password')
         ]);
     }
 
@@ -293,6 +293,7 @@ class CreatecontactaccountController extends AbstractController
         // dd($profiles);
         //$user = Profiles::where('login', $login)->first();
         // dd($userPasswordHasher->isPasswordValid($profiles, $password));
+    
         if ($profiles == null) {
             return new JsonResponse([
                 'success' => 'false',
@@ -607,102 +608,181 @@ class CreatecontactaccountController extends AbstractController
     }
 
     #[Route('/login/2fa/generate', name: 'app_login_2fa_generate')]
-    public function generate(Request $request, EntityManagerInterface $entityManagerInterface, TwoFactorAuthAccountRepository $TwoFactorAuthAccountRepository): Response
+    public function generate(MailerInterface $mailer,Request $request, EntityManagerInterface $entityManagerInterface, TwoFactorAuthAccountRepository $TwoFactorAuthAccountRepository): Response
     {
         $data = json_decode($request->getContent(), true);
 
         $receiver = $request->get('receiver');
-
-
         $account_id = $request->get('account');
 
-        $method = 1;
+        if (
+            isset($receiver) && !is_null($receiver) && $receiver !== ''
+            && isset($account_id) && !is_null($account_id) && $account_id !== ''
+        ) {
 
 
-        $id_2fa_accounts = null;
 
-        $sql = "SELECT  fa.id , fr.status , fc.id as id_code , fc.status as status_code   FROM `2fa_accounts` AS fa
+            $method = 1;
+
+            $id_2fa_accounts = null;
+
+            $sql = "SELECT  fa.id , fr.status , fc.id as id_code , fc.status as status_code   FROM `2fa_accounts` AS fa
          LEFT JOIN `2fa_codes` AS fc ON fc.account_id = fa.id
         LEFT JOIN `2fa_requests` AS fr ON fr.code_id = fc.id
         WHERE fr.id  is not null  and  fa.customer_account_id = :account_id and  fa.method = :method and fa.receiver= :receiver  and DATE(fa.date_start) <= CURDATE() and fa.status = 1   AND (fa.date_end IS NULL OR CURDATE() < DATE(fa.date_end)) 
         ";
 
-        $statement = $entityManagerInterface->getConnection()->prepare($sql);
-        $statement->bindValue('receiver', $receiver);
-        $statement->bindValue('account_id', $account_id);
-        $statement->bindValue('method', $method);
-        $results = $statement->executeQuery()->fetchAllAssociative();
-        $list_code_id_used = []; //for add all old code used
-        if (count($results) > 0) {
-            $isVerify = false;
-            foreach ($results as $row) {
-                if (isset($row['status'])) {
-                    if ($row['status'] === 3) {
-                        $isVerify = true;
+            $statement = $entityManagerInterface->getConnection()->prepare($sql);
+            $statement->bindValue('receiver', $receiver);
+            $statement->bindValue('account_id', $account_id);
+            $statement->bindValue('method', $method);
+            $results = $statement->executeQuery()->fetchAllAssociative();
+            $list_code_id_used = []; //for add all old code used
+            if (count($results) > 0) {
+                $isVerify = false;
+                foreach ($results as $row) {
+                    if (isset($row['status'])) {
+                        if ($row['status'] === 3) {
+                            $isVerify = true;
+                        }
                     }
-                }
-                if (isset($row['id'])) {
-                    if (!isset($id_2fa_accounts))
-                        $id_2fa_accounts = $row['id'];
-                }
+                    if (isset($row['id'])) {
+                        if (!isset($id_2fa_accounts))
+                            $id_2fa_accounts = $row['id'];
+                    }
 
-                if (isset($row['status_code'])) {
-                    if ($row['status_code'] != 3) {
-                        $list_code_id_used[] = $row['id_code'];
+                    if (isset($row['status_code'])) {
+                        if ($row['status_code'] != 3) {
+                            $list_code_id_used[] = $row['id_code'];
+                        }
                     }
                 }
+                if ($isVerify)
+                    return new JsonResponse([
+                        'success' => false,
+                        'error_type' => "READY_VRIFYIED",
+                        'generated_code' =>  null,
+                    ]);
             }
-            if ($isVerify)
+            if (isset($id_2fa_accounts)) {
+                $TwoFactorAuthAccount = $TwoFactorAuthAccountRepository->find($id_2fa_accounts);
+                if (count($list_code_id_used) > 0) {
+                    $codes = implode(', ', array_map('intval', $list_code_id_used));
+                    $sql = "UPDATE 2fa_codes SET status = 3 WHERE id IN ($codes)";
+                    $statementused = $entityManagerInterface->getConnection()->prepare($sql);
+                    $statementused->execute();
+                }
+            } else {
                 return new JsonResponse([
                     'success' => false,
-                    'error_type' => "READY_VRIFYIED",
+                    'error_type' => "usernotfound",
                     'generated_code' =>  null,
                 ]);
-        }
-        if (isset($id_2fa_accounts)) {
-            $TwoFactorAuthAccount = $TwoFactorAuthAccountRepository->find($id_2fa_accounts);
-            if (count($list_code_id_used) > 0) {
-                $codes = implode(', ', array_map('intval', $list_code_id_used));
-                $sql = "UPDATE 2fa_codes SET status = 3 WHERE id IN ($codes)";
-                $statementused = $entityManagerInterface->getConnection()->prepare($sql);
-                $statementused->execute();
-            }
-        } else {
-            $TwoFactorAuthAccount = new TwoFactorAuthAccount();
+                /*       $TwoFactorAuthAccount = new TwoFactorAuthAccount();
             $TwoFactorAuthAccount->receiver = $receiver;
             $TwoFactorAuthAccount->method = $method;
             $TwoFactorAuthAccount->status = 1;
             $TwoFactorAuthAccount->date_start = new \DateTimeImmutable();
             $TwoFactorAuthAccount->customer_account_id = $account_id;
             $entityManagerInterface->persist($TwoFactorAuthAccount);
+            $entityManagerInterface->flush(); */
+            }
+
+
+            $TwoFactorAuthCode = new TwoFactorAuthCode();
+            $TwoFactorAuthCode->account_id  = $TwoFactorAuthAccount->id;
+            $TwoFactorAuthCode->code  = mt_rand(100000, 999999); // Generates a random 6-digit number
+            $TwoFactorAuthCode->status = 1;
+            $TwoFactorAuthCode->date_creation = new \DateTimeImmutable();
+            $entityManagerInterface->persist($TwoFactorAuthCode);
             $entityManagerInterface->flush();
+
+
+
+
+            $TwoFactorAuthRequests = new TwoFactorAuthRequests();
+            $TwoFactorAuthRequests->account_id = $TwoFactorAuthAccount->id;
+            $TwoFactorAuthRequests->code_id = $TwoFactorAuthCode->id;
+            $TwoFactorAuthRequests->date_sent  = new \DateTimeImmutable();
+            $TwoFactorAuthRequests->status = 1;
+            $entityManagerInterface->persist($TwoFactorAuthRequests);
+            $entityManagerInterface->flush();
+
+
+            
+        function addTrailingSlashIfMissing2($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $APP_PUBLIC_DIR = addTrailingSlashIfMissing2($this->parameterBag->get('APP_PUBLIC_DIR'));
+
+        $formstemplate = 'lang/email_verification_' . $request->get('lang') . '.json';
+        $filePath = $APP_PUBLIC_DIR . $formstemplate;
+
+
+        if (file_exists($filePath)) {
+
+            $fileContent = file_get_contents($filePath);
+
+
+            $dataArray = json_decode($fileContent, true);
+
+            if ($dataArray !== null) {
+
+                $subject = $dataArray['subject'];
+
+                $email_verification_templete = 'templete/email_verification.html';
+                $filePathemail_verification = $APP_PUBLIC_DIR . $email_verification_templete;
+                $htmlTemplate = file_get_contents($filePathemail_verification);
+                $replacement = $dataArray['content']['header'];
+                $search = '${languageText.content.header}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['body'];
+                $search = '${languageText.content.body}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement =       $TwoFactorAuthCode->code;
+                $search = '${response.data.generated_code}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['greeting'];
+                $search = '${languageText.content.footer.greeting}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['brand'];
+                $search = '${languageText.content.footer.brand}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['team'];
+                $search = '${languageText.content.footer.team}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+
+
+
+                $email = (new Email())
+                    ->from('hello@example.com')
+                    ->to($receiver )
+                    ->subject($subject)
+                    ->html($htmlTemplate);
+
+                $mailer->send($email);
+            }
         }
 
 
-        $TwoFactorAuthCode = new TwoFactorAuthCode();
-        $TwoFactorAuthCode->account_id  = $TwoFactorAuthAccount->id;
-        $TwoFactorAuthCode->code  = mt_rand(100000, 999999); // Generates a random 6-digit number
-        $TwoFactorAuthCode->status = 1;
-        $TwoFactorAuthCode->date_creation = new \DateTimeImmutable();
-        $entityManagerInterface->persist($TwoFactorAuthCode);
-        $entityManagerInterface->flush();
 
 
 
+            return new JsonResponse([
+                'success' => true,
 
-        $TwoFactorAuthRequests = new TwoFactorAuthRequests();
-        $TwoFactorAuthRequests->account_id = $TwoFactorAuthAccount->id;
-        $TwoFactorAuthRequests->code_id = $TwoFactorAuthCode->id;
-        $TwoFactorAuthRequests->date_sent  = new \DateTimeImmutable();
-        $TwoFactorAuthRequests->status = 1;
-        $entityManagerInterface->persist($TwoFactorAuthRequests);
-        $entityManagerInterface->flush();
-
-
+            ]);
+        }
 
         return new JsonResponse([
-            'success' => true,
-            'generated_code' =>  $TwoFactorAuthCode->code
+            'success' => false,
+            'error_type' => "usernotfound",
+            'generated_code' =>  null,
         ]);
     }
 }

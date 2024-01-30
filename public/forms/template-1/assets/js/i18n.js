@@ -34,7 +34,7 @@ var demoJson = {
       incorrecet_code: {
         en: "Incorrect code",
         fr: "Code incorrect",
-      },
+      }, 
 	  "ready_have_account": {
 		"en": "Account already existing",
 		"fr": "Compte déjà existant"

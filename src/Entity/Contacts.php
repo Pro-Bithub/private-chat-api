@@ -150,6 +150,15 @@ class Contacts
     #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
     public ?string $country_card = null;
 
+    #[ORM\Column(length: 3)]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $currency = null;
+
+    #[ORM\Column(length: 2)]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $language = null;
+
+
 
 
 

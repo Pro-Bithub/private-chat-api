@@ -82,7 +82,7 @@ class UpdatePasswordContactController extends AbstractController
 
                 <p>If you did not make this request then please ignore this email.</p>
 
-                <p>Otherwise, please click this link to change your password: <a href="' . $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe . '">[link]</a></p>             
+                <p>Otherwise, please click this link to change your password: <a href="' . $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe . '" target="_top">[' . $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe . ']</a></p>             
             ');
 
             $this->mailer->send($email);

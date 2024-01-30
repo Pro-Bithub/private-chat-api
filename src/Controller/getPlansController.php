@@ -920,7 +920,7 @@ class getPlansController extends AbstractController
 
         return new JsonResponse([
             'success' => 'true',
-            'data' => $results
+            'data' => $results[0]
         ]);
       
     }

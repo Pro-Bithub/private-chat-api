@@ -13,74 +13,138 @@ use Symfony\Component\Routing\Annotation\Route;
 class GetTypeFormController extends AbstractController
 {
 
-    
+
 
     protected $parameterBag;
     public function __construct(ParameterBagInterface $parameterBag)
     {
         $this->parameterBag = $parameterBag;
-
     }
 
 
     #[Route('/GetFormType', name: 'app_get_type_form')]
-    public function index(EntityManagerInterface $entityManagerInterface): Response
+    public function index(Request $request,EntityManagerInterface $entityManagerInterface): Response
     {
 
-        $sql = "SELECT   CASE
-    WHEN cu.field_type = 12 OR cu.field_type = 13  THEN  GROUP_CONCAT(cflv.value SEPARATOR '##') 
-    ELSE NULL  
-    END AS list_values_select,c.agent_status,c.source,c.message_capture  ,c.introduction ,c.button, c.account_id , c.id as form_id, c.form_type, c.text_capture, c.friendly_name, cu.field_name, cu.field_type, cf.id , cu.id as idcustom_fields
-    FROM `contact_forms` AS c
-    LEFT JOIN `contact_form_fields` AS cf ON cf.form_id = c.id
-    LEFT JOIN `custom_fields` AS cu ON cu.id = cf.field_id
-    LEFT JOIN `custom_field_list_values` AS cflv ON cflv.custom_field_id = cu.id  
 
-    WHERE c.form_type IN (1, 2, 3) AND c.status = 1 and cf.status = 1
-    GROUP BY c.id, cu.id ,cf.id
-    ORDER BY c.form_type, c.id  DESC;";
+        function fetchContactFormsData(EntityManagerInterface $entityManagerInterface, $account_id)
+        {
+            $sql = "SELECT   
+                    CASE
+                        WHEN cu.field_type = 12 OR cu.field_type = 13 THEN GROUP_CONCAT(cflv.value SEPARATOR '##')
+                        ELSE NULL
+                    END AS list_values_select,
+                    c.agent_status,
+                    c.source,
+                    c.message_capture,
+                    c.introduction,
+                    c.button,
+                    c.account_id,
+                    c.id AS form_id,
+                    c.form_type,
+                    c.text_capture,
+                    c.friendly_name,
+                    cu.field_name,
+                    cu.field_type,
+                    cf.id,
+                    cu.id AS idcustom_fields
+                FROM
+                    `contact_forms` AS c
+                LEFT JOIN `contact_form_fields` AS cf ON cf.form_id = c.id
+                LEFT JOIN `custom_fields` AS cu ON cu.id = cf.field_id
+                LEFT JOIN `custom_field_list_values` AS cflv ON cflv.custom_field_id = cu.id
+                WHERE
+                    c.form_type IN (1, 2, 3) AND c.status = 1 AND cf.status = 1";
+        
+        /*     if ($account_id === null) {
+                $sql .= " AND c.account_id IS NULL";
+            } else {
+                $sql .= " AND c.account_id = :account_id";
+            } */
+        
+            $sql .= " GROUP BY c.id, cu.id, cf.id
+                      ORDER BY c.form_type, c.id DESC";
+        
+            $statement = $entityManagerInterface->getConnection()->prepare($sql);
+        /*     
+            if ($account_id !== null) {
+                $statement->bindValue('account_id', $account_id);
+            } */
+        
+            $contactForms = $statement->executeQuery()->fetchAllAssociative();
+        
+            return $contactForms;
+        }
+        
+        $account_id = $request->attributes->get('account');
+        // Usage of the function
+        $contactFormsData = fetchContactFormsData($entityManagerInterface,$account_id);
 
-        $statement = $entityManagerInterface->getConnection()->prepare($sql);
-        $contactForms = $statement->executeQuery()->fetchAllAssociative();
-        // dd($contactForms);
-        $data = [];
 
-        foreach ($contactForms as $row) {
-            if (empty($data[$row['form_id']])) {
-                $data[$row['form_id']] = [
-                    'form_type' => $row['form_type'],
-                    'friendly_name' => $row['friendly_name'],
-                    'text_capture' => $row['text_capture'],
-                    'introduction' => $row['introduction'],
-                    'message_capture' => $row['message_capture'],
-                    'source' => $row['source'],
-                    'agent_status' => $row['agent_status'],
-                    'button' => $row['button'],
-                    'form_id' => $row['form_id'],
-                    'account_id' => $row['account_id'],
-                    'fields' => [],
+        function structureContactFormData($contactFormsData,$account_id) {
+            $data = [];
+            $formTypeExists = false;
+        
+            foreach ($contactFormsData as $row) {
+                if (empty($data[$row['form_id']])) {
+                    if ($row['form_type'] == '1') {
+                        $formTypeExists = true;
+                    }
+        
+                    $data[$row['form_id']] = [
+                        'form_type' => $row['form_type'],
+                        'friendly_name' => $row['friendly_name'],
+                        'text_capture' => $row['text_capture'],
+                        'introduction' => $row['introduction'],
+                        'message_capture' => $row['message_capture'],
+                        'source' => $row['source'],
+                        'agent_status' => $row['agent_status'],
+                        'button' => $row['button'],
+                        'form_id' => $row['form_id'],
+                        'account_id' => $row['account_id'],
+                        'fields' => [],
+                    ];
+                }
+        
+                $listArray = [];
+                if ($row['field_type'] == 12 || $row['field_type'] == 13) {
+                    if ($row['list_values_select'] !== null) {
+                        $listArray = explode('##', $row['list_values_select']);
+                    }
+                }
+                $data[$row['form_id']]['fields'][] = [
+                    'field_name' => $row['field_name'],
+                    'field_type' => $row['field_type'],
+                    'field_id' => $row['id'],
+                    'field_default_value' => $listArray,
                 ];
             }
-            $listArray = [];
-            if ($row['field_type'] == 12 || $row['field_type'] == 13) {
-                if ($row['list_values_select'] !== null) {
-                    $listArray = explode('##', $row['list_values_select']);
-                }
-            }
-
-            $data[$row['form_id']]['fields'][] = [
-                'field_name' => $row['field_name'],
-                'field_type' => $row['field_type'],
-                'field_id' => $row['id'],
-                'field_default_value' => $listArray,
+        
+            return [
+                'data' => $data,
+                'formTypeExists' => $formTypeExists
             ];
         }
+        $result = structureContactFormData($contactFormsData,$account_id);
+   
+
+        $data = $result ['data'];
+               // Check if form_type 1 exists in the data
+     /*      if($result ['formTypeExists']==false){
+            $contactFormsData2 = fetchContactFormsData($entityManagerInterface,null);
+            $result2 = structureContactFormData($contactFormsData2,$account_id) ;
+
+            $data = array_merge($result['data'], $result2['data']);
+
+        } 
+  */
 
 
 
         return new JsonResponse([
             'success' => true,
             'data' => array_values($data),
+            
         ]);
     }
 
@@ -172,7 +236,7 @@ class GetTypeFormController extends AbstractController
             return $str;
         }
 
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/";
 
         $data = json_decode($request->getContent(), true);
         $query2 = [];
@@ -181,13 +245,15 @@ class GetTypeFormController extends AbstractController
             $query2[] = ' (u.status = :status)';
         }
 
-        $rawQuery = "SELECT  up.picture as picture, up.id as presentation_id, up.status as presentation_stauts,up.nickname as nickname ,   p.id as profile_id , u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
+
+        $rawQuery = "SELECT  up.picture as picture, up.id as presentation_id, up.status as presentation_stauts,up.nickname as nickname , p.id as profile_id, p.u_type, u.id , u.email, u.lastname , u.firstname , u.status, p.user_key
         FROM `user` AS u
         left join `user_presentations` as up on up.user_id = u.id and  up.status =1
         left join `profiles` as p on p.u_id = u.id  and u_type in (1,3)
          WHERE u.account_id = :account  
         " . (!empty($query2) ? 'AND' : '') . implode(' AND ', $query2) . " 
         ";
+
 
         $stmt = $entityManagerInterface->getConnection()->prepare($rawQuery);
         //dd($stmt);
@@ -199,10 +265,11 @@ class GetTypeFormController extends AbstractController
 
 
         $data = [];
-   
+
         foreach ($userwithpresentation as $row) {
             if (empty($data[$row['id']])) {
                 $data[$row['id']] = [
+                    'role' => (($row['u_type'] == '3') ? 'ADMIN' : 'AGENT'),
                     'profile_id' => $row['profile_id'],
                     'email' => $row['email'],
                     'lastname' => $row['lastname'],
@@ -213,23 +280,20 @@ class GetTypeFormController extends AbstractController
                     'presentations' => [],
                 ];
             }
-            if($row['presentation_stauts']){
-                if($row['presentation_stauts']===1){
-                    $avatar="";
-                if($row['picture']!=null)
-                if(!empty($row['picture']))
-                $avatar=$uploads_directory.$row['picture'];
-                
-                $data[$row['id']]['presentations'][] = [
+            if ($row['presentation_stauts']) {
+                if ($row['presentation_stauts'] === 1) {
+                    $avatar = "";
+                    if ($row['picture'] != null)
+                        if (!empty($row['picture']))
+                            $avatar = $uploads_directory . $row['picture'];
+
+                    $data[$row['id']]['presentations'][] = [
                         'nickname' => $row['nickname'],
                         'avatar' => $avatar,
                         'id' => $row['presentation_id'],
-               ];
-                
+                    ];
                 }
-               
             }
-          
         }
 
 
