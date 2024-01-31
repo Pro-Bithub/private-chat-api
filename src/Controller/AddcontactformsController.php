@@ -15,8 +15,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AddcontactformsController extends AbstractController
 {
-    #[Route('/addcontactforms')]
-    public function index(Request $request, UserPasswordHasherInterface $userPasswordHasher,  EntityManagerInterface $entityManagerInterface, ContactsRepository $contactsRepository, ProfilesRepository $profilesRepository): Response
+    #[Route('/addcontactforms/{newpassword}')]
+    public function index( $newpassword,Request $request, UserPasswordHasherInterface $userPasswordHasher,  EntityManagerInterface $entityManagerInterface, ContactsRepository $contactsRepository, ProfilesRepository $profilesRepository): Response
     {
 
         // $authorizationHeader = $request->headers->get('Authorization');
@@ -196,18 +196,22 @@ class AddcontactformsController extends AbstractController
             $login = $contact->id . $timestamp;
             $profile->login =  $login;
         }
-
-        $password = bin2hex(random_bytes(8));
-        $profile->password = $userPasswordHasher->hashPassword($profile, $password);
+        $data = [];
+        if($newpassword){
+            $password = bin2hex(random_bytes(8));
+            $profile->password = $userPasswordHasher->hashPassword($profile, $password);
+            $data['password'] = $password;
+        }
+     
 
         $entityManagerInterface->persist($profile);
         $entityManagerInterface->flush();
 
 
 
-        $data = [];
+   
         $data['login'] = $profile->login;
-        $data['password'] = $password;
+     
         $data['firstname'] = $contact->firstname ?? '';
         $data['lastname'] = $contact->lastname ?? '';
 

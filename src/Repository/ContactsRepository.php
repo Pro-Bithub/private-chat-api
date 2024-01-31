@@ -42,10 +42,12 @@ class ContactsRepository extends ServiceEntityRepository
     public function loadContactByEmail($email)
     {
         return $this->createQueryBuilder('u')
-            ->where('u.email = :email')
-            ->setParameter('email', $email)
-            ->getQuery()
-            ->getOneOrNullResult();
+        ->where('u.email = :email')             // Filter users by email
+        ->setParameter('email', $email)          // Bind the parameter :email
+        ->orderBy('u.id', 'DESC')                // Order by user id in descending order
+        ->setMaxResults(1)                       // Limit the result to one record
+        ->getQuery()                             // Get the query
+        ->getOneOrNullResult(); 
     }
 
     public function loadContactBsourceAndsourceType($source_id,$source_type)

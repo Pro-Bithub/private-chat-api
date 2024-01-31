@@ -190,6 +190,7 @@ fetch(AssetsUrl)
 
           formdata.append("account", data.data.accountId);
           formdata.append("login", $('#register-form1 [name="email"]').val());
+          document.querySelector("#signup1").classList.add("disabled");
           $.ajax({
             type: "POST",
             dataType: "json",

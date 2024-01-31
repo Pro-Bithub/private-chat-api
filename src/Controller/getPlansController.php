@@ -487,6 +487,9 @@ class getPlansController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $id = intval($data['account_id']);
 
+        $language = $data['language'];
+
+
         $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id AS UserID, p.firstname, p.lastname,
         
         CASE
@@ -496,9 +499,9 @@ class getPlansController extends AbstractController
          END as avatar  ,pr.*
         FROM `user` AS p
         INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id   and  pr.status =1
-        WHERE p.account_id = :id");
+        WHERE p.account_id = :id   AND pr.languages LIKE :language ");
         $stmt->bindValue('id', $id);
-     
+        $stmt->bindValue('language', '%' . $language . '%');
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
 
         return new JsonResponse([

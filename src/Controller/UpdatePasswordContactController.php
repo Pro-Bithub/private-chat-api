@@ -43,6 +43,7 @@ class UpdatePasswordContactController extends AbstractController
      */
     public function sendEmail(Request $request)
     {
+
         function addTrailingSlashIfMissing($str)
         {
             if (!in_array(substr($str, -1), ['/', '\\'])) {
@@ -50,8 +51,59 @@ class UpdatePasswordContactController extends AbstractController
             }
             return $str;
         }
+/* 
+        $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
+
+        $formstemplate = 'lang/email_verification_' . $request->get('lang') . '.json';
+        $filePath = $APP_PUBLIC_DIR . $formstemplate;
 
 
+        if (file_exists($filePath)) {
+
+            $fileContent = file_get_contents($filePath);
+
+
+            $dataArray = json_decode($fileContent, true);
+
+            if ($dataArray !== null) {
+
+                $subject = $dataArray['subject'];
+
+                $email_verification_templete = 'templete/email_verification.html';
+                $filePathemail_verification = $APP_PUBLIC_DIR . $email_verification_templete;
+                $htmlTemplate = file_get_contents($filePathemail_verification);
+                $replacement = $dataArray['content']['header'];
+                $search = '${languageText.content.header}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['body'];
+                $search = '${languageText.content.body}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement =       $TwoFactorAuthCode->code;
+                $search = '${response.data.generated_code}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['greeting'];
+                $search = '${languageText.content.footer.greeting}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['brand'];
+                $search = '${languageText.content.footer.brand}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                $replacement = $dataArray['content']['footer']['team'];
+                $search = '${languageText.content.footer.team}';
+                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+
+
+
+                $email = (new Email())
+                    ->from('hello@example.com')
+                    ->to($request->get('email'))
+                    ->subject($subject)
+                    ->html($htmlTemplate);
+
+                $mailer->send($email);
+            }
+        }
+ */
+    
 
         // dd($request->get('email'));
         $data = json_decode($request->getContent(), true);
