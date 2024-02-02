@@ -51,93 +51,87 @@ class UpdatePasswordContactController extends AbstractController
             }
             return $str;
         }
-/* 
-        $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
-
-        $formstemplate = 'lang/email_verification_' . $request->get('lang') . '.json';
-        $filePath = $APP_PUBLIC_DIR . $formstemplate;
 
 
-        if (file_exists($filePath)) {
-
-            $fileContent = file_get_contents($filePath);
-
-
-            $dataArray = json_decode($fileContent, true);
-
-            if ($dataArray !== null) {
-
-                $subject = $dataArray['subject'];
-
-                $email_verification_templete = 'templete/email_verification.html';
-                $filePathemail_verification = $APP_PUBLIC_DIR . $email_verification_templete;
-                $htmlTemplate = file_get_contents($filePathemail_verification);
-                $replacement = $dataArray['content']['header'];
-                $search = '${languageText.content.header}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-                $replacement = $dataArray['content']['body'];
-                $search = '${languageText.content.body}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-                $replacement =       $TwoFactorAuthCode->code;
-                $search = '${response.data.generated_code}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-                $replacement = $dataArray['content']['footer']['greeting'];
-                $search = '${languageText.content.footer.greeting}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-                $replacement = $dataArray['content']['footer']['brand'];
-                $search = '${languageText.content.footer.brand}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-                $replacement = $dataArray['content']['footer']['team'];
-                $search = '${languageText.content.footer.team}';
-                $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
-
-
-
-                $email = (new Email())
-                    ->from('hello@example.com')
-                    ->to($request->get('email'))
-                    ->subject($subject)
-                    ->html($htmlTemplate);
-
-                $mailer->send($email);
-            }
-        }
- */
-    
 
         // dd($request->get('email'));
         $data = json_decode($request->getContent(), true);
         $name = $request->get('name');
         $url = $request->get('url');
+        $account = $request->get('account');
+
+
         //dd($data);
-        $contact = $this->ContactsRepository->loadContactByEmail($request->get('login'));
+        $contact = $this->ContactsRepository->loadContactByEmail($request->get('login'), $account);
         if ($contact != null) {
 
-            $APP_URL = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'));
+            $APP_PUBLIC_DIR = addTrailingSlashIfMissing($this->parameterBag->get('APP_PUBLIC_DIR'));
+
+            $formstemplate = 'lang/email_recover_password_' . $request->get('lang') . '.json';
+            $filePath = $APP_PUBLIC_DIR . $formstemplate;
 
             $key = "gcsit";
             $encryptedidcontact = openssl_encrypt($contact->id, 'AES-128-ECB', $key);
             $encryptedIdContactUrlSafe = urlencode($encryptedidcontact);
 
-            $email = (new Email())
-                ->from('hello@example.com')
-                ->to($request->get('login'))
-                //->cc('cc@example.com')
-                //->bcc('bcc@example.com')
-                //->replyTo('fabien@example.com')
-                //->priority(Email::PRIORITY_HIGH)
-                ->subject('Forgot password?')
-                ->text('Sending emails is fun again!')
-                ->html('
-                <p>Hi,</p>
-                <p>There was a request to change your password!</p>
 
-                <p>If you did not make this request then please ignore this email.</p>
+            if (file_exists($filePath)) {
 
-                <p>Otherwise, please click this link to change your password: <a href="' . $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe . '" target="_top">[' . $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe . ']</a></p>             
-            ');
 
-            $this->mailer->send($email);
+
+
+                $fileContent = file_get_contents($filePath);
+
+
+                $dataArray = json_decode($fileContent, true);
+
+                if ($dataArray !== null) {
+
+                    $subject = $dataArray['subject'];
+
+                    $email_verification_templete = 'templete/email_recover_password.html';
+                    $filePathemail_verification = $APP_PUBLIC_DIR . $email_verification_templete;
+                    $htmlTemplate = file_get_contents($filePathemail_verification);
+                    $replacement = $dataArray['content']['header'];
+                    $search = '${languageText.content.header}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                    $replacement = $dataArray['content']['body'];
+                    $search = '${languageText.content.body}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                    $replacement =  $url . 'reset_password.html?uid=' . $encryptedIdContactUrlSafe;
+                    $search = '${link}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                    $replacement = $dataArray['content']['footer']['greeting'];
+                    $search = '${languageText.content.footer.greeting}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                    $replacement = $dataArray['content']['footer']['brand'];
+                    $search = '${languageText.content.footer.brand}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+                    $replacement = $dataArray['content']['footer']['team'];
+                    $search = '${languageText.content.footer.team}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+
+
+                    $replacement = $dataArray['content']['button'];
+                    $search = '${languageText.content.button}';
+                    $htmlTemplate = str_replace($search, $replacement, $htmlTemplate);
+
+
+                    
+
+
+                    $email = (new Email())
+                        ->from('hello@example.com')
+                        ->to($request->get('login'))
+                        ->subject($subject)
+                        ->html($htmlTemplate);
+
+
+                    $this->mailer->send($email);
+                }
+            }
+
+
 
             //dd($user->id);
             //return $user;

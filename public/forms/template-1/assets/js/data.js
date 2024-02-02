@@ -89,7 +89,7 @@ fetch(AssetsUrl)
           });
         } else {
           var formdata = new FormData();
-          formdata.append("account", data.data.accountId);
+    
           formdata.append("name", $('#register-form1 [name="name"]').val());
           formdata.append("email", $('#register-form1 [name="email"]').val());
           formdata.append(
@@ -98,7 +98,7 @@ fetch(AssetsUrl)
           );
           formdata.append("origin", data.data.id);
           document.querySelector("#signup1")?.classList.add("disabled");
-
+          formdata.append("account", data.data.accountId);
           formdata.append("lang",lang);
           
 
@@ -368,6 +368,10 @@ fetch(AssetsUrl)
         formdata.append("name", data.data.name);
         formdata.append("template", data.data.template);
         formdata.append("url", currentUrlresult);
+
+        formdata.append("account", data.data.accountId);
+        formdata.append("lang",lang);
+        
 
         document.querySelector("#sendsetlink1")?.classList.add("disabled");
         $.ajax({

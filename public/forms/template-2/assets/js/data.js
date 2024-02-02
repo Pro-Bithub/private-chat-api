@@ -374,6 +374,11 @@ fetch(AssetsUrl)
         formdata.append("template", data.data.template);
         formdata.append("url", currentUrlresult);
 
+
+        formdata.append("account", data.data.accountId);
+        formdata.append("lang",lang);
+        
+
         document.querySelector("#sendsetlink1")?.classList.add("disabled");
         $.ajax({
           type: "POST",

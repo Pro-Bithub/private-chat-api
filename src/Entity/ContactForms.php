@@ -115,9 +115,9 @@ class ContactForms
     public ?string $sendable_agents = null;
 
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(length: 25, nullable: true)]
     #[Groups(['read10:collection'])]
-    public ?int $source = null;
+    public ?string $source = null;
 
     #[ORM\Column(type: 'integer', nullable: true)]
     #[Groups(['read10:collection'])]

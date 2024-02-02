@@ -1575,3 +1575,10 @@ span.error:after {
     margin-top: 20px;
   }
   .indicator-progress{display:none}
+
+
+  @media screen and (max-width: 768px) {
+    .w-60px {
+        width: 42px!important;
+    }
+ }

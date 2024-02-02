@@ -115,7 +115,7 @@ class GetContactFormsController extends AbstractController
                $statement3->bindValue('account_id',$user->accountId);
        
                $results3 = $statement3->executeQuery() */
-
+/* 
         if ((isset($filterValues['status']) && $filterValues['status'] == "1") && $start ==0) {
             $onlyRegistration = false;
             if (isset($filterValues['form_type'])) {
@@ -126,15 +126,7 @@ class GetContactFormsController extends AbstractController
             }
 
             if ($onlyRegistration) {
-/* 
-                $issetformRegistration = false;
-                foreach ($results as $form) {
-                    if ($form['form_type'] == '1') {
-                        $issetformRegistration = true;
-                        break;
-                    }
-                } */
-       /*          if ($issetformRegistration == false) { */
+
                     $sqlr = "SELECT e.*
                     FROM contact_forms e
               
@@ -156,9 +148,9 @@ class GetContactFormsController extends AbstractController
                     if (count($resultssqlr) > 0) {
                         $results = array_merge($results, $resultssqlr);
                     }
-             /*    } */
+
             }
-        }
+        } */
 
         return new JsonResponse([
             'draw' => $draw,
