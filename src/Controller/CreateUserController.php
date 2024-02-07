@@ -292,6 +292,7 @@ class CreateUserController extends AbstractController
                 "profile_id" => $userPresentations->id,
                 "avatar" => $avatar,
                 "id" => $user->id,
+                "languages" => $userPresentations->languages,
                 "accountId" =>  $user->accountId,
             ];
             $ws_library = addTrailingSlashIfMissing($this->parameterBag->get('ws_library'));
@@ -736,6 +737,7 @@ class CreateUserController extends AbstractController
                 "profile_id" => $userPresentation->id,
                 "avatar" => $avatar,
                 "id" => $userid->id,
+                "languages" => $userPresentation->languages,
                 "accountId" =>  $userid->accountId,
             ];
 
@@ -891,6 +893,7 @@ class CreateUserController extends AbstractController
                 "profile_id" => $userPresentation->id,
                 "avatar" => $avatar,
                 "id" => $userid->id,
+                "languages" => $userPresentation->languages,
                 "accountId" =>  $userid->accountId,
             ];
 
