@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiSubresource;
+use App\Controller\AddAccountsController;
 use App\Repository\AccountsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -15,6 +16,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     collectionOperations: [
         'get'=> [
+            'controller' => AddAccountsController::class,
             'openapi_context' => [
                 'security' => [['bearerAuth' => []]],
             ],
@@ -52,26 +54,26 @@ class Accounts
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['write15:collection', 'write4:collection', 'read:collection3'])]
-    private ?int $id = null;
+    public ?int $id = null;
 
     #[ORM\Column(length: 100)]
     #[Groups(['read:collection3'])]
-    private ?string $name = null;
+    public ?string $name = null;
 
     #[ORM\Column]
     #[Groups(['read:collection3'])]
 
-    private ?string $status = null;
+    public ?string $status = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Groups(['read:collection3'])]
 
-    private ?\DateTimeInterface $date_start = null;
+    public ?\DateTimeInterface $date_start = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     #[Groups(['read:collection3'])]
 
-    private ?\DateTimeInterface $date_end = null;
+    public ?\DateTimeInterface $date_end = null;
 
     #[ORM\Column]
     #[Groups(['read:collection3'])]
@@ -89,36 +91,36 @@ class Accounts
 
     // #[ORM\OneToMany(mappedBy: 'account', targetEntity: User::class)]
     // #[ApiSubresource]
-    // private Collection $users;
+    // public Collection $users;
 
     // #[ORM\OneToMany(mappedBy: 'account', targetEntity: Registrations::class)]
-    // private Collection $registrations;
+    // public Collection $registrations;
 
     // #[ORM\OneToMany(mappedBy: 'account', targetEntity: Profiles::class)]
-    // private Collection $profiles;
+    // public Collection $profiles;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: PredefindTexts::class)]
-    private Collection $predefindTexts;
+    public Collection $predefindTexts;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: Plans::class)]
     #[ApiSubresource]
-    private Collection $plans;
+    public Collection $plans;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: LandingPages::class)]
-    private Collection $landingPages;
+    public Collection $landingPages;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: CustomFields::class)]
-    private Collection $customFields;
+    public Collection $customFields;
 
     // #[ORM\OneToMany(mappedBy: 'account', targetEntity: Contacts::class)]
-    // private Collection $contacts;
+    // public Collection $contacts;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: ContactForms::class)]
     #[ApiSubresource]
-    private Collection $contactForms;
+    public Collection $contactForms;
 
     #[ORM\OneToMany(mappedBy: 'account', targetEntity: ClickableLinks::class)]
-    private Collection $clickableLinks;
+    public Collection $clickableLinks;
 
     public function __construct()
     {

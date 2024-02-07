@@ -119,7 +119,7 @@ class getPricingPlansController extends AbstractController
          
         ]); */
         
-        $sql1 = "SELECT e.*, GROUP_CONCAT(r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name , count(DISTINCT tf.id)as tariff_counts
+        $sql1 = "SELECT e.*, GROUP_CONCAT( DISTINCT r.user_id SEPARATOR ',') AS user_ids, d.name as dicount_name , count(DISTINCT tf.id)as tariff_counts
             FROM plans e
            left JOIN plan_users r ON r.plan_id = e.id and r.status = 1
            left JOIN plan_discounts d ON d.plan_id = e.id

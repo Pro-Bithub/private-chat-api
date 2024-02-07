@@ -210,7 +210,7 @@ class ContactGuestController extends AbstractController
             $profiles->login =  $login;
         }
         // $encodedPassword = $this->passwordEncoder->encodePassword(null, $password);
-        $password = bin2hex(random_bytes(8)); // Generate a random 16-character password
+        $password = bin2hex(random_bytes(6)); // Generate a random 16-character password
         $profiles->password = $userPasswordHasher->hashPassword($profiles, $password);
         $profiles->u_type = '2';
         $profiles->u_id = $contact->id;
@@ -338,6 +338,9 @@ class ContactGuestController extends AbstractController
         $contact->source = !empty($data['source']) ? $data['source'] : $contact->source;
         $contact->source_id = !empty($data['source_id']) ? $data['source_id'] : $contact->source_id;
 
+        $contact->currency = !empty($data['currency']) ? $data['currency'] : $contact->currency;
+
+
         $entityManagerInterface->persist($contact);
         $entityManagerInterface->flush();
 
@@ -454,11 +457,9 @@ class ContactGuestController extends AbstractController
         $currencies = $statement->executeQuery()->fetchAllAssociative();
 
 
-        $sqltariffs = "SELECT  pt.country , pt.currency
-        FROM plans AS p
-        LEFT JOIN plan_tariffs AS pt ON pt.plan_id = p.id
-         WHERE p.status  = 1  and pt.status  = 1  and  p.account_id = :account_id 
-        GROUP by  pt.country , pt.currency
+        $sqltariffs = " SELECT pt.country, pt.currency, GROUP_CONCAT(DISTINCT COALESCE(NULLIF(TRIM(pt.language), ''), 'default')) AS languages
+         FROM plans AS p LEFT JOIN plan_tariffs AS pt ON pt.plan_id = p.id WHERE p.status = 1 AND pt.status = 1 AND p.account_id =:account_id 
+         GROUP BY pt.country, pt.currency;
         ";
         $statementtariffs = $entityManagerInterface->getConnection()->prepare($sqltariffs);
         $statementtariffs->bindValue('account_id', $request->attributes->get('account'));

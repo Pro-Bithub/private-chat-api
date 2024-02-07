@@ -273,11 +273,11 @@ class DashbordController extends AbstractController
             'SELECT 
        c.country, 
        COUNT(c.country) AS sales_country,
-       ROUND((COUNT(c.country) / (SELECT COUNT(*) FROM contacts WHERE MONTH(date_start) = MONTH(CURRENT_DATE()) AND YEAR(date_start) = YEAR(CURRENT_DATE()) AND account_id = :id AND country IS NOT NULL AND status = 1)) * 100, 2) AS contact_percentage
+       ROUND((COUNT(c.country) / (SELECT COUNT(*) FROM contacts WHERE  date_start BETWEEN :startDate AND :endDate AND account_id = :id AND country IS NOT NULL AND status = 1)) * 100, 2) AS contact_percentage
         FROM 
         contacts AS c 
         WHERE 
-        account_id = :id AND country IS NOT NULL AND status = 1 AND MONTH(c.date_start) = MONTH(CURRENT_DATE()) AND YEAR(c.date_start) = YEAR(CURRENT_DATE())
+        account_id = :id AND country IS NOT NULL AND status = 1 AND  c.date_start BETWEEN :startDate AND :endDate
         GROUP BY 
         c.country
         ORDER BY 
@@ -285,6 +285,8 @@ class DashbordController extends AbstractController
         LIMIT 7;';
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY9);
         $stmt->bindValue('id', $user->accountId);
+        $stmt->bindValue('startDate', $startDate);
+        $stmt->bindValue('endDate', $endDate);
         $result8 = $stmt->executeQuery()->fetchAllAssociative();
 
 
@@ -292,20 +294,20 @@ class DashbordController extends AbstractController
         //contactBrowser
         $RAW_QUERY10 =
             "SELECT SUBSTRING_INDEX(p.browser_data, ';', 1) as browser, COUNT(SUBSTRING_INDEX(p.browser_data, ';', 1)) AS num_contacts,
-        ROUND((COUNT(*) / (SELECT COUNT(*) FROM profiles pr INNER JOIN contacts co on pr.u_id = co.id WHERE MONTH(co.date_start) = MONTH(CURRENT_DATE()) AND YEAR(co.date_start) = YEAR(CURRENT_DATE()) AND (pr.account_id = :id or co.account_id = :id)  AND co.status = 1)) * 100) AS contact_percentage
+        ROUND((COUNT(*) / (SELECT COUNT(*) FROM profiles pr INNER JOIN contacts co on pr.u_id = co.id WHERE co.date_start BETWEEN :startDate AND :endDate AND (pr.account_id = :id or co.account_id = :id)  AND co.status = 1)) * 100) AS contact_percentage
               
                FROM profiles p
                
                INNER JOIN contacts c ON p.u_id = c.id
                WHERE c.account_id = :id 
                AND c.status = 1 
-               AND MONTH(c.date_start) = MONTH(CURRENT_DATE()) 
-               AND YEAR(c.date_start) = YEAR(CURRENT_DATE())
+               AND   c.date_start BETWEEN :startDate AND :endDate
                GROUP BY browser
                ORDER by contact_percentage DESC
-         
         ;";
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY10);
+        $stmt->bindValue('startDate', $startDate);
+        $stmt->bindValue('endDate', $endDate);
         $stmt->bindValue('id', $user->accountId);
         $result9 = $stmt->executeQuery()->fetchAllAssociative();
 
@@ -313,20 +315,21 @@ class DashbordController extends AbstractController
         //contactOS
         $RAW_QUERY11 =
             "SELECT SUBSTRING_INDEX(p.browser_data, ';', -1) as os, COUNT(SUBSTRING_INDEX(p.browser_data, ';', -1)) AS num_contacts,
-        ROUND((COUNT(*) / (SELECT COUNT(*) FROM profiles pr INNER JOIN contacts co on pr.u_id = co.id WHERE MONTH(co.date_start) = MONTH(CURRENT_DATE()) AND YEAR(co.date_start) = YEAR(CURRENT_DATE()) AND (pr.account_id = :id or co.account_id = :id)  AND co.status = 1)) * 100) AS contact_percentage
+        ROUND((COUNT(*) / (SELECT COUNT(*) FROM profiles pr INNER JOIN contacts co on pr.u_id = co.id WHERE   co.date_start BETWEEN :startDate AND :endDate  AND (pr.account_id = :id or co.account_id = :id)  AND co.status = 1)) * 100) AS contact_percentage
              
               FROM profiles p
               
               INNER JOIN contacts c ON p.u_id = c.id
               WHERE c.account_id = :id 
               AND c.status = 1 
-              AND MONTH(c.date_start) = MONTH(CURRENT_DATE()) 
-              AND YEAR(c.date_start) = YEAR(CURRENT_DATE())
+              AND   c.date_start BETWEEN :startDate AND :endDate
               GROUP BY os
               ORDER by contact_percentage DESC
        ;";
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY11);
         $stmt->bindValue('id', $user->accountId);
+        $stmt->bindValue('startDate', $startDate);
+        $stmt->bindValue('endDate', $endDate);
         $result10 = $stmt->executeQuery()->fetchAllAssociative();
 
 

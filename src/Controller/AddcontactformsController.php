@@ -198,7 +198,7 @@ class AddcontactformsController extends AbstractController
         }
         $data = [];
         if($newpassword== "true"){
-            $password = bin2hex(random_bytes(8));
+            $password = bin2hex(random_bytes(6));
             $profile->password = $userPasswordHasher->hashPassword($profile, $password);
             $data['password'] = $password;
         }

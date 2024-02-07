@@ -490,18 +490,27 @@ class getPlansController extends AbstractController
         $language = $data['language'];
 
 
-        $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id AS UserID, p.firstname, p.lastname,
+        $query = "SELECT p.id AS UserID, p.firstname, p.lastname,
         
         CASE
-          WHEN  pr.picture is not null
-            THEN  concat( '$uploads_directory' , pr.picture )
-              ELSE null
-         END as avatar  ,pr.*
+          WHEN pr.picture IS NOT NULL
+            THEN CONCAT('$uploads_directory', pr.picture)
+          ELSE NULL
+        END AS avatar, pr.*
         FROM `user` AS p
-        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id   and  pr.status =1
-        WHERE p.account_id = :id   AND pr.languages LIKE :language ");
+        INNER JOIN `user_presentations` AS pr ON p.id = pr.user_id AND pr.status = 1
+        WHERE p.account_id = :id";
+
+   
+            if ($language !== null) {
+                $query .= " AND pr.languages LIKE :language";
+            }
+
+            $stmt = $entityManagerInterface->getConnection()->prepare($query);
         $stmt->bindValue('id', $id);
-        $stmt->bindValue('language', '%' . $language . '%');
+        if ($language !== null) {
+            $stmt->bindValue('language', '%' . $language . '%');
+        }
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
 
         return new JsonResponse([
@@ -683,12 +692,15 @@ class getPlansController extends AbstractController
                 $querry2[] = ' p.status = :status';
             }
 
-            $RAW_QUERY1 = "SELECT p.*
+         
+
+            $RAW_QUERY1 = "SELECT p.* , pf.price as tariff_price, pf.id as tariff_id , pf.currency as tariff_currency, pf.country as tariff_country ,   pf.language as tariff_language
           FROM `plans` AS p
+          LEFT JOIN `plan_tariffs` AS pf ON pf.plan_id = p.id and pf.status = 1 
           LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
           LEFT JOIN `profiles` AS pr ON pr.u_id = pu.user_id
           WHERE (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))" . (!empty($querry1) ? 'AND' : '') . implode(' AND', $querry1) . " " . (!empty($querry2) ? 'AND' : '') . implode(' AND', $querry2) . "
-          group by p.id
+ 
           ;";
 
             $stmt1 = $entityManagerInterface->getConnection()->prepare($RAW_QUERY1);
@@ -700,7 +712,38 @@ class getPlansController extends AbstractController
                 $stmt1->bindValue('status', $request->query->get('status'));
             }
             $result1 = $stmt1->executeQuery()->fetchAllAssociative();
-            $data['plans'] = $result1;
+
+            
+          $combinedData = [];
+          
+            foreach ($result1 as $row) {
+                $plansId = $row['id'];
+
+                if (!isset($combinedData[$plansId])) {
+                    $combinedData[$plansId] = [
+                        'id' => $row['id'],
+                        'account_id' => $row['account_id'],
+                        'name' => $row['name'],
+                        'billing_type' => $row['billing_type'],
+                        'billing_volume' => $row['billing_volume'],
+                        'status' => $row['status'],
+                        'date_start' => $row['date_start'],
+                        'date_end' => $row['date_end'],
+                        'tariffs' => [],
+                    ];
+                }
+                $combinedData[$plansId]['tariffs'][] = [
+                    'id' => $row['tariff_id'],
+                    'currency' => $row['tariff_currency'],
+                    'country' => $row['tariff_country'],
+                    'language' => $row['tariff_language'],
+                    'price' => $row['tariff_price'],
+                    
+                ];
+            }
+
+            $data['plans'] = array_values($combinedData);
+    
         }
         if (empty($plans) || in_array("predefined_texts", $plans)) {
             $query5 = $query6 = [];
@@ -916,7 +959,7 @@ class getPlansController extends AbstractController
     public function getDataByProfileId(Request $request, $id, EntityManagerInterface $entityManagerInterface): Response
     {
 
-        $sql2 = "SELECT c.firstname , c.lastname , c.email ,c.phone , c.country  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
+        $sql2 = "SELECT c.firstname , c.lastname , c.email ,c.phone , c.country , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
         $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
         $statement2->bindValue('id', $id);
         $results = $statement2->executeQuery()->fetchAllAssociative();

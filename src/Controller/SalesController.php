@@ -7,6 +7,7 @@ use App\Entity\Sales;
 use App\Entity\UserLogs;
 use App\Repository\ContactsRepository;
 use App\Repository\PlansRepository;
+use App\Repository\PlanTariffsRepository;
 use App\Repository\SalesRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,7 +20,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class SalesController extends AbstractController
 {
     #[Route('/add_sales', name: 'app_sales')]
-    public function index(Request $request, EntityManagerInterface $entityManagerInterface, ContactsRepository $contactsRepository, UserRepository $userRepository, PlansRepository $plansRepository): Response
+    public function index(Request $request, EntityManagerInterface $entityManagerInterface,PlanTariffsRepository $planTariffsRepository, ContactsRepository $contactsRepository, UserRepository $userRepository, PlansRepository $plansRepository): Response
     {
         $sales = new Sales();
         $data = json_decode($request->getContent(), true);
@@ -94,10 +95,14 @@ class SalesController extends AbstractController
 
 
 
+        
+
+        $tariff = $planTariffsRepository->find($data['tariff']);
+
+        
 
 
-
-
+        
 
 
         return new JsonResponse([
@@ -110,8 +115,8 @@ class SalesController extends AbstractController
             'firstname' => $sales->contact->firstname,
             'sale_status' => $sales->status,
             'plan_name' => $plans->name,
-            'plan_tariff' => $plans->tariff,
-            'plan_currency' => $plans->currency,
+            'plan_tariff' => $tariff->price,
+            'plan_currency' => $sales->contact->currency,
 
 
         ]);
@@ -204,10 +209,10 @@ class SalesController extends AbstractController
                 'balance' => $balance->balance,
                 'Total_balance' => $results6,
             ]);
-        }else{
+        } else {
             return new JsonResponse([
                 'success' => false,
-             
+
             ]);
         }
 

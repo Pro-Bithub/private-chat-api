@@ -683,7 +683,9 @@ class CreateUserController extends AbstractController
 
         if (null !== $uploadedFile) {
             try {
-                $userPresentation->picture = $fileUploader->upload($uploadedFile);
+                $file_name = preg_replace('/[\s.]+/', '_', $userPresentation->nickname);
+
+                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name);
             } catch (FileException $e) {
             }
         }
@@ -731,7 +733,7 @@ class CreateUserController extends AbstractController
                 "is_active" => false,
                 "is_online" => false,
                 "created_at" =>  date('Y-m-d H:i:s'),
-                "presentation_id" => $userPresentation->id,
+                "profile_id" => $userPresentation->id,
                 "avatar" => $avatar,
                 "id" => $userid->id,
                 "accountId" =>  $userid->accountId,
@@ -806,6 +808,9 @@ class CreateUserController extends AbstractController
             throw new AccessDeniedException('Invalid token.');
         }
 
+        $user = $tokenData->getUser();
+
+   
 
         // dd($data);
         $userPresentation = $userPresentationsRepository->find($id);
@@ -829,9 +834,9 @@ class CreateUserController extends AbstractController
 
         if (null !== $uploadedFile) {
             try {
-                $file_name = str_replace([' ', '.'], '_', $userPresentation->nickname . '-' . $userPresentation->id);
-
-                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name);
+             
+                $file_name = preg_replace('/[\s.]+/', '_', $userPresentation->nickname);
+                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name,$user->accountId);
             } catch (FileException $e) {
             }
         }
@@ -854,11 +859,76 @@ class CreateUserController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
+        $userid =$userPresentation->user;
+
+        
+        function addTrailingSlashIfMissing3($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $avatar = null;
+        if (isset($userPresentation->picture)) {
+
+            $uploads_directory = addTrailingSlashIfMissing3($this->parameterBag->get('APP_URL')) . "uploads/";
+            $avatar = $uploads_directory . $userPresentation->picture;
+        }
+
+
+        $content = null;
+        try {
+            $client = HttpClient::create();
+            $data = [
+                "nickname" =>  $userPresentation->nickname,
+                "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
+                "role" => "AGENT",
+                "is_active" => false,
+                "is_online" => false,
+                "created_at" =>  date('Y-m-d H:i:s'),
+                "profile_id" => $userPresentation->id,
+                "avatar" => $avatar,
+                "id" => $userid->id,
+                "accountId" =>  $userid->accountId,
+            ];
+
+
+            $ws_library = addTrailingSlashIfMissing3($this->parameterBag->get('ws_library'));
+            $url = $ws_library . 'users';
+
+
+
+            $response = $client->request('PUT', $url, [
+                'json' => $data,
+            ]);
+
+
+
+
+            $content = null;
+
+
+            $status = $response->getStatusCode();
+
+
+
+            if ($status < 400) {
+                $content = $response->getContent();
+            }
+        } catch (\Throwable $e) {
+
+            $content = $e->getMessage();
+            $status = 500;
+        }
+
 
 
         return new JsonResponse([
             'success' => true,
-            'data' => $userPresentation
+            'data' => $userPresentation,
+            'content' => $content,
 
         ]);
     }

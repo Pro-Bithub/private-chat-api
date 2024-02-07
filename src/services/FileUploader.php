@@ -27,7 +27,7 @@ class FileUploader
         // Get uploads directory relative to public path (e.g., "/uploads/")
         $this->relativeUploadsDir = str_replace($publicPath, '', $this->uploadPath) . '/';
     }
-    public function upload(UploadedFile $file, $file_name = null)
+    public function upload(UploadedFile $file, $file_name = null,$accountId=null)
     {
         $originalFilename ="";
         if($file_name==null)
@@ -35,12 +35,31 @@ class FileUploader
         else
         $originalFilename = $file_name;
 
+        $Extension ="";
+        if($accountId==null)
+        $Extension =$file->guessExtension();
+        else
+        $Extension ="jpg";
+        
+
         $safeFilename = $this->slugger->slug($originalFilename);
-        $fileName = $safeFilename .'.' . $file->guessExtension();
+        $fileName = $safeFilename .'.' .  $Extension ;
         // $fileName1 = $id . '.' . $file->guessExtension();
+
+
+        $UploadPath=$this->getUploadPath();
+      /*   if($accountId!=null){
+
+            $folderPath = $UploadPath . DIRECTORY_SEPARATOR . $accountId;
+            if (!is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true); 
+            }
+            $UploadPath =$folderPath;
+        } */
+      
     
         try {
-            $file->move($this->getUploadPath(), $fileName);
+            $file->move($UploadPath, $fileName);
         } catch (FileException $e) {
             // Handle exception if something happens during file upload
             throw new \Exception('File upload failed: ' . $e->getMessage());
