@@ -5,6 +5,7 @@ namespace App\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -156,6 +157,14 @@ class GetContactDetailsController extends AbstractController
     public function getAgentsByPresentationId(Request $request, EntityManagerInterface $entityManagerInterface): Response
     {
 
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+         $user = $tokenData->getUser();
+         
         function addTrailingSlashIfMissing($str)
         {
             if (!in_array(substr($str, -1), ['/', '\\'])) {
@@ -164,7 +173,7 @@ class GetContactDetailsController extends AbstractController
             return $str;
         }
 
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/".$user->accountId."/";
 
         $data = json_decode($request->getContent(), true);
         $ids = $data;
@@ -199,6 +208,15 @@ class GetContactDetailsController extends AbstractController
     #[Route('/getAgentByPresentationId/{id}', name: 'app_get_Agent_By_Presentation_Id_details')]
     public function getAgentByPresentationId($id, EntityManagerInterface $entityManagerInterface): Response
     {
+        
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+         $user = $tokenData->getUser();
+         
         function addTrailingSlashIfMissing2($str)
         {
             if (!in_array(substr($str, -1), ['/', '\\'])) {
@@ -207,7 +225,7 @@ class GetContactDetailsController extends AbstractController
             return $str;
         }
 
-        $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'))."uploads/";
+        $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'))."uploads/".$user->accountId."/";
 
         $sql = "SELECT   CASE
         WHEN  up.picture  is not null

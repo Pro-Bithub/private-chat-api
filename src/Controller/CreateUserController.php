@@ -105,12 +105,15 @@ class CreateUserController extends AbstractController
 
         $userPresentations->gender = $request->get('gender');
         $userPresentations->website = $request->get('website');
-
+        $userPresentations->nickname = $request->get('nickname');
         $uploadedFile = $request->files->get('file');
+
+        
 
         if (null !== $uploadedFile) {
             try {
-                $userPresentations->picture = $fileUploader->upload($uploadedFile);
+                $file_name = preg_replace('/[\s.]+/', '_', $userPresentations->nickname);
+                $userPresentations->picture = $fileUploader->upload($uploadedFile, $file_name,$user2->accountId);
             } catch (FileException $e) {
             }
         }
@@ -121,7 +124,7 @@ class CreateUserController extends AbstractController
 
         $userPresentations->role = $request->get('role');
         $userPresentations->gender = $request->get('gender_presentation');
-        $userPresentations->nickname = $request->get('nickname');
+
         $userPresentations->country = $request->get('country');
         $userPresentations->languages = $request->get('languages');
         $userPresentations->expertise = $request->get('expertise');
@@ -274,7 +277,7 @@ class CreateUserController extends AbstractController
         $avatar = null;
         if (isset($userPresentations->picture)) {
 
-            $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/";
+            $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/".$user->accountId."/";
             $avatar = $uploads_directory . $userPresentations->picture;
         }
 
@@ -517,122 +520,6 @@ class CreateUserController extends AbstractController
         ]);
     }
 
-    /*  witoutfile  #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
-    public function addUserPresentation($id, Request $request, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
-    {
-
-        $authorizationHeader = $request->headers->get('Authorization');
-
-        // Check if the token is present and in the expected format (Bearer TOKEN)
-        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
-            throw new AccessDeniedException('Invalid or missing authorization token.');
-        }
-
-        // Extract the token value (without the "Bearer " prefix)
-        $token = substr($authorizationHeader, 7);
-
-        $tokenData = $this->get('security.token_storage')->getToken();
-
-        if ($tokenData === null) {
-            throw new AccessDeniedException('Invalid token.');
-        }
-
-        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
-        // $user = $tokenData->getUser();
-        $data = json_decode($request->getContent(), true);
-        // dd($data);
-        $userid = $userRepository->find($id);
-        $userPresentation = new UserPresentations();
-        $userPresentation->user = $userid;
-        $userPresentation->gender = $data['gender'];
-        $userPresentation->website = $data['website'];
-        $userPresentation->role = $data['role'];
-        $userPresentation->nickname = $data['nickname'];
-        $userPresentation->country = $data['country'];
-        $userPresentation->languages = $data['languages'];
-        $userPresentation->expertise = $data['expertise'];
-        $userPresentation->diploma = $data['diploma'];
-        $userPresentation->brand_name = $data['brand_name'];
-        $userPresentation->contact_phone = $data['contact_phone'];
-        $userPresentation->contact_mail = $data['contact_mail'];
-        $userPresentation->atrological_sign = $data['atrological_sign'];
-        $userPresentation->skills = $data['skills'];
-        $userPresentation->status = '1';
-        $userPresentation->date_start = new \DateTime('@' . strtotime('now'));
-        $userPresentation->presentation = $data['presentation'];
-        $userPresentation->contact_phone_comment = $data['contact_phone_comment'];
-
-
-
-        $entityManagerInterface->persist($userPresentation);
-        $entityManagerInterface->flush();
-
-
-
-        $logs = new UserLogs();
-        $logs->user_id = $data['user_id'];
-        $logs->element = 18;
-        $logs->action = 'add';
-        $logs->element_id = $userPresentation->id;
-        $logs->source = 1;
-        $logs->log_date = new \DateTimeImmutable();
-        $entityManagerInterface->persist($logs);
-        $entityManagerInterface->flush();
-
-
-        $client = HttpClient::create();
-        $data = [
-            "nickname" =>  $userPresentation->nickname,
-            "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
-            "role" => "AGENT",
-            "is_active" => false,
-            "is_online" => false,
-            "created_at" =>  date('Y-m-d H:i:s'),
-            "presentation_id" => $userPresentation->id,
-            "id" => $userid->id,
-            "accountId" =>  $userid->accountId,
-        ];
-
-
-
-
-        function addTrailingSlashIfMissing2($str)
-        {
-            if (!in_array(substr($str, -1), ['/', '\\'])) {
-                $str .= '/';
-            }
-            return $str;
-        }
-
-        $ws_library = addTrailingSlashIfMissing2($this->parameterBag->get('ws_library'));
-        $url = $ws_library . 'users';
-
-
-
-        $response = $client->request('POST', $url, [
-            'json' => $data,
-        ]);
-
-
-        $content = null;
-
-
-        $status = $response->getStatusCode();
-
-
-
-        if ($status < 400) {
-            $content = $response->getContent();
-        }
-
-
-        return new JsonResponse([
-            'success' => true,
-            'data' => $userPresentation,
-            'content' => $content,
-            'status_server_ws' => $status,
-        ]);
-    } */
 
     #[Route('/add_user_presentation/{id}', name: 'app_add_user_presentation_controller')]
     public function addUserPresentation($id, Request $request, FileUploader $fileUploader, EntityManagerInterface $entityManagerInterface, UserPresentationsRepository $userPresentationsRepository, UserRepository $userRepository): Response
@@ -656,7 +543,7 @@ class CreateUserController extends AbstractController
 
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
-
+        $user2 = $tokenData->getUser();
         // dd($data);
         $userid = $userRepository->find($id);
         $userPresentation = new UserPresentations();
@@ -686,7 +573,7 @@ class CreateUserController extends AbstractController
             try {
                 $file_name = preg_replace('/[\s.]+/', '_', $userPresentation->nickname);
 
-                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name);
+                $userPresentation->picture = $fileUploader->upload($uploadedFile, $file_name,$user2->accountId);
             } catch (FileException $e) {
             }
         }
@@ -707,7 +594,7 @@ class CreateUserController extends AbstractController
         $avatar = null;
         if (isset($userPresentation->picture)) {
 
-            $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL')) . "uploads/";
+            $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL')) . "uploads/".$user2->accountId."/";
             $avatar = $uploads_directory . $userPresentation->picture;
         }
 
@@ -875,7 +762,7 @@ class CreateUserController extends AbstractController
         $avatar = null;
         if (isset($userPresentation->picture)) {
 
-            $uploads_directory = addTrailingSlashIfMissing3($this->parameterBag->get('APP_URL')) . "uploads/";
+            $uploads_directory = addTrailingSlashIfMissing3($this->parameterBag->get('APP_URL')) . "uploads/".$user->accountId."/";
             $avatar = $uploads_directory . $userPresentation->picture;
         }
 
@@ -932,6 +819,7 @@ class CreateUserController extends AbstractController
             'success' => true,
             'data' => $userPresentation,
             'content' => $content,
+            "de"=>preg_replace('/[\s.]+/', '_', $userPresentation->nickname)
 
         ]);
     }

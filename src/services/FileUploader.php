@@ -43,19 +43,22 @@ class FileUploader
         
 
         $safeFilename = $this->slugger->slug($originalFilename);
+        $safeFilename = str_replace('-', '_', $safeFilename);
         $fileName = $safeFilename .'.' .  $Extension ;
+ 
+
         // $fileName1 = $id . '.' . $file->guessExtension();
 
 
         $UploadPath=$this->getUploadPath();
-      /*   if($accountId!=null){
+        if($accountId!=null){
 
             $folderPath = $UploadPath . DIRECTORY_SEPARATOR . $accountId;
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0755, true); 
             }
             $UploadPath =$folderPath;
-        } */
+        }
       
     
         try {

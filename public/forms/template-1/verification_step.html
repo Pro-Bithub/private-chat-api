@@ -133,7 +133,7 @@
         var code = getParameterByName('code');
 			var codeFields = document.querySelectorAll('#codeFields input');
 
-			// Remplir les champs avec les valeurs du code
+			if(code)
 			for (var i = 0; i < code.length; i++) {
 				codeFields[i].value = code.charAt(i);
 			}

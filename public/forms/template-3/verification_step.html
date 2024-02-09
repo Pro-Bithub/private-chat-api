@@ -172,14 +172,14 @@
       var email = getParameterByName('email');
 
   
-
       var code = getParameterByName('code');
-    var codeFields = document.querySelectorAll('#codeFields input');
+			var codeFields = document.querySelectorAll('#codeFields input');
 
-    // Remplir les champs avec les valeurs du code
-    for (var i = 0; i < code.length; i++) {
-      codeFields[i].value = code.charAt(i);
-    }
+			if(code)
+			for (var i = 0; i < code.length; i++) {
+				codeFields[i].value = code.charAt(i);
+			}
+
 
 
       if (email !== null && validateEmail(email)) {

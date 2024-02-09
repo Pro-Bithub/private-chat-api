@@ -145,7 +145,7 @@ class AddAccountsController extends AbstractController
 
                 $newuser->password = $userPasswordHasher->hashPassword($newuser,  $user['password']);
 
-
+                $newuser->status = '1';
                 $newuser->date_start =  new \DateTimeImmutable();
 
                 $entityManagerInterface->persist($newuser);

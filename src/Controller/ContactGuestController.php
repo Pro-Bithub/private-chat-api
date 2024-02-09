@@ -470,7 +470,7 @@ class ContactGuestController extends AbstractController
         $data['currenciestariffs'] = $currenciestariffs;
         $data['currencies'] = $currencies;
         $data['language'] = array(
-            array("code" => "FR", "title" => "France"),
+            array("code" => "FR", "title" => "Français"),
             array("code" => "EN", "title" => "English")
         );
 

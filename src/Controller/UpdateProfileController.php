@@ -81,17 +81,14 @@ class UpdateProfileController extends AbstractController
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
 
-        // Extract the token value (without the "Bearer " prefix)
-        $token = substr($authorizationHeader, 7);
 
         $tokenData = $this->get('security.token_storage')->getToken();
 
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
-    
-        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
-        // $user = $tokenData->getUser();
+
+         $user = $tokenData->getUser();
         $time =  new \DateTimeImmutable();
        // $data = json_decode($request->getContent(), true);
      
@@ -109,8 +106,12 @@ class UpdateProfileController extends AbstractController
               $user_p=  $userPresentationsRepository->loadActiveUserPresentationByuser($profile->u_id);
               if($user_p!=null){
                 try {
-                    $file_name = str_replace([' ', '.'], '_', $user_p->nickname . '-' . $user_p->id);
-                    $user_p->picture = $fileUploader->upload($uploadedFile,$file_name);
+                  
+              
+
+                    $file_name = preg_replace('/[\s.]+/', '_', $user_p->nickname);
+                    $user_p->picture = $fileUploader->upload($uploadedFile, $file_name,$user->accountId);
+
                     $entityManagerInterface->persist($user_p);
                     $entityManagerInterface->flush();
                 } catch (FileException $e) {

@@ -445,11 +445,11 @@ class getPlansController extends AbstractController
             return $str;
         }
 
-      
-
-        $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'))."uploads/";
- 
         $account_id = $request->attributes->get('account');
+
+        $uploads_directory = addTrailingSlashIfMissing2($this->parameterBag->get('APP_URL'))."uploads/". $account_id."/";
+ 
+
         $stmt = $entityManagerInterface->getConnection()->prepare("SELECT p.id, p.firstname, p.lastname,  CASE
         WHEN  pr.picture is not null
           THEN  concat( '$uploads_directory' , pr.picture )
@@ -480,14 +480,15 @@ class getPlansController extends AbstractController
         }
 
       
-
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
-
-
         $data = json_decode($request->getContent(), true);
         $id = intval($data['account_id']);
 
         $language = $data['language'];
+
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/". $id."/";
+
+
+    
 
 
         $query = "SELECT p.id AS UserID, p.firstname, p.lastname,

@@ -236,7 +236,7 @@ class GetTypeFormController extends AbstractController
             return $str;
         }
 
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/";
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL')) . "uploads/". $request->attributes->get('account')."/";
 
         $data = json_decode($request->getContent(), true);
         $query2 = [];

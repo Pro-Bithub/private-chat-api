@@ -33,7 +33,7 @@ class GetusersbyaccountController extends AbstractController
             return $str;
         }
 
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/".$id."/";
         $sql = "SELECT 
           CASE
           WHEN  SUBSTRING_INDEX(GROUP_CONCAT(p.picture ORDER BY p.id DESC), ',', 1)  is not null

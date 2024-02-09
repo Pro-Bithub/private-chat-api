@@ -41,12 +41,10 @@ class DetailsController extends AbstractController
             }
             return $str;
         }
-
-        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/";
-   
-
         $account_id = $request->attributes->get('account');
-        
+
+        $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/".$account_id."/";
+   
         $users = $userRepository->loaduserByAccount($account_id);
 
        // $salesArray = $plans_account->toArray();
