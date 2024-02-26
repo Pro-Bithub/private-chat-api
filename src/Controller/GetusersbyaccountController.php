@@ -36,14 +36,14 @@ class GetusersbyaccountController extends AbstractController
         $uploads_directory = addTrailingSlashIfMissing($this->parameterBag->get('APP_URL'))."uploads/".$id."/";
         $sql = "SELECT 
           CASE
-          WHEN  SUBSTRING_INDEX(GROUP_CONCAT(p.picture ORDER BY p.id DESC), ',', 1)  is not null
-            THEN  concat( '$uploads_directory' , SUBSTRING_INDEX(GROUP_CONCAT(p.picture ORDER BY p.id), ',', 1) )  
+          WHEN  p.picture is not null
+            THEN  concat( '$uploads_directory' , p.picture  )  
               ELSE null
          END as avatar
-        , u.id ,  u.email , u.firstname,u.lastname FROM user u
+        , u.id ,  u.email , u.firstname,u.lastname , p.id as p_id , p.nickname FROM user u
         left join user_presentations p on p.user_id = u.id and  p.status =1
         where u.account_id = :account_id and  u.status =1
-        group by u.id
+       
         ";
 
         $statement = $entityManagerInterface->getConnection()->prepare($sql);

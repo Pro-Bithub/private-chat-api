@@ -59,7 +59,12 @@ class SalesController extends AbstractController
             $sales->payment_method = $data['payment_method'];
             $sales->provider_id = $data['provider_id'];
 
+       
+            $sales->p_id = $data['p_id'] != null?$data['p_id']:null;
 
+            $sales->tariff_id = $data['tariff'] != null?$data['tariff']:null;
+
+          
 
             $entityManagerInterface->persist($sales);
             $entityManagerInterface->flush();
@@ -78,6 +83,7 @@ class SalesController extends AbstractController
             $sales->provider_id = $data['provider_id'];
 
 
+            $sales->tariff_id = $data['tariff'] != null?$data['tariff']:null;
 
             $entityManagerInterface->persist($sales);
             $entityManagerInterface->flush();
@@ -162,6 +168,7 @@ class SalesController extends AbstractController
                 'firstname' => $sales->contact->firstname,
                 'sale_status' => $sales->status,
                 'plan_name' => $sales->plan->name,
+                'plan_id' => $sales->plan->id,
                 'plan_tariff' => $sales->plan->tariff,
                 'plan_currency' => $sales->plan->currency,
             ]);
@@ -204,6 +211,7 @@ class SalesController extends AbstractController
                 'plan_name' => $sales->plan->name,
                 'plan_tariff' => $sales->plan->tariff,
                 'plan_currency' => $sales->plan->currency,
+                'plan_id' => $sales->plan->id,
                 'id' => $balance->id,
                 'balance_type' => $balance->balance_type,
                 'balance' => $balance->balance,

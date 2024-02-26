@@ -81,6 +81,17 @@ class Sales
     #[Groups(['read108:collection'])]
     public ?int $provider_id = null;
 
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read108:collection'])]
+    public ?int $p_id = null;
+
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read108:collection'])]
+    public ?int $tariff_id = null;
+
+    
+
     #[ORM\Column]
     #[Groups(['read108:collection','read:collection'])]
     public ?string $status = null;

@@ -264,6 +264,7 @@ class CreateUserController extends AbstractController
         $userPermission->date_start = new \DateTime('@' . strtotime('now'));
         $entityManagerInterface->persist($userPermission);
         $entityManagerInterface->flush();
+        $user_type = $request->get('user_type') !== null ? $request->get('user_type') : "AGENT";
         // dd('eqqfs');
         function addTrailingSlashIfMissing($str)
         {
@@ -288,7 +289,7 @@ class CreateUserController extends AbstractController
             $data = [
                 "nickname" => $userPresentations->nickname,
                 "full_name" => $user->firstname ?? $user->firstname . ' ' . $user->lastname ?? $user->lastname,
-                "role" => "AGENT",
+                "role" => $user_type ,
                 "is_active" => false,
                 "is_online" => false,
                 "created_at" =>  date('Y-m-d H:i:s'),
@@ -566,6 +567,8 @@ class CreateUserController extends AbstractController
         $userPresentation->presentation = $request->get('presentation');
         $userPresentation->contact_phone_comment = $request->get('contact_phone_comment');
 
+        $user_type = $request->get('user_type') !== null ? $request->get('user_type') : "AGENT";
+
 
         $uploadedFile = $request->files->get('file');
 
@@ -617,7 +620,7 @@ class CreateUserController extends AbstractController
             $data = [
                 "nickname" =>  $userPresentation->nickname,
                 "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
-                "role" => "AGENT",
+                "role" => $user_type ,
                 "is_active" => false,
                 "is_online" => false,
                 "created_at" =>  date('Y-m-d H:i:s'),
@@ -719,6 +722,8 @@ class CreateUserController extends AbstractController
         $userPresentation->presentation = $request->get('presentation');
         $userPresentation->contact_phone_comment = $request->get('contact_phone_comment');
 
+        $user_type = $request->get('user_type') !== null ? $request->get('user_type') : "AGENT";
+
         $uploadedFile = $request->files->get('file');
 
         if (null !== $uploadedFile) {
@@ -773,7 +778,7 @@ class CreateUserController extends AbstractController
             $data = [
                 "nickname" =>  $userPresentation->nickname,
                 "full_name" => $userid->firstname ?? $userid->firstname . ' ' . $userid->lastname ?? $userid->lastname,
-                "role" => "AGENT",
+                "role" => $user_type,
                 "is_active" => false,
                 "is_online" => false,
                 "created_at" =>  date('Y-m-d H:i:s'),

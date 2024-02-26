@@ -6,6 +6,7 @@ use App\Entity\Accounts;
 use App\Entity\ContactCustomFields;
 use App\Entity\Profiles;
 use App\Entity\User;
+use App\Entity\UserPresentations;
 use App\Repository\ContactsRepository;
 use App\Repository\ProfilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -151,6 +152,14 @@ class AddAccountsController extends AbstractController
                 $entityManagerInterface->persist($newuser);
                 $entityManagerInterface->flush();
 
+                $userPresentation = new UserPresentations();
+                $userPresentation->gender = $newuser->gender;
+                $userPresentation->nickname = $newuser->firstname;
+                $userPresentation->languages="FR";
+
+                $entityManagerInterface->persist($userPresentation);
+                $entityManagerInterface->flush();
+
 
                 $newuserId = $newuser->id;
 
@@ -174,7 +183,7 @@ class AddAccountsController extends AbstractController
 
                 $response['success_db'] = 'Account successfully inserted into the database.';
 
-
+ 
                 function addTrailingSlashIfMissing($str)
                 {
                     if (!in_array(substr($str, -1), ['/', '\\'])) {
@@ -195,6 +204,8 @@ class AddAccountsController extends AbstractController
                         "created_at" =>  date('Y-m-d H:i:s'),
                         "id" => $newuser->id,
                         "accountId" =>  $newuser->accountId,
+                        "profile_id" => $userPresentation->id,
+                        "languages" => $userPresentation->languages,
                     ];
                     $ws_library = addTrailingSlashIfMissing($this->parameterBag->get('ws_library'));
                     $url = $ws_library . 'users';

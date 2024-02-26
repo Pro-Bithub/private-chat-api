@@ -108,11 +108,46 @@ class AddRegisterController extends AbstractController
             $distUplodaingFolder = $folderValue . '/' . $slug_url;
 
 
-
+            $lang = ($Registrations->lang == 1) ? 'en' : 'fr';
             //for page contact
             $formstemplateContact = 'forms/template-contact';
             $newBaseContactHref = $APP_URL . $formstemplateContact . '/';
-            $fileContact = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/index.html', '', '');
+
+
+          function processAndDumpFile($filesystem, $fileSource, $fileDestination, $newBaseHref,  $lang ) {
+            $file = new SplFileInfo($fileSource, '', '');
+            $fileContents = $file->getContents();
+            $fileContents = str_replace('[base-href]', $newBaseHref, $fileContents);
+            $filesystem->dumpFile($fileDestination, $fileContents);
+        }
+        $contactFilesSet1 = [
+            'index.html' => '/contact/index.html',
+            'error.html' => '/contact/error.html',
+            'success.html' => '/contact/success.html',
+            'request.php' => '/contact/request.php'
+        ];
+        
+        $contactFilesSet2 = [
+            'index.html' => '/chat/contact/index.html',
+            'error.html' => '/chat/contact/error.html',
+            'success.html' => '/chat/contact/success.html',
+            'request.php' => '/chat/contact/request.php',
+        ];
+        
+        foreach ($contactFilesSet1 as $filename => $destination) {
+            $fileSource = $APP_PUBLIC_DIR . $formstemplateContact . '/' . $filename;
+            $fileDestination = $distUplodaingFolder . $destination;
+            processAndDumpFile($filesystem, $fileSource, $fileDestination, $newBaseContactHref,  $lang);
+        }
+        
+        foreach ($contactFilesSet2 as $filename => $destination) {
+            $fileSource = $APP_PUBLIC_DIR . $formstemplateContact . '/' . $filename;
+            $fileDestination = $distUplodaingFolder . $destination;
+            processAndDumpFile($filesystem, $fileSource, $fileDestination, $newBaseContactHref,  $lang);
+        }
+        
+
+          /*   $fileContact = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/index.html', '', '');
             $fileContentsContact = $fileContact->getContents();
             $fileContentsContact = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContact);
             $filesystem->dumpFile($distUplodaingFolder  . '/contact/index.html',  $fileContentsContact);
@@ -130,10 +165,10 @@ class AddRegisterController extends AbstractController
             $fileContactrequest = new SplFileInfo($APP_PUBLIC_DIR . $formstemplateContact . '/request.php', '', '');
             $fileContentsContactrequest = $fileContactrequest->getContents();
             $fileContentsContactrequest = str_replace('[base-href]',  $newBaseContactHref, $fileContentsContactrequest);
-            $filesystem->dumpFile($distUplodaingFolder  . '/contact/request.php',  $fileContentsContactrequest);
+            $filesystem->dumpFile($distUplodaingFolder  . '/contact/request.php',  $fileContentsContactrequest); */
             //
 
-            $lang = ($Registrations->lang == 1) ? 'en' : 'fr';
+
 
 
 
@@ -185,8 +220,13 @@ class AddRegisterController extends AbstractController
 
 
             $filesystem->chmod($distUplodaingFolder , 0755);
+
             $filesystem->chmod($distUplodaingFolder  . '/contact', 0755);
             $filesystem->chmod($distUplodaingFolder  . '/contact/request.php', 0644);
+            
+            $filesystem->chmod($distUplodaingFolder . '/chat', 0755);
+            $filesystem->chmod($distUplodaingFolder  . '/chat/contact', 0755);
+            $filesystem->chmod($distUplodaingFolder  . '/chat/contact/request.php', 0644);
 
 
 

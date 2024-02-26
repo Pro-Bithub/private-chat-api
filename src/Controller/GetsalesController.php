@@ -85,13 +85,13 @@ class GetsalesController extends AbstractController
             }
         }
 
-        $sql1 = "SELECT e.* ,  SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
-            FROM sales e
+        $sql1 = "SELECT  e.* ,up.picture as user_img , up.contact_mail as user_email, ''as user_lastname , up.nickname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, pf.currency as plan_currency, pf.price as plan_tariff
+           FROM sales e
                 left JOIN contacts r ON r.id = e.contact_id
                 left JOIN user d ON d.id = e.user_id
-                left JOIN user_presentations up ON up.user_id = e.user_id  and  up.status =1
-                
+                left JOIN user_presentations up ON up.id = e.p_id  
                 left JOIN plans p ON p.id = e.plan_id
+                left JOIN plan_tariffs pf ON pf.id = e.tariff_id
                 where p.account_id = :account_id 
                  " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
                 GROUP BY e.id
@@ -100,11 +100,11 @@ class GetsalesController extends AbstractController
                 ;";
 
         //dd($sql1,$filters);
-        $sql2 = "SELECT e.* ,SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+        $sql2 = "SELECT e.* ,up.picture as p_id ,up.picture as user_img , up.contact_mail as user_email, ''as user_lastname , up.nickname as user_firstname, r.email as contact_email, r.name as contact_name,p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
             FROM sales e
            left JOIN contacts r ON r.id = e.contact_id
            left JOIN user d ON d.id = e.user_id
-           left JOIN user_presentations up ON up.user_id = e.user_id  and  up.status =1
+           left JOIN user_presentations up ON up.id = e.p_id  
            left JOIN plans p ON p.id = e.plan_id
            where p.account_id = :account_id 
                 " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
@@ -222,13 +222,15 @@ class GetsalesController extends AbstractController
                 }
             }
         }
-
-        $sql1 = "SELECT e.* ,SUBSTRING_INDEX(GROUP_CONCAT(up.picture ), ',', 1) as user_img , d.email as user_email, d.lastname as user_lastname , d.firstname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, p.currency as plan_currency, p.tariff as plan_tariff
+   
+        $sql1 = "SELECT e.* ,up.picture as user_img , up.contact_mail as user_email, '' as user_lastname ,  up.nickname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, pf.currency as plan_currency, pf.price as plan_tariff
             FROM sales e
                 left JOIN contacts r ON r.id = e.contact_id
                 left JOIN user d ON d.id = e.user_id       
-                left JOIN user_presentations up ON up.user_id = e.user_id and  up.status =1
+                left JOIN user_presentations up ON up.id = e.p_id and  up.status =1
+                
                 left JOIN plans p ON p.id = e.plan_id
+                left JOIN plan_tariffs pf ON pf.id = e.tariff_id
                 where p.account_id = :account_id and e.contact_id = :contact_id
                  " . (!empty($filters) ? ' and ' : '') . implode(' AND', $filters) . "
                 GROUP BY e.id
