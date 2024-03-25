@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\UserLogs;
 use App\Repository\UserLogsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -164,4 +165,187 @@ class GetlogsbycontactController extends AbstractController
         // $result = $statement->fetchAll();
         // dd($result);
     }
+
+    #[Route('/add_user_log', name: 'app_add_log_controller')]
+    public function updateUserInfo( Request $request,EntityManagerInterface $entityManagerInterface): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $logs = new UserLogs();
+
+        $logs->element =  $data['element'];
+        $logs->action =  $data['action'];
+        $logs->element_id = $data['element_id'];
+        $logs->source = 1;
+        $logs->log_date = new \DateTimeImmutable();
+
+        $entityManagerInterface->persist($logs);
+        $entityManagerInterface->flush();
+  
+      
+
+       
+        return new JsonResponse([
+            'success' => true,
+      
+        ]);
+
+
+    }
+
+    #[Route('/get_user_logs/{id}', name: 'app_get_user_logs_controller')]
+    public function get_user_logs($id,Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
+        $authorizationHeader = $request->headers->get('Authorization');
+
+        // Check if the token is present and in the expected format (Bearer TOKEN)
+        if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
+            throw new AccessDeniedException('Invalid or missing authorization token.');
+        }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+
+        $tokenData = $this->get('security.token_storage')->getToken();
+
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        $user = $tokenData->getUser();
+    
+        $draw = (int) $request->get('draw', 1);
+        $start = (int) $request->get('start', 0);
+        $length = (int) $request->get('length', 5);
+        $columns = $request->get('columns');
+
+        $order = $request->get('order');
+
+        $sort = [];
+        foreach ($order as  $orders) {
+            if (isset($columns[$orders['column']]['name'])) {
+                $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
+            }
+        }
+        $filters = [];
+        $filterValues = [];
+        if ($request->get('search')['value'] &&  trim($request->get('search')['value']) != '') {
+            $filters[] = "(lg.id LIKE :searchTerm OR lg.action LIKE :searchTerm OR lg.log_date LIKE :searchTerm)";
+            $filterValues['searchTerm'] = '%' . trim($request->get('search')['value']) . '%';
+        }
+       
+        if ($request->get('columns')) {
+            foreach ($request->get('columns') as $column) {
+                if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
+                    $filters[] = "(" . $column['name'] . " LIKE :" . str_replace('.', '_', $column['name']) . ")";
+                    $filterValues[str_replace('.', '_', $column['name'])] = $column['search']['value'];
+                }
+            }
+        }
+
+        if(empty($filters)){
+            $filters[] = ' 1=1';
+        }
+      /*   return new JsonResponse([
+         
+            'filterValues' => $filterValues,
+         
+        ]); */
+        
+        $sql1 = "SELECT lg.*
+            FROM user_logs lg
+          
+                 " . (!empty($filters) ? 'where  lg.element_id = :id and lg.element = 30 and ' : '') . implode(' AND', $filters) . "
+                GROUP BY lg.id
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
+                LIMIT :limit OFFSET :offset             
+                ;";
+      /*       return new JsonResponse([
+                    'sql1' => $sql1,
+                   
+             
+                ]); */
+
+
+        // dd($sql1,$filters,$filterValues);
+        $sql2 = "SELECT lg.*
+                FROM user_logs lg
+         
+               
+                " . (!empty($filters) ? 'where  lg.element_id = :id  and lg.element = 30 and ' : '') . implode(' AND', $filters) . "
+                GROUP BY lg.id
+                " . (!empty($sort) ? 'order BY ' : '') . implode(' ,', $sort) . "
+                ;";
+
+        $sql3 = "SELECT lg.*
+        FROM user_logs lg
+    
+       
+         where     lg.element_id = :id  and lg.element = 30
+        GROUP BY lg.id
+        ;";
+        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
+    
+        $statement3->bindValue('id', $id);
+
+        $results3 = $statement3->executeQuery()->rowCount();
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+        $statement1 = $entityManagerInterface->getConnection()->prepare($sql2);
+      
+      
+        foreach ($filterValues as $key => $value) {
+            $statement->bindValue($key, $value);
+            $statement1->bindValue($key, $value);
+        }
+        
+      
+        // $statement->bindValue('searchTerm', '%' . $search . '%');
+        $statement->bindValue('limit', $length, \PDO::PARAM_INT);
+        $statement->bindValue('offset', $start, \PDO::PARAM_INT);
+ 
+        $statement->bindValue('id', $id);
+   
+        $statement1->bindValue('id', $id);
+        $results = $statement->executeQuery()->fetchAllAssociative();
+        $results1 = $statement1->executeQuery()->rowCount();
+        // $data1 = $this->PredefindTextsRepository->findDataBySearch($search);
+        // dd($results);
+
+        return new JsonResponse([
+            'draw' => $draw,
+            'recordsTotal' => $results3,
+            'recordsFiltered' => $results1,
+            'data' => $results
+     
+        ]);
+    }
+
+    #[Route('/get_welcome_msg', name: 'app_get_welcome_msg_controller')]
+    public function get_welcome_msg(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
+       
+        $sql1 = "SELECT mg.*
+        FROM welcome_msg mg
+            ;";
+
+            $statement = $entityManagerInterface->getConnection()->prepare($sql1);
+            $results = $statement->executeQuery()->fetchAllAssociative();
+
+            $sql2 = "SELECT o.*
+            FROM offres o
+                ;";
+    
+                $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
+                $results2 = $statement2->executeQuery()->fetchAllAssociative();
+
+
+      return new JsonResponse([
+    'welcome_msg' => $results,
+     'offres' => $results2,
+                ]);
+ 
+    }
+
+
 }

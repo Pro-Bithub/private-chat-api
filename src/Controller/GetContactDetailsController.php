@@ -109,7 +109,7 @@ class GetContactDetailsController extends AbstractController
     #[Route('/getContactInfoByProfileId/{id}', name: 'app_get_Contact_info_By_Profile_Id_details')]
     public function getContactInfoByProfileId($id, EntityManagerInterface $entityManagerInterface): Response
     {
-        $sql = "SELECT c.id as contact_id, p.id as profil_id, c.country ,c.firstname , c.lastname
+        $sql = "SELECT c.id as contact_id, p.id as profil_id, c.country ,c.firstname , c.lastname ,c.country_detected
                     FROM `contacts` AS c
                     LEFT JOIN `profiles` AS p ON p.u_id = c.id and p.u_type=2
                     WHERE p.id  = :id and c.status = 1  ";
@@ -137,7 +137,7 @@ class GetContactDetailsController extends AbstractController
             $idsinsql .= $id;
         }
 
-        $sql = "SELECT c.id as contact_id, p.id as profil_id, c.country ,c.firstname , c.lastname
+        $sql = "SELECT c.id as contact_id, p.id as profil_id, c.country ,c.firstname , c.lastname , c.country_detected
                     FROM `contacts` AS c
                     LEFT JOIN `profiles` AS p ON p.u_id = c.id and p.u_type=2
                     WHERE p.id  IN ( " . $idsinsql . " )  and c.status = 1";

@@ -214,6 +214,8 @@ class AddcontactformsController extends AbstractController
      
         $data['firstname'] = $contact->firstname ?? '';
         $data['lastname'] = $contact->lastname ?? '';
+        $data['source_id'] = $contact->source_id ?? null;
+        
 
         return new JsonResponse([
             'success' => 'true',
@@ -238,7 +240,7 @@ class AddcontactformsController extends AbstractController
         LEFT JOIN  `plan_tariffs` AS t ON t.plan_id = p.id  and t.status = 1
         LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
         LEFT JOIN `profiles` AS pr ON pr.u_id = pu.user_id
-        WHERE   t.currency like :currency and  t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
+        WHERE   (t.currency = :currency OR t.currency IS NULL OR t.currency = '') AND   t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
         group by p.id
         ;";
 
@@ -255,7 +257,7 @@ class AddcontactformsController extends AbstractController
             LEFT JOIN  `plan_tariffs` AS t ON t.plan_id = p.id  and t.status = 1
             LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
             LEFT JOIN `profiles` AS pr ON pr.u_id = pu.user_id
-            WHERE   t.currency like :currency and  t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
+            WHERE    (t.currency = :currency OR t.currency IS NULL OR t.currency = '') AND  t.country like :country    and  p.status = 1 and (p.account_id = :account and p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
             group by p.id
             ;";
     

@@ -245,7 +245,7 @@ class AddFormController extends AbstractController
         
 
         $content = null;
-        if ($ContactForms->form_type == "1") {
+        if ($ContactForms->form_type == "1"|| $ContactForms->form_type == "2") {
       
      $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
 
@@ -529,7 +529,7 @@ class AddFormController extends AbstractController
 
 
         $content = null;
-        if ($ContactForms->form_type == "1") {
+        if ($ContactForms->form_type == "1"|| $ContactForms->form_type == "2") {
       
      $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
 
@@ -752,7 +752,8 @@ class AddFormController extends AbstractController
 
         
         $content = null;
-        if ($newContactForms->form_type == "1") {
+
+      if ($newContactForms->form_type == "1"|| $newContactForms->form_type == "2") {
       
      $content  = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/forms');
 

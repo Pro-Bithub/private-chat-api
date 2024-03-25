@@ -77,7 +77,8 @@ class ContactGuestController extends AbstractController
                 $contact->date_start = new \DateTime('@' . strtotime('now'));
                 // $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
                 $contact->ip_address =  $data['ipAddress'] ?? '';
-                $contact->country =  $data['country'] ?? '';
+                $contact->country = $data['country'] ??  '';
+                $contact->country_detected =   $data['userCountry'] ?? '';
                 $contact->phone =  $data['phone'] ?? '';
 
                 if (isset($data['date_birth'])) {
@@ -181,7 +182,8 @@ class ContactGuestController extends AbstractController
         $contact->date_start = new \DateTime('@' . strtotime('now'));
         // $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $contact->ip_address =  $data['ipAddress'] ?? '';
-        $contact->country =  $data['country'] ?? '';
+        $contact->country = $data['country'] ??   '';
+        $contact->country_detected =   $data['userCountry'] ?? '';
 
         $entityManagerInterface->persist($contact);
         $entityManagerInterface->flush();
@@ -295,7 +297,9 @@ class ContactGuestController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        $account_id= $data['account_id'] ??$request->attributes->get('account');
+        $account_id = $data['account_id'] ?? $request->attributes->get('account');
+
+
 
 
         $profile = $profilesRepository->findContactProfileByIdProfile($id,  $account_id);
@@ -312,6 +316,24 @@ class ContactGuestController extends AbstractController
                 'message' => 'contact not exist.'
             ]);
         }
+
+        if (isset($data['iscurrency'])) {
+            if ($data['iscurrency'] == true) {
+                $contact->currency = !empty($data['currency']) ? $data['currency'] : $contact->currency;
+
+                $entityManagerInterface->persist($contact);
+                $entityManagerInterface->flush();
+
+                return new JsonResponse([
+                    'success' => true,
+                    'data' => $contact,
+                    'datad' => $data,
+                ]);
+            }
+        }
+
+
+
 
         $contact->gender = $data['gender'] ?? $contact->gender;
         $contact->firstname = !empty($data['firstname']) ? $data['firstname'] : $contact->firstname;
@@ -449,6 +471,15 @@ class ContactGuestController extends AbstractController
     {
 
 
+        
+        $sql = "SELECT  pn.*  
+                      FROM `phone_number` AS pn
+                      WHERE pn.account_id = :account_id
+                ";
+        $statementnumber = $entityManagerInterface->getConnection()->prepare($sql);
+        $statementnumber->bindValue('account_id', $request->attributes->get('account'));
+        $phone_number = $statementnumber->executeQuery()->fetchAllAssociative();
+
 
         $sql = "SELECT  c.*  
                       FROM `currencies` AS c
@@ -469,6 +500,8 @@ class ContactGuestController extends AbstractController
         $data = array();
         $data['currenciestariffs'] = $currenciestariffs;
         $data['currencies'] = $currencies;
+        $data['phone_number'] = $phone_number;
+  
         $data['language'] = array(
             array("code" => "FR", "title" => "Français"),
             array("code" => "EN", "title" => "English")
