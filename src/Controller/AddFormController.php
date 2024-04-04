@@ -105,6 +105,7 @@ class AddFormController extends AbstractController
         $ContactForms->agent_status = $data['agentStatus'];
         $ContactForms->button = $data['button'];
         $ContactForms->message_capture = $data['messageCapture'];
+   /*      $ContactForms->message_capture_online = $data['messageCaptureOnline']; */
 
         $ContactForms->account = $account;
         $ContactForms->form_type = $data['formType'];
@@ -327,6 +328,7 @@ class AddFormController extends AbstractController
         $ContactForms->agent_status = $data['agentStatus'];
         $ContactForms->button = $data['button'];
         $ContactForms->message_capture = $data['messageCapture'];
+   /*      $ContactForms->message_capture_online = $data['messageCaptureOnline']; */
 
         $ContactForms->form_type = $data['formType'];
         $ContactForms->friendly_name = $data['FriendlyName'];

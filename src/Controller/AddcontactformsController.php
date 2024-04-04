@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ContactCustomFields;
+use App\Entity\TwoFactorAuthAccount;
 use App\Repository\ContactsRepository;
 use App\Repository\ProfilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -197,10 +198,42 @@ class AddcontactformsController extends AbstractController
             $profile->login =  $login;
         }
         $data = [];
+        $data['isfirsttime'] =false;
         if($newpassword== "true"){
-            $password = bin2hex(random_bytes(6));
-            $profile->password = $userPasswordHasher->hashPassword($profile, $password);
-            $data['password'] = $password;
+     
+            
+             //!check if is first time 
+             if (!empty($contact->email)){
+                $sqlv = "SELECT  1  
+                from `2fa_accounts` AS fa 
+                WHERE  fa.customer_account_id = :accountId and fa.receiver like :email and fa.status = 1 limit 1";
+                $statementv = $entityManagerInterface->getConnection()->prepare($sqlv);
+                $statementv->bindValue('accountId', $contact->accountId);
+                $statementv->bindValue('email', $contact->email);
+                  $oneverify = $statementv->executeQuery()->rowCount();
+              
+                  if($oneverify==0 ){
+                    $password = bin2hex(random_bytes(6));
+                    $profile->password = $userPasswordHasher->hashPassword($profile, $password);
+                    $data['password'] = $password;
+
+                    $TwoFactorAuthAccount = new TwoFactorAuthAccount();
+                    $TwoFactorAuthAccount->receiver = $contact->email;
+                    $TwoFactorAuthAccount->method = 1;
+                    $TwoFactorAuthAccount->status = 1;
+                    $TwoFactorAuthAccount->date_start = new \DateTimeImmutable();
+                    $TwoFactorAuthAccount->customer_account_id = $contact->accountId;
+                    $entityManagerInterface->persist($TwoFactorAuthAccount);
+                    $entityManagerInterface->flush();
+                    $data['isfirsttime'] =true;
+
+                  }
+                  
+          
+   
+             }
+            
+      
         }
      
 
@@ -215,11 +248,15 @@ class AddcontactformsController extends AbstractController
         $data['firstname'] = $contact->firstname ?? '';
         $data['lastname'] = $contact->lastname ?? '';
         $data['source_id'] = $contact->source_id ?? null;
-        
+        $data['source_type'] = $contact->source_type ?? null;
+
+       
+   
 
         return new JsonResponse([
             'success' => 'true',
             'data' => $data,
+  
 
 
         ]);

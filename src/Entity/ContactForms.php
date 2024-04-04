@@ -127,6 +127,13 @@ class ContactForms
     #[Groups(['read10:collection'])]
     public ?string $message_capture = null;
 
+
+  /*   #[ORM\Column(length: 255,nullable: true)]
+    #[Groups(['read10:collection'])]
+    public ?string $message_capture_online = null; */
+
+    
+
     
     #[ORM\Column(length: 25, nullable: true)]
     #[Groups(['read10:collection'])]
