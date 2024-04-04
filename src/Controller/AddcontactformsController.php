@@ -206,10 +206,10 @@ class AddcontactformsController extends AbstractController
              if (!empty($contact->email)){
                 $sqlv = "SELECT  1  
                 from `2fa_accounts` AS fa 
-                WHERE  fa.customer_account_id = :accountId and fa.receiver like :email and fa.status = 1 limit 1";
+                WHERE fa.contact_id = :contactId and fa.customer_account_id = :accountId  and fa.status = 1 limit 1";
                 $statementv = $entityManagerInterface->getConnection()->prepare($sqlv);
                 $statementv->bindValue('accountId', $contact->accountId);
-                $statementv->bindValue('email', $contact->email);
+                $statementv->bindValue('contactId', $contact->id);
                   $oneverify = $statementv->executeQuery()->rowCount();
               
                   if($oneverify==0 ){
@@ -221,6 +221,7 @@ class AddcontactformsController extends AbstractController
                     $TwoFactorAuthAccount->receiver = $contact->email;
                     $TwoFactorAuthAccount->method = 1;
                     $TwoFactorAuthAccount->status = 1;
+                    $TwoFactorAuthAccount->contact_id =  $contact->id;
                     $TwoFactorAuthAccount->date_start = new \DateTimeImmutable();
                     $TwoFactorAuthAccount->customer_account_id = $contact->accountId;
                     $entityManagerInterface->persist($TwoFactorAuthAccount);

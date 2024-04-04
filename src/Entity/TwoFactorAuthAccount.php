@@ -23,6 +23,10 @@ class TwoFactorAuthAccount
     #[ORM\Column(type: "integer")]
     public  ?int $customer_account_id;
 
+    #[ORM\Column(type: "integer", nullable: true)]
+    public ?int  $contact_id;
+
+
 
     #[ORM\Column(type: "smallint")]
     public $method;
