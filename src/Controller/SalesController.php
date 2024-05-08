@@ -122,7 +122,7 @@ class SalesController extends AbstractController
             'sale_status' => $sales->status,
             'plan_name' => $plans->name,
             'plan_tariff' => $tariff->price,
-            'plan_currency' => $sales->contact->currency,
+            'plan_currency' => $tariff->currency,
 
 
         ]);
