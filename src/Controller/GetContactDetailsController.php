@@ -249,11 +249,12 @@ class GetContactDetailsController extends AbstractController
     public function getContactInfoForMonitoring(EntityManagerInterface $entityManagerInterface, $profile_id): Response
     {
         
-        $sql = "SELECT c.source  , c.id as contact_id , c.gender,SUBSTRING_INDEX(GROUP_CONCAT(uagents.firstname ORDER BY s.id desc), ',', 1) as agents_firstname , SUBSTRING_INDEX(GROUP_CONCAT(s.date_end ORDER BY s.id desc), ',', 1) as last_payment,  SUBSTRING_INDEX(GROUP_CONCAT(pl.currency ORDER BY s.id desc), ',', 1) as currency, SUBSTRING_INDEX(GROUP_CONCAT(pl.tariff ORDER BY s.id desc), ',', 1) as paid_amount, count(s.id) as purchases_numbe , SUBSTRING_INDEX(GROUP_CONCAT(pl.name ORDER BY s.id desc), ',', 1) as plan_name, count(s.id) as purchases_numbe , p.ip_address , p.browser_data , c.date_start , c.phone , c.email , c.country ,c.status , c.firstname , c.lastname
+        $sql = "SELECT c.source  , c.id as contact_id , c.gender,SUBSTRING_INDEX(GROUP_CONCAT(uagents.firstname ORDER BY s.id desc), ',', 1) as agents_firstname , SUBSTRING_INDEX(GROUP_CONCAT(s.date_end ORDER BY s.id desc), ',', 1) as last_payment,  SUBSTRING_INDEX(GROUP_CONCAT(ptf.currency ORDER BY s.id desc), ',', 1) as currency, SUBSTRING_INDEX(GROUP_CONCAT(ptf.price ORDER BY s.id desc), ',', 1) as paid_amount, count(s.id) as purchases_numbe , SUBSTRING_INDEX(GROUP_CONCAT(pl.name ORDER BY s.id desc), ',', 1) as plan_name, count(s.id) as purchases_numbe , p.ip_address , p.browser_data , c.date_start , c.phone , c.email , c.country ,c.status , c.country_detected, c.firstname , c.lastname
     FROM `profiles` AS p
     LEFT JOIN `contacts` AS c ON c.id = p.u_id
     LEFT JOIN `sales` AS s ON s.contact_id = c.id and s.status = 1 
-    LEFT JOIN `plans` AS pl ON s.plan_id = pl.id 
+    LEFT JOIN `plan_tariffs` AS ptf ON ptf.id = s.tariff_id
+    LEFT JOIN `plans` AS pl ON ptf.plan_id = pl.id 
     LEFT JOIN `profiles` AS pagents ON s.user_id = pagents.id  and pagents.u_type= 1
     LEFT JOIN `user` AS uagents ON pagents.u_id = uagents.id 
     WHERE p.id = :id and p.u_type = 2 

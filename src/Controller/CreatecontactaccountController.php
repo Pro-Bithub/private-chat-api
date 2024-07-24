@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\ContactLogs;
 use App\Entity\Contacts;
 use App\Entity\Profiles;
 use App\Entity\TwoFactorAuthAccount;
@@ -148,7 +149,7 @@ class CreatecontactaccountController extends AbstractController
         $time =  new \DateTimeImmutable();
 
 
-        $UserLogs = new UserLogs();
+   /*      $UserLogs = new UserLogs();
         $UserLogs->user_id = $contact->id;
         $UserLogs->action = 'Register Contact';
         $UserLogs->element = '27';
@@ -157,7 +158,7 @@ class CreatecontactaccountController extends AbstractController
         $UserLogs->source = '3';
         $entityManagerInterface->persist($UserLogs);
         $entityManagerInterface->flush();
-
+ */
         $profiles = new Profiles();
         $profiles->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $profiles->accountId = $request->get('account');
@@ -182,7 +183,7 @@ class CreatecontactaccountController extends AbstractController
         $entityManagerInterface->persist($profiles);
         $entityManagerInterface->flush();
 
-        $UserLogs = new UserLogs();
+   /*      $UserLogs = new UserLogs();
         $UserLogs->user_id = $contact->id;
         $UserLogs->action = 'new Profile';
         $UserLogs->element = '30';
@@ -191,9 +192,18 @@ class CreatecontactaccountController extends AbstractController
         $UserLogs->source = '3';
         $entityManagerInterface->persist($UserLogs);
         $entityManagerInterface->flush();
+ */
 
-
-     
+        $ContactLogs = new ContactLogs();
+        $ContactLogs->profile_id = $profiles->id;
+        $ContactLogs->action = 8;
+        $ContactLogs->element = 'register-form';
+   /*      $ContactLogs->element_value =  $request->get('email'); */
+        $ContactLogs->log_date = $time;
+        $ContactLogs->browsing_data =    $browserName . ';' . $os->getName();
+        $entityManagerInterface->persist($ContactLogs);
+        $entityManagerInterface->flush();
+        
 
         $email = urlencode($request->get('email'));
 
@@ -330,7 +340,7 @@ class CreatecontactaccountController extends AbstractController
             $entityManagerInterface->persist($profiles);
             $entityManagerInterface->flush();
 
-            $UserLogs = new UserLogs();
+         /*    $UserLogs = new UserLogs();
             $UserLogs->user_id = $profiles->u_id;
             $UserLogs->action = 'Login Contact';
             $UserLogs->element = '25';
@@ -340,7 +350,18 @@ class CreatecontactaccountController extends AbstractController
             $UserLogs->source = '3';
 
             $entityManagerInterface->persist($UserLogs);
-            $entityManagerInterface->flush();
+            $entityManagerInterface->flush(); */
+
+                $time =  new \DateTimeImmutable();
+                $ContactLogs = new ContactLogs();
+                $ContactLogs->profile_id = $profiles->id;
+                $ContactLogs->action = 8;
+                $ContactLogs->element = 'login-form';
+                $ContactLogs->log_date = $time;
+                $ContactLogs->browsing_data =    $browserName . ';' . $os->getName();
+                $entityManagerInterface->persist($ContactLogs);
+                $entityManagerInterface->flush();
+
 
             return new JsonResponse([
                 'success' => 'true',
@@ -580,7 +601,7 @@ class CreatecontactaccountController extends AbstractController
             $entityManagerInterface->persist($profiles);
             $entityManagerInterface->flush();
 
-            $UserLogs = new UserLogs();
+    /*         $UserLogs = new UserLogs();
             $UserLogs->user_id = $profiles->u_id;
             $UserLogs->action = 'Login Contact';
             $UserLogs->element = '25';
@@ -591,7 +612,17 @@ class CreatecontactaccountController extends AbstractController
 
             $entityManagerInterface->persist($UserLogs);
             $entityManagerInterface->flush();
-
+ */
+            $time =  new \DateTimeImmutable();
+            $ContactLogs = new ContactLogs();
+            $ContactLogs->profile_id = $profiles->id;
+            $ContactLogs->action = 8;
+            $ContactLogs->element = 'sing-in-two-steps-form';
+            $ContactLogs->log_date = $time;
+            $ContactLogs->browsing_data =    $browserName . ';' . $os->getName();
+            $entityManagerInterface->persist($ContactLogs);
+            $entityManagerInterface->flush();
+      
 
             return new JsonResponse([
                 'success' => true,
@@ -707,6 +738,7 @@ class CreatecontactaccountController extends AbstractController
             $TwoFactorAuthRequests->status = 1;
             $entityManagerInterface->persist($TwoFactorAuthRequests);
             $entityManagerInterface->flush();
+
 
 
             

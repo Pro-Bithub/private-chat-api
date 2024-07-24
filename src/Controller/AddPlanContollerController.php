@@ -72,9 +72,25 @@ class AddPlanContollerController extends AbstractController
         $plans->currency = $data['currency'];
         $plans->tariff = $data['tariff']; */
         $plans->billing_type = $data['billingType'];
-        $plans->billing_volume = $data['billingVolume'];
+        if (isset($data['billingVolume'])) {
+            $plans->billing_volume =$data['billingVolume'] ;
+        }
+ 
         $planUserData = $data['planUser'];
         //$planDiscountUserData = $data['plandiscountUser'];
+        if (isset($data['duration'])) {
+            $plans->duration =$data['duration'] ;
+        }
+        if (isset($data['introductory'])) {
+            if( $plans->introductory==true){
+                $plans->introductory =1 ;
+            }else if($plans->introductory==false){
+                $plans->introductory =0 ;
+            }
+      
+        }
+
+        $plans->type =$data['type'] ;
 
         $entityManagerInterface->persist($plans);
         $entityManagerInterface->flush();
@@ -93,9 +109,55 @@ class AddPlanContollerController extends AbstractController
                 $planTariffs->language = $tariff['language'];
                 $planTariffs->date_start = new \DateTimeImmutable();
                 $planTariffs->status = 1;
-                $planTariffs->price = $tariff['price']; 
+
+                if (isset($tariff['price'])) {
+                    $planTariffs->price = $tariff['price']; 
+                }
+                if($data['type'] ==2){
+                    if (isset($tariff['minute_cost'])){
+                        $planTariffs->minute_cost = $tariff['minute_cost']; 
+                    }
+                    if (isset($tariff['details'])){
+                        $planTariffs->details = $tariff['details']; 
+                    }
+                    if (isset($tariff['phone_number'])){
+                        $planTariffs->phone_number = $tariff['phone_number']; 
+                    }
+
+                
+                }
+             
+            
                 $planTariffs->plan = $plans;
                 $entityManagerInterface->persist($planTariffs);
+                $entityManagerInterface->flush(); 
+
+  
+
+                if($data['type'] ==2){
+                    $id = $planTariffs->id;
+                   
+      
+                    foreach ($tariff['openingInfoArray'] as  $openingInfo) {
+                        $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+                        VALUES (:value, '2', :plan_tariff_id)";
+                        $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+                        $stmt4->bindValue('value', $openingInfo);
+                        $stmt4->bindValue('plan_tariff_id',$id);
+                        $result = $stmt4->executeQuery();
+                    }
+                    foreach ($tariff['regulationArray'] as  $regulation) {
+                        $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+                        VALUES (:value, '1', :plan_tariff_id)";
+                        $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+                        $stmt4->bindValue('value', $regulation);
+                        $stmt4->bindValue('plan_tariff_id',$id);
+                        $result = $stmt4->executeQuery();
+                    }
+
+                }
+
+
                 $iterationCount++;
                 if ($iterationCount >= 100) {
                     break;
@@ -259,6 +321,10 @@ class AddPlanContollerController extends AbstractController
          $oldplans->date_start =$plans->date_start ;
          $oldplans->account =$plans->account ;
          $oldplans->planTariffs =$plans->planTariffs ;
+         $oldplans->duration =$plans->duration ;
+         $oldplans->type =$plans->type ;
+         $oldplans->introductory =$plans->introductory ;
+     
          $oldplans->status = '0';
          $entityManagerInterface->persist($oldplans);
          $entityManagerInterface->flush();
@@ -283,8 +349,19 @@ class AddPlanContollerController extends AbstractController
         $plans->status = $data['status'];
    
         $plans->billing_type = $data['billingType'];
+
+        if (isset($data['billingVolume'])) 
         $plans->billing_volume = $data['billingVolume'];
-   
+
+        if (isset($data['duration'])) 
+        $plans->duration = $data['duration'];
+
+        $plans->type =$data['type'];
+
+        if (array_key_exists('introductory', $data)) {
+            $plans->introductory = $data['introductory'] ? '1' : '0';
+        }
+        
 
         $entityManagerInterface->persist($plans);
         $entityManagerInterface->flush();
@@ -327,13 +404,58 @@ class AddPlanContollerController extends AbstractController
                     $planTariffs->language = $tariff['language'];
                    $planTariffs->date_start = new \DateTimeImmutable();
                     $planTariffs->status = 1;
-                    $planTariffs->price = $tariff['price']; 
+      
                     $planTariffs->plan = $plans;
+
+                    if (isset($tariff['price'])) {
+                        $planTariffs->price = $tariff['price']; 
+                    }
+                    if($data['type'] ==2){
+                        if (isset($tariff['minute_cost'])){
+                            $planTariffs->minute_cost = $tariff['minute_cost']; 
+                        }
+                        if (isset($tariff['details'])){
+                            $planTariffs->details = $tariff['details']; 
+                        }
+                        if (isset($tariff['phone_number'])){
+                            $planTariffs->phone_number = $tariff['phone_number']; 
+                        }
+                    }
+             
+                    
                     $entityManagerInterface->persist($planTariffs);
+                    $entityManagerInterface->flush(); 
                     $iterationCount++;
                     if ($iterationCount >= 100) {
                         break;
                     }
+
+                    if($data['type'] ==2){
+                        $id = $planTariffs->id;
+                       
+          
+                        foreach ($tariff['openingInfoArray'] as  $openingInfo) {
+                            $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+                            VALUES (:value, '2', :plan_tariff_id)";
+                            $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+                            $stmt4->bindValue('value', $openingInfo);
+                            $stmt4->bindValue('plan_tariff_id',$id);
+                            $result = $stmt4->executeQuery();
+                        }
+                        foreach ($tariff['regulationArray'] as  $regulation) {
+                            $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+                            VALUES (:value, '1', :plan_tariff_id)";
+                            $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+                            $stmt4->bindValue('value', $regulation);
+                            $stmt4->bindValue('plan_tariff_id',$id);
+                            $result = $stmt4->executeQuery();
+                        }
+    
+                    }
+    
+                    
+
+
                 }
                 $entityManagerInterface->flush();
             }
@@ -700,7 +822,7 @@ class AddPlanContollerController extends AbstractController
         $id,
         Request $request,
         PlanTariffsRepository $planTariffsRepository,
-
+        EntityManagerInterface $entityManagerInterface
     ): Response {
 
          
@@ -722,10 +844,20 @@ class AddPlanContollerController extends AbstractController
     
         $Tariffs = $planTariffsRepository->find($id);
 
+	    $sql = "SELECT p.*
+    FROM `plan_info` AS p
+    WHERE p.plan_tariff_id = :id ";
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql);
+        $statement->bindValue('id', $id);
+        $plan_infos = $statement->executeQuery()->fetchAllAssociative();
+
 
         return new JsonResponse([
             'success' => true,
             'data' => $Tariffs,
+            'plan_infos' => $plan_infos,
+            
         ]);
     }
 
@@ -829,10 +961,23 @@ class AddPlanContollerController extends AbstractController
         $newTariffs =new PlanTariffs();
         $newTariffs->status = "1";
         $newTariffs->plan = $Tariffs->plan;
+        if(isset($data['price']))
         $newTariffs->price = $data['price'];
         $newTariffs->country = $data['country'];
         $newTariffs->currency = $data['currency'];
         $newTariffs->language = $data['language'];
+
+        if(isset($data['phone_number']))
+        $newTariffs->phone_number = $data['phone_number'];
+
+        if(isset($data['minute_cost']))
+        $newTariffs->minute_cost = $data['minute_cost'];
+
+        if(isset($data['details']))
+        $newTariffs->details = $data['details'];
+
+        
+
      
         $newTariffs->date_start = new \DateTimeImmutable();
 
@@ -851,6 +996,29 @@ class AddPlanContollerController extends AbstractController
 
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
+
+
+
+        $id = $newTariffs->id;
+                   
+      
+        foreach ($data['opening_info'] as  $openingInfo) {
+            $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+            VALUES (:value, '2', :plan_tariff_id)";
+            $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+            $stmt4->bindValue('value', $openingInfo);
+            $stmt4->bindValue('plan_tariff_id',$id);
+            $result = $stmt4->executeQuery();
+        }
+        foreach ($data['regulation'] as  $regulation) {
+            $sql = "INSERT INTO plan_info (value,element, plan_tariff_id) 
+            VALUES (:value, '1', :plan_tariff_id)";
+            $stmt4 = $entityManagerInterface->getConnection()->prepare($sql);
+            $stmt4->bindValue('value', $regulation);
+            $stmt4->bindValue('plan_tariff_id',$id);
+            $result = $stmt4->executeQuery();
+        }
+
 
 
 

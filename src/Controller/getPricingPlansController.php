@@ -27,7 +27,29 @@ class getPricingPlansController extends AbstractController
         $this->tokenStorage = $tokenStorage;
     }
 
+    #[Route('/planinfo', name: 'planinfo')]
+    public function get_plan(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
+    {
 
+      
+        $data = json_decode($request->getContent(), true);
+
+        $placeholders = implode(',', array_fill(0, count($data), '?'));
+        $sql = "SELECT info.* FROM plan_info info WHERE info.plan_tariff_id IN ($placeholders)";
+
+        $stmt = $entityManagerInterface->getConnection()->prepare($sql);
+
+    
+        $result = $stmt->executeQuery($data)->fetchAllAssociative();
+
+        return new JsonResponse([
+            'success' => 'true',
+            'data' =>   $result 
+        ]);
+      
+        return new JsonResponse();
+    }
+    
 
     //     public function isValidToken($token, JWTTokenManagerInterface $jwtManager)
     // {
@@ -348,5 +370,9 @@ class getPricingPlansController extends AbstractController
 
         ]);
     }
+
+   
+
+
 
 }

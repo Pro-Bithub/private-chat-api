@@ -145,9 +145,9 @@ class SalesController extends AbstractController
 
 
 
+     
 
-
-        $logs = new UserLogs();
+    /*     $logs = new UserLogs();
         $logs->user_id =  $sales->contact->id;
         $logs->element = 14;
         $logs->action = 'update';
@@ -155,7 +155,7 @@ class SalesController extends AbstractController
         $logs->source = 3;
         $logs->log_date = new \DateTimeImmutable();
         $entityManagerInterface->persist($logs);
-        $entityManagerInterface->flush();
+        $entityManagerInterface->flush(); */
 
         if ($data['status'] === 2) {
             return new JsonResponse([

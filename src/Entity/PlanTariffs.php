@@ -46,6 +46,22 @@ class PlanTariffs
     #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
     public ?string $status = null;
 
+
+    #[ORM\Column]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $details = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
+    #[Groups(['read4:collection', 'read19:collection' , 'read108:collection', 'read:collection'])]
+    public ?string $minute_cost = null;
+
+
+    #[ORM\Column]
+    #[Groups(['read4:collection', 'read19:collection', 'read108:collection', 'read:collection'])]
+    public ?string $phone_number = null;
+
+
+
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Groups(['read4:collection'])]
     public ?\DateTimeInterface $date_start = null;

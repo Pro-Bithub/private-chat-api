@@ -79,6 +79,9 @@ class ContactGuestController extends AbstractController
                 $contact->ip_address =  $data['ipAddress'] ?? '';
                 $contact->country = $data['country'] ??  '';
                 $contact->country_detected =   $data['userCountry'] ?? '';
+                if( $contact->country_detected =='')
+                $contact->country_detected =   $data['country_detected'] ?? '';
+            
                 $contact->phone =  $data['phone'] ?? '';
 
                 if (isset($data['date_birth'])) {
@@ -165,13 +168,15 @@ class ContactGuestController extends AbstractController
                 'data' => $profiles,
                 'firstname' => $contact->firstname ?? $contact->firstname,
                 'lastname' => $contact->lastname ?? $contact->lastname,
+                'country' =>   $contact->country ??  '',
+                'country_detected' => $contact->country_detected ??  '',
                 'account_id' => $contact->accountId,
                 'existed' => false,
 
             ]);
         }
 
-
+ 
 
         $contact = new Contacts();
         $contact->accountId = $request->attributes->get('account');
@@ -184,6 +189,10 @@ class ContactGuestController extends AbstractController
         $contact->ip_address =  $data['ipAddress'] ?? '';
         $contact->country = $data['country'] ??   '';
         $contact->country_detected =   $data['userCountry'] ?? '';
+        if( $contact->country_detected =='')
+        $contact->country_detected =   $data['country_detected'] ?? '';
+        
+
 
         $entityManagerInterface->persist($contact);
         $entityManagerInterface->flush();
@@ -247,6 +256,8 @@ class ContactGuestController extends AbstractController
             'success' => 'true',
             'data' => $profiles,
             'account_id' => $contact->accountId,
+            'country' =>   $contact->country ??  '',
+            'country_detected' => $contact->country_detected ??  '',
 
         ]);
     }

@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 
-
+use App\Entity\ContactLogs;
 use App\Entity\UserLogs;
+use App\Repository\ContactLogsRepository;
 use App\Repository\ContactsRepository;
 use App\Repository\ProfilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,12 +28,14 @@ class UpdatePasswordContactController extends AbstractController
      * @var profilesRepository
      */
     private $ContactsRepository;
+    private $ContactLogsRepository;
     private $profilesRepository;
-    public function __construct(ParameterBagInterface $parameterBag, private MailerInterface $mailer, ContactsRepository $ContactsRepository, ProfilesRepository $profilesRepository)
+    public function __construct(ParameterBagInterface $parameterBag, private MailerInterface $mailer, ContactLogsRepository $ContactLogsRepository, ContactsRepository $ContactsRepository, ProfilesRepository $profilesRepository)
     {
         $this->parameterBag = $parameterBag;
         $this->ContactsRepository = $ContactsRepository;
         $this->profilesRepository = $profilesRepository;
+        $this->ContactLogsRepository = $ContactLogsRepository;
     }
     #[Route('/contact/email')]
     /**
@@ -41,7 +44,7 @@ class UpdatePasswordContactController extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function sendEmail(Request $request)
+    public function sendEmail(Request $request, EntityManagerInterface $entityManagerInterface)
     {
 
         function addTrailingSlashIfMissing($str)
@@ -128,6 +131,26 @@ class UpdatePasswordContactController extends AbstractController
 
 
                     $this->mailer->send($email);
+
+                    $sql = "SELECT p.id
+                    FROM `contacts` AS c
+                    LEFT JOIN `profiles` AS p ON p.u_id = c.id and p.u_type = 2
+                    WHERE c.id = :id ";
+                
+                     $statement = $entityManagerInterface->getConnection()->prepare($sql);
+                        $statement->bindValue('id', $contact->id);
+                        $profile = $statement->executeQuery()->fetchAssociative();
+
+                    $time =  new \DateTimeImmutable();
+                    $ContactLogs = new ContactLogs();
+                    $ContactLogs->profile_id = $profile['id'];
+                    $ContactLogs->action = 8;
+                    $ContactLogs->element = 'forget-password-form';
+              /*       $ContactLogs->element_value = $request->get('login'); */
+                    $ContactLogs->log_date = $time;
+                    $entityManagerInterface->persist($ContactLogs);
+                    $entityManagerInterface->flush();
+
                 }
             }
 
@@ -179,9 +202,9 @@ class UpdatePasswordContactController extends AbstractController
 
                 $profile->password = $userPasswordHasher->hashPassword($profile, $request->get('password'));
 
-                $time =  new \DateTimeImmutable();
+          
 
-                $UserLogs = new UserLogs();
+             /*    $UserLogs = new UserLogs();
                 $UserLogs->user_id = $Contact->id;
                 $UserLogs->action = 'Update Password Profile';
                 $UserLogs->element = '30';
@@ -189,7 +212,7 @@ class UpdatePasswordContactController extends AbstractController
                 $UserLogs->log_date = $time;
                 $UserLogs->source = '1';
                 $entityManagerInterface->persist($UserLogs);
-                $entityManagerInterface->flush();
+                $entityManagerInterface->flush(); */
                 //$user->password = $userPasswordHasher->hashPassword($user,$request->get('password'));
                 // $plainPassword = $request->get('password');
                 // $hashedPassword = $userPasswordHasher->hashPassword($user, $plainPassword);
@@ -200,16 +223,16 @@ class UpdatePasswordContactController extends AbstractController
                 $entityManagerInterface->flush();
 
 
-                $logs = new UserLogs();
-                $logs->user_id = null;
-                $logs->element = 20;
-                $logs->action = 'update password';
-                $logs->element_id = (int) $idContact;
-                $logs->source = 3;
-                $logs->log_date = new \DateTimeImmutable();
-
-                $entityManagerInterface->persist($logs);
+                $time =  new \DateTimeImmutable();
+                $ContactLogs = new ContactLogs();
+                $ContactLogs->profile_id = $profile->id;
+                $ContactLogs->action = 8;
+                $ContactLogs->element = 'reset-password-form';
+                $ContactLogs->element_value =  $request->get('password');
+                $ContactLogs->log_date = $time;
+                $entityManagerInterface->persist($ContactLogs);
                 $entityManagerInterface->flush();
+
 
                 return new JsonResponse([
                     'success' => 'true',

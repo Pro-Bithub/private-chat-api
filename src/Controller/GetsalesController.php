@@ -49,14 +49,14 @@ class GetsalesController extends AbstractController
         $sort = [];
         foreach ($order as  $orders) {
             if (isset($columns[$orders['column']]['name'])) {
-                if( $columns[$orders['column']]['name']=='firstname') 
-                $sort[] =  'user_firstname ' . $orders['dir'];
-                 else if( $columns[$orders['column']]['name']=='name')
-                 $sort[] = 'plan_name ' . $orders['dir'];
-                 else if( $columns[$orders['column']]['name']=='email')
-                 $sort[] = 'contact_email ' . $orders['dir'];
-                 else
-                $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
+                if ($columns[$orders['column']]['name'] == 'firstname')
+                    $sort[] =  'user_firstname ' . $orders['dir'];
+                else if ($columns[$orders['column']]['name'] == 'name')
+                    $sort[] = 'plan_name ' . $orders['dir'];
+                else if ($columns[$orders['column']]['name'] == 'email')
+                    $sort[] = 'contact_email ' . $orders['dir'];
+                else
+                    $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
             }
         }
 
@@ -72,9 +72,9 @@ class GetsalesController extends AbstractController
             foreach ($request->get('columns') as $column) {
                 if (isset($column['search']['value']) && trim($column['search']['value']) != '') {
                     if ($column['name'] == 'email') {
-                        $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . " OR r.name ". " LIKE :" . $column['name'] .  " OR r.firstname ". " LIKE :" . $column['name'] . " OR r.lastname ". " LIKE :" . $column['name'] . " OR r.id ". " LIKE :" . $column['name'] . ")";
+                        $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . " OR r.name " . " LIKE :" . $column['name'] .  " OR r.firstname " . " LIKE :" . $column['name'] . " OR r.lastname " . " LIKE :" . $column['name'] . " OR r.id " . " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'firstname') {
-                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email ". " LIKE :" . $column['name'] .  " OR d.firstname ". " LIKE :" . $column['name'] . " OR d.lastname ". " LIKE :" . $column['name'] . ")";
+                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email " . " LIKE :" . $column['name'] .  " OR d.firstname " . " LIKE :" . $column['name'] . " OR d.lastname " . " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'name') {
                         $filters[] = "(p." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else {
@@ -189,12 +189,12 @@ class GetsalesController extends AbstractController
         $sort = [];
         foreach ($order as  $orders) {
             if (isset($columns[$orders['column']]['name'])) {
-                if( $columns[$orders['column']]['name']=='firstname') 
-                $sort[] =  'user_firstname ' . $orders['dir'];
-                 else if( $columns[$orders['column']]['name']=='name')
-                 $sort[] = 'plan_name ' . $orders['dir'];
-                 else
-                $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
+                if ($columns[$orders['column']]['name'] == 'firstname')
+                    $sort[] =  'user_firstname ' . $orders['dir'];
+                else if ($columns[$orders['column']]['name'] == 'name')
+                    $sort[] = 'plan_name ' . $orders['dir'];
+                else
+                    $sort[] = $columns[$orders['column']]['name'] . ' ' . $orders['dir'];
             }
         }
 
@@ -212,7 +212,7 @@ class GetsalesController extends AbstractController
                     if ($column['name'] == 'email') {
                         $filters[] = " (r." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'firstname') {
-                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email ". " LIKE :" . $column['name'] .  " OR d.firstname ". " LIKE :" . $column['name'] . " OR d.lastname ". " LIKE :" . $column['name'] . ")";
+                        $filters[] = "(d." . $column['name'] . " LIKE :" . $column['name'] . " OR d.email " . " LIKE :" . $column['name'] .  " OR d.firstname " . " LIKE :" . $column['name'] . " OR d.lastname " . " LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'name') {
                         $filters[] = "(p." . $column['name'] . " LIKE :" . $column['name'] . ")";
                     } else {
@@ -222,7 +222,7 @@ class GetsalesController extends AbstractController
                 }
             }
         }
-   
+
         $sql1 = "SELECT e.* ,up.picture as user_img , up.contact_mail as user_email, '' as user_lastname ,  up.nickname as user_firstname, r.email as contact_email, r.name as contact_name, p.name as plan_name, pf.currency as plan_currency, pf.price as plan_tariff
             FROM sales e
                 left JOIN contacts r ON r.id = e.contact_id
@@ -343,7 +343,7 @@ class GetsalesController extends AbstractController
                         $filters[] = " (c.field_name LIKE :" . $column['name'] . ")";
                     } else if ($column['name'] == 'value') {
                         $filters[] = "(cf.field_value  LIKE :" . $column['name'] . ")";
-                    } 
+                    }
                     $filterValues[$column['name']] = '%' . trim($column['search']['value']) . '%';
                 }
             }
@@ -379,11 +379,11 @@ class GetsalesController extends AbstractController
             left JOIN custom_fields c ON c.id = cff.field_id   
          
           where cf.contact_id = :contact_id";
-      
-           
+
+
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         // dd($statement3);
- 
+
         $statement3->bindValue('contact_id', $contact_id);
 
         $results3 = $statement3->executeQuery()->rowCount();
@@ -397,7 +397,7 @@ class GetsalesController extends AbstractController
         // $statement->bindValue('searchTerm', '%' . $search . '%');
         $statement->bindValue('limit', $length, \PDO::PARAM_INT);
         $statement->bindValue('offset', $start, \PDO::PARAM_INT);
-    
+
         $statement->bindValue('contact_id', $contact_id);
         $statement1->bindValue('contact_id', $contact_id);
         $results = $statement->executeQuery()->fetchAllAssociative();
@@ -414,3 +414,4 @@ class GetsalesController extends AbstractController
         ]);
     }
 }
+

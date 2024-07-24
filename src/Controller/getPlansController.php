@@ -695,7 +695,7 @@ class getPlansController extends AbstractController
 
          
 
-            $RAW_QUERY1 = "SELECT p.* , pf.price as tariff_price, pf.id as tariff_id , pf.currency as tariff_currency, pf.country as tariff_country ,   pf.language as tariff_language
+            $RAW_QUERY1 = "SELECT p.*,pf.details ,pf.minute_cost,pf.phone_number, pf.price as tariff_price, pf.id as tariff_id , pf.currency as tariff_currency, pf.country as tariff_country ,   pf.language as tariff_language
           FROM `plans` AS p
           LEFT JOIN `plan_tariffs` AS pf ON pf.plan_id = p.id and pf.status = 1 
           LEFT JOIN `plan_users` AS pu ON p.id = pu.plan_id 
@@ -725,6 +725,8 @@ class getPlansController extends AbstractController
                         'id' => $row['id'],
                         'account_id' => $row['account_id'],
                         'name' => $row['name'],
+                        'type' => $row['type'],
+                        'duration' => $row['duration'],
                         'billing_type' => $row['billing_type'],
                         'billing_volume' => $row['billing_volume'],
                         'status' => $row['status'],
@@ -733,14 +735,25 @@ class getPlansController extends AbstractController
                         'tariffs' => [],
                     ];
                 }
-                $combinedData[$plansId]['tariffs'][] = [
-                    'id' => $row['tariff_id'],
-                    'currency' => $row['tariff_currency'],
-                    'country' => $row['tariff_country'],
-                    'language' => $row['tariff_language'],
-                    'price' => $row['tariff_price'],
-                    
-                ];
+                $tariffExists = false;
+                foreach ($combinedData[$plansId]['tariffs'] as $tariff) {
+                    if ($tariff['id'] === $row['tariff_id']) {
+                        $tariffExists = true;
+                        break;
+                    }
+                }
+                if (!$tariffExists && $row['tariff_id'] !== null) {
+                        $combinedData[$plansId]['tariffs'][] = [
+                            'id' => $row['tariff_id'],
+                            'currency' => $row['tariff_currency'],
+                            'country' => $row['tariff_country'],
+                            'language' => $row['tariff_language'],
+                            'price' => $row['tariff_price'],
+                            'phone_number' => $row['phone_number'],
+                            'minute_cost' => $row['minute_cost'],
+                            'details' => $row['details'],
+                        ];
+                }
             }
 
             $data['plans'] = array_values($combinedData);
@@ -960,7 +973,7 @@ class getPlansController extends AbstractController
     public function getDataByProfileId(Request $request, $id, EntityManagerInterface $entityManagerInterface): Response
     {
 
-        $sql2 = "SELECT c.firstname , c.lastname , c.email ,c.phone , c.country , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
+        $sql2 = "SELECT p.ip_address,p.browser_data, c.firstname , c.lastname , c.email ,c.phone , c.country , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
         $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
         $statement2->bindValue('id', $id);
         $results = $statement2->executeQuery()->fetchAllAssociative();

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\ContactLogs;
 use App\Entity\Supportickets;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -91,7 +92,15 @@ class SupportController extends AbstractController
 
 
 
-
+        $time =  new \DateTimeImmutable();
+        $ContactLogs = new ContactLogs();
+        $ContactLogs->profile_id = $profile_id;
+        $ContactLogs->action = 7;
+        $ContactLogs->element = 'btn-contact-form';
+        $ContactLogs->log_date = $time;
+        $ContactLogs->browsing_data =    $browserName . ';' . $os->getName();
+        $entityManagerInterface->persist($ContactLogs);
+        $entityManagerInterface->flush();
 
 
         $client = HttpClient::create();

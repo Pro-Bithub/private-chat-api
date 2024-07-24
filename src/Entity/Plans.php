@@ -112,9 +112,24 @@ class Plans
     #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
     public ?int $billing_volume = null;
 
+    #[ORM\Column(type: Types::SMALLINT)]
+    #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
+    public ?int $type = null;
+
+
+    #[ORM\Column]
+    #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
+    public ?int $duration = null;
+
+
     #[ORM\Column]
     #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
     public ?string $status = null;
+    #[ORM\Column]
+    #[Groups(['read4:collection' , 'read19:collection', 'read108:collection'])]
+    public ?string $introductory = null;
+
+    
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Groups(['read4:collection'])]

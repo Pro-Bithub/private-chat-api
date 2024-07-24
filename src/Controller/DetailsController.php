@@ -320,6 +320,9 @@ class DetailsController extends AbstractController
 
     }
 
+  
+
+
     #[Route('/newticket', name: 'newticket')]
     public function newticket(Request $request, EntityManagerInterface $entityManagerInterface): Response
     {
