@@ -185,6 +185,10 @@ class ContactGuestController extends AbstractController
         $contact->status = '1';
         $contact->email = '';
         $contact->date_start = new \DateTime('@' . strtotime('now'));
+        $contact->source = $data['source'] ?? null;
+        $contact->source_type = $data['source_type'] ?? "contact";
+        
+
         // $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $contact->ip_address =  $data['ipAddress'] ?? '';
         $contact->country = $data['country'] ??   '';

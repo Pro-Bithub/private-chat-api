@@ -199,11 +199,11 @@ class AddcontactformsController extends AbstractController
         }
         $data = [];
         $data['isfirsttime'] = false;
+        $data['isfirsttimecontact'] = false;
         if ($newpassword == "true") {
 
 
-            //!check if is first time 
-            if (!empty($contact->email)) {
+          
                 $sqlv = "SELECT  1  
                 from `2fa_accounts` AS fa 
                 WHERE fa.contact_id = :contactId and fa.customer_account_id = :accountId  and fa.status = 1 limit 1";
@@ -218,7 +218,10 @@ class AddcontactformsController extends AbstractController
                     $data['password'] = $password;
 
                     $TwoFactorAuthAccount = new TwoFactorAuthAccount();
-                    $TwoFactorAuthAccount->receiver = $contact->email;
+                    if (!empty($contact->email)) {
+                    $TwoFactorAuthAccount->receiver = $contact->email;}else{
+                        $TwoFactorAuthAccount->receiver = "";
+                    }
                     $TwoFactorAuthAccount->method = 1;
                     $TwoFactorAuthAccount->status = 1;
                     $TwoFactorAuthAccount->contact_id =  $contact->id;
@@ -226,9 +229,12 @@ class AddcontactformsController extends AbstractController
                     $TwoFactorAuthAccount->customer_account_id = $contact->accountId;
                     $entityManagerInterface->persist($TwoFactorAuthAccount);
                     $entityManagerInterface->flush();
-                    $data['isfirsttime'] = true;
+                    if (!empty($contact->email)) {
+                    $data['isfirsttime'] = true;}
+                    $data['isfirsttimecontact'] = true;
                 }
-            }
+           
+         
         }
 
 
@@ -248,7 +254,7 @@ class AddcontactformsController extends AbstractController
         $data['country'] = $contact->country ?? '';
         $data['country_detected'] = $contact->country_detected ?? '';
 
-        if( $data['isfirsttime']==true){
+        if( $data['isfirsttimecontact']==true){
             $data['gender'] = $contact->gender ?? '';
             $data['email'] = $contact->email ?? '';
             $data['phone'] = $contact->phone ?? '';
