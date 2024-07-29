@@ -201,9 +201,12 @@ class AddcontactformsController extends AbstractController
         $data['isfirsttime'] = false;
         $data['isfirsttimecontact'] = false;
         if ($newpassword == "true") {
-
-
-          
+            $data['source_id'] = $contact->source_id ?? null;
+            if($data['source_id']==null){
+                $data['isfirsttimecontact'] = true;
+            }
+       
+            if (!empty($contact->email)) {
                 $sqlv = "SELECT  1  
                 from `2fa_accounts` AS fa 
                 WHERE fa.contact_id = :contactId and fa.customer_account_id = :accountId  and fa.status = 1 limit 1";
@@ -216,12 +219,8 @@ class AddcontactformsController extends AbstractController
                     $password = bin2hex(random_bytes(6));
                     $profile->password = $userPasswordHasher->hashPassword($profile, $password);
                     $data['password'] = $password;
-
                     $TwoFactorAuthAccount = new TwoFactorAuthAccount();
-                    if (!empty($contact->email)) {
-                    $TwoFactorAuthAccount->receiver = $contact->email;}else{
-                        $TwoFactorAuthAccount->receiver = "";
-                    }
+                    $TwoFactorAuthAccount->receiver = $contact->email;
                     $TwoFactorAuthAccount->method = 1;
                     $TwoFactorAuthAccount->status = 1;
                     $TwoFactorAuthAccount->contact_id =  $contact->id;
@@ -229,10 +228,11 @@ class AddcontactformsController extends AbstractController
                     $TwoFactorAuthAccount->customer_account_id = $contact->accountId;
                     $entityManagerInterface->persist($TwoFactorAuthAccount);
                     $entityManagerInterface->flush();
-                    if (!empty($contact->email)) {
-                    $data['isfirsttime'] = true;}
+                    $data['isfirsttime'] = true;
                     $data['isfirsttimecontact'] = true;
                 }
+               
+            }
            
          
         }
@@ -438,6 +438,8 @@ class AddcontactformsController extends AbstractController
     public function get_global_plans(Request $request, EntityManagerInterface $entityManagerInterface): JsonResponse
     {
    
+        $accountId = $request->query->get('accountId');
+
        
 
         $RAW_QUERY2 = "SELECT  GROUP_CONCAT(pi.element,'___',pi.value SEPARATOR '##')    AS list_info ,  p.*  ,t. country,t.details ,t.phone_number, t.minute_cost as tariff_minute_cost, t.price as tariff_price , t.id as tariff_id ,  t.currency as   tariff_currency
@@ -449,18 +451,30 @@ class AddcontactformsController extends AbstractController
        LEFT JOIN `plan_info` AS pi ON t.id = pi.plan_tariff_id  and   p.type = 2  AND p.billing_type = 2   
         WHERE   
      p.status = 1 and ( p.date_start <= CURDATE() and (p.date_end >= CURDATE() or p.date_end is null))
-        group by p.id
-        ;";
+     
+       ";
+
+         if ($accountId !== null) {
+            $RAW_QUERY2 .= " AND p.account_id = :accountId";
+        }
+
+        $RAW_QUERY2 .= " GROUP BY t.id;";
+
 
         $stmt = $entityManagerInterface->getConnection()->prepare($RAW_QUERY2);
       
+        if ($accountId !== null) {
+            $stmt->bindValue('accountId', $accountId);
+        }
+
+
         $result1 = $stmt->executeQuery()->fetchAllAssociative();
         
 
 
         return new JsonResponse([
             'success' =>  'true',
-            'data' =>  $result1,
+            'data' =>  $result1
         ]);
     }
 

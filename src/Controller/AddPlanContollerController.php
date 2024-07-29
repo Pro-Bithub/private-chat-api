@@ -18,14 +18,23 @@ use App\Repository\UserRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\HttpClient\HttpClient;
 
 class AddPlanContollerController extends AbstractController
 {
+    protected $parameterBag;
+
+    public function __construct(ParameterBagInterface $parameterBag)
+    {
+        $this->parameterBag = $parameterBag;
+    }
+    
     // #[Route('/add/plan', name: 'app_add_plan_contoller')]
     public function __invoke(Request $request, EntityManagerInterface $entityManagerInterface, AccountsRepository $accountsRepository, UserRepository $userRepository): Response
     {
@@ -44,6 +53,8 @@ class AddPlanContollerController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
+        
+         $user = $tokenData->getUser();
     
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
@@ -267,9 +278,14 @@ class AddPlanContollerController extends AbstractController
             }
         }
 
+          
+        $content = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/plans/'.$user->accountId);
+     
+
         return new JsonResponse([
             'success' => true,
             'data' => $plans,
+            'content' => $content,
         ]);
     }
 
@@ -303,7 +319,7 @@ class AddPlanContollerController extends AbstractController
             throw new AccessDeniedException('Invalid token.');
         }
 
-
+        $user = $tokenData->getUser();
 
         $data = json_decode($request->getContent(), true);
     
@@ -750,10 +766,53 @@ class AddPlanContollerController extends AbstractController
             }
         }
 
+
+    
+      
+       $content = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/plans/'.$user->accountId);
+     
+
+  
+
+
         return new JsonResponse([
             'success' => true,
             'data' => $plans,
+            'content' => $content,
         ]);
+    }
+
+    function fetchDataFromWebService($parameterBag,$urlparam)
+    {
+        function addTrailingSlashIfMissing($str)
+        {
+            if (!in_array(substr($str, -1), ['/', '\\'])) {
+                $str .= '/';
+            }
+            return $str;
+        }
+
+        $content = null;
+
+
+        try {
+            $client = HttpClient::create();
+
+
+            $ws_library = addTrailingSlashIfMissing($parameterBag->get('ws_library'));
+
+            $url = $ws_library .$urlparam ;
+            $response = $client->request('GET', $url);
+
+            $status = $response->getStatusCode();
+            if ($status < 400) {
+                $content = $response->getContent();
+            }
+        } catch (\Throwable $e) {
+            $content = $e->getMessage();
+        }
+
+        return $content;
     }
 
     #[Route('/delete_plan/{id}', name: 'app_delete_plan_controller')]
@@ -781,6 +840,7 @@ class AddPlanContollerController extends AbstractController
         if ($tokenData === null) {
             throw new AccessDeniedException('Invalid token.');
         }
+        $user = $tokenData->getUser();
     
         // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
         // $user = $tokenData->getUser();
@@ -808,11 +868,13 @@ class AddPlanContollerController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
-
+        $content = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/plans/'.$user->accountId);
+    
 
         return new JsonResponse([
             'success' => true,
             'data' => $plans,
+            'content' => $content,
         ]);
     }
 
@@ -909,10 +971,14 @@ class AddPlanContollerController extends AbstractController
         $entityManagerInterface->persist($logs);
         $entityManagerInterface->flush();
 
+        $user = $tokenData->getUser();
+        $content = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/plans/'.$user->accountId);
+     
 
         return new JsonResponse([
             'success' => true,
             'data' => $Tariffs,
+            'content' => $content,
         ]);
     }
 
@@ -1019,12 +1085,13 @@ class AddPlanContollerController extends AbstractController
             $result = $stmt4->executeQuery();
         }
 
-
-
+        $user = $tokenData->getUser();
+        $content = $this->fetchDataFromWebService($this->parameterBag,'messages/changed/plans/'.$user->accountId);
 
         return new JsonResponse([
             'success' => true,
             'data' => $Tariffs,
+            'content' => $content,
         ]);
     }
 
