@@ -66,6 +66,17 @@ class PlanUsersRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function loaduserByPlansID($plan): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.plan = :plan')
+            ->setParameter('plan', $plan)
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
 //    /**
 //     * @return PlanUsers[] Returns an array of PlanUsers objects
 //     */

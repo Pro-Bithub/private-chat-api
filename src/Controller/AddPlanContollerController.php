@@ -302,7 +302,7 @@ class AddPlanContollerController extends AbstractController
      
         PlanDiscountUsersRepository $planDiscountUsersRepository
     ): Response {
-         
+    
         $authorizationHeader = $request->headers->get('Authorization');
 
         // Check if the token is present and in the expected format (Bearer TOKEN)
@@ -326,7 +326,9 @@ class AddPlanContollerController extends AbstractController
          $plans = $plansRepository->find($id);
 
          $oldplans = new plans();
-         $oldplans->planUsers = $plans->planUsers ;
+       
+       
+/*          $oldplans->planUsers = $plans->planUsers ; */
          $oldplans->planDiscounts = $plans->planDiscounts;
          $oldplans->sales = $plans->sales;
          $oldplans->name = $plans->name;
@@ -344,6 +346,15 @@ class AddPlanContollerController extends AbstractController
          $oldplans->status = '0';
          $entityManagerInterface->persist($oldplans);
          $entityManagerInterface->flush();
+
+         $plan_user_data = $planUsersRepository->loaduserByPlansID($id);
+         foreach ($plan_user_data as $plan_user) {
+            $plan_user->plan=$oldplans;
+            $entityManagerInterface->persist($plan_user);
+            $entityManagerInterface->flush();
+
+            
+        }
 
 
         if ($data['discountdateStart'] != null) {
@@ -685,45 +696,23 @@ class AddPlanContollerController extends AbstractController
 
 
 
-        // $planDiscountUserData1 = isset($data['plandiscountUser']) ? $data['plandiscountUser'] : [];
 
         $planUserData = isset($data['planUser']) ? $data['planUser'] : [];
+        if (!empty($planUserData)) 
+        foreach ($planUserData as $user_id) {
+            $plan_user_data = $planUsersRepository->loadPlanByUserData($plans->id, $user_id);
 
+            if (empty($plan_user_data)) {
+                $planUser = new PlanUsers();
+                $user = $userRepository->find($user_id);
+                $planUser->plan = $plans;
+                $planUser->user = $user;
+                $planUser->status = '1';
+                $planUser->date_start = new \DateTimeImmutable();
+                $entityManagerInterface->persist($planUser);
+                $entityManagerInterface->flush();
 
-
-        $sql3 = "SELECT p.user_id FROM `plan_users` as p WHERE p.plan_id = :id and p.status = 1";
-        $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
-        $statement3->bindValue('id', $plans->id);
-
-        $PlanUserIds = $statement3->executeQuery()->fetchAllAssociative();
-    
-        $result = array_column($PlanUserIds, 'user_id');
-
-        $difference2 = array_diff($result, $planUserData);
-
-        if (!empty($difference2)) {
-            foreach ($difference2 as $difference) {
-                if (in_array($difference, $result)) {
-                    $plan_user_data = $planUsersRepository->loadPlanByUserData($plans->id, $difference);
-
-                    if (!empty($plan_user_data)) {
-                        $plan_user = $plan_user_data[0];
-                        $plan_user->status = '0';
-                        $plan_user->date_end = new \DateTimeImmutable();
-
-                        $entityManagerInterface->persist($plan_user);
-                        $entityManagerInterface->flush();
-                    }
-                } else {
-                    $planUser = new PlanUsers();
-                    $user = $userRepository->find($difference);
-                    $planUser->plan = $plans;
-                    $planUser->user = $user;
-                    $planUser->status = '1';
-                    $planUser->date_start = new \DateTimeImmutable();
-
-                    $entityManagerInterface->persist($planUser);
-                    $entityManagerInterface->flush();
+                if( ! $this-> userExistsInPlan($user_id,  $plan_user_data)){
 
                     $logs = new UserLogs();
                     $logs->user_id = $data['user_id'];
@@ -732,40 +721,31 @@ class AddPlanContollerController extends AbstractController
                     $logs->element_id = $planUser->id;
                     $logs->source = 1;
                     $logs->log_date = new \DateTimeImmutable();
-
                     $entityManagerInterface->persist($logs);
                     $entityManagerInterface->flush();
                 }
-            }
-        } else {
-            foreach ($planUserData as $user_id) {
-                $plan_user_data = $planUsersRepository->loadPlanByUserData($plans->id, $user_id);
+             
+           
 
-                if (empty($plan_user_data)) {
-                    $planUser = new PlanUsers();
-                    $user = $userRepository->find($user_id);
-                    $planUser->plan = $plans;
-                    $planUser->user = $user;
-                    $planUser->status = '1';
-                    $planUser->date_start = new \DateTimeImmutable();
-
-                    $entityManagerInterface->persist($planUser);
-                    $entityManagerInterface->flush();
-
-                    $logs = new UserLogs();
-                    $logs->user_id = $data['user_id'];
-                    $logs->element = 4;
-                    $logs->action = 'create';
-                    $logs->element_id = $planUser->id;
-                    $logs->source = 1;
-                    $logs->log_date = new \DateTimeImmutable();
-
-                    $entityManagerInterface->persist($logs);
-                    $entityManagerInterface->flush();
-                }
             }
         }
 
+        $plan_user_data = $planUsersRepository->loaduserByPlansID(    $oldplans->id);
+     
+        foreach ($plan_user_data as $plan_user) {
+          
+            if (!in_array($plan_user->user->id, $planUserData)) {
+                $logs = new UserLogs();
+                $logs->user_id = $data['user_id'];
+                $logs->element = 4;
+                $logs->action = 'delete';
+                $logs->element_id = $plan_user->id;
+                $logs->source = 1;
+                $logs->log_date = new \DateTimeImmutable();
+                $entityManagerInterface->persist($logs);
+                $entityManagerInterface->flush();
+            }
+        }
 
     
       
@@ -778,9 +758,22 @@ class AddPlanContollerController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'data' => $plans,
-            'content' => $content,
+            'content' => $content
         ]);
     }
+
+    function userExistsInPlan($userId,  $planUserData)
+        {
+            foreach ($planUserData as $user) {
+                if ($user->id === $userId) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+     
+
 
     function fetchDataFromWebService($parameterBag,$urlparam)
     {
