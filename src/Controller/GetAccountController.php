@@ -44,9 +44,9 @@ class GetAccountController extends AbstractController
         $results = $stmt->executeQuery()->fetchAllAssociative();
 
         return new JsonResponse([
-
             'data' => $results,
-
+            'default_text_additional_comment' =>   "Une application de messagerie privée, payante et sécurisée spécifiquement conçue pour des consultations confidentielles avec des experts qualifiés. En mettant l'accent sur la confidentialité et la sécurité, {APPLICATION} les utilisateurs peuvent engager des consultations vidéo, vocales ou écrites en toute confiance, sachant que leurs données sensibles sont protégées. ",
+     
         ]);
     }
 }

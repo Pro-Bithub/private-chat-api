@@ -75,11 +75,22 @@ class GetRegistrationController extends AbstractController
         if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
+
+        // Extract the token value (without the "Bearer " prefix)
+        $token = substr($authorizationHeader, 7);
+        $tokenData = $this->get('security.token_storage')->getToken();
+        if ($tokenData === null) {
+            throw new AccessDeniedException('Invalid token.');
+        }
+        // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+        $user = $tokenData->getUser();
+
     
-        $sql3= "SELECT * FROM `registrations` as r WHERE r.slug_url LIKE :slug and r.id != :registrations_id";
+        $sql3= "SELECT * FROM `registrations` as r WHERE r.slug_url LIKE :slug  and r.account_id  = :account_id and r.id != :registrations_id";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('slug', $slug);
         $statement3->bindValue('registrations_id', $registrations_id);
+        $statement3->bindValue('account_id', $user->accountId);
         $results3 = $statement3->executeQuery()->fetchAllAssociative();
         return new JsonResponse([
             'status' => true,
@@ -97,11 +108,20 @@ class GetRegistrationController extends AbstractController
         if (!$authorizationHeader || strpos($authorizationHeader, 'Bearer ') !== 0) {
             throw new AccessDeniedException('Invalid or missing authorization token.');
         }
-    
+           // Extract the token value (without the "Bearer " prefix)
+           $token = substr($authorizationHeader, 7);
+           $tokenData = $this->get('security.token_storage')->getToken();
+           if ($tokenData === null) {
+               throw new AccessDeniedException('Invalid token.');
+           }
+           // Now you can access the user data from the token (assuming your User class has a `getUsername()` method)
+           $user = $tokenData->getUser();
 
-        $sql3= "SELECT * FROM `registrations` as r WHERE r.slug_url LIKE :slug";
+
+        $sql3= "SELECT * FROM `registrations` as r WHERE r.slug_url LIKE :slug and r.account_id  = :account_id";
         $statement3 = $entityManagerInterface->getConnection()->prepare($sql3);
         $statement3->bindValue('slug', $slug);
+        $statement3->bindValue('account_id', $user->accountId);
         $results3 = $statement3->executeQuery()->fetchAllAssociative();
         return new JsonResponse([
             'status' => true,
