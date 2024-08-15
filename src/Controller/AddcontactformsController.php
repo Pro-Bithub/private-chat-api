@@ -254,27 +254,30 @@ class AddcontactformsController extends AbstractController
         $data['country'] = $contact->country ?? '';
         $data['country_detected'] = $contact->country_detected ?? '';
 
-        if( $data['isfirsttimecontact']==true){
-            $data['gender'] = $contact->gender ?? '';
-            $data['email'] = $contact->email ?? '';
-            $data['phone'] = $contact->phone ?? '';
-            $data['address'] = $contact->address ?? '';
-            $data['company'] = $contact->company ?? '';
-            $data['currency'] = $contact->currency ?? '';
-            $data['language'] = $contact->language ?? '';
-            $data['contact_id'] = $contact->id;
-
-            $data['name'] = $contact->name ?? '';
-
-            $data['date_birth'] = $contact->date_birth ?? '';
-            $data['accountId'] = $contact->accountId ?? '';
-            
-
-            
-            if(  $data['language'] =="ALL")
-            $data['language'] ='';
+      /*   if( $data['isfirsttimecontact']==true){
+           
         
-        }
+        } */
+
+        $data['gender'] = $contact->gender ?? '';
+        $data['email'] = $contact->email ?? '';
+        $data['phone'] = $contact->phone ?? '';
+        $data['address'] = $contact->address ?? '';
+        $data['company'] = $contact->company ?? '';
+        $data['currency'] = $contact->currency ?? '';
+        $data['language'] = $contact->language ?? '';
+        $data['contact_id'] = $contact->id;
+
+        $data['name'] = $contact->name ?? '';
+
+        $data['date_birth'] = $contact->date_birth ?? '';
+        $data['accountId'] = $contact->accountId ?? '';
+        
+
+        
+        if(  $data['language'] =="ALL")
+        $data['language'] ='';
+    
 
         return new JsonResponse([
             'success' => 'true',

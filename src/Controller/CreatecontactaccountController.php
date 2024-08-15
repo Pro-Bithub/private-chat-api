@@ -444,7 +444,7 @@ class CreatecontactaccountController extends AbstractController
         $login = $request->get('login');
         $account = $request->get('account');
         //$profiles = $this->ProfilesRepository->findContactProfileByemail(array('login' => $login));
-        $sql = "SELECT p.login , c.status
+        $sql = "SELECT p.login , c.status , p.id
         FROM `profiles` AS p
         LEFT JOIN `contacts` AS c ON c.id = p.u_id
         WHERE p.u_type = 2 AND c.status = 1 and p.login = :login and c.account_id = :account";
@@ -471,6 +471,41 @@ class CreatecontactaccountController extends AbstractController
             'data' => $profiles
         ]);
     }
+
+    #[Route('/check_phone_contact', name: 'check_phone_contact')]
+    public function checkphone(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManagerInterface): Response
+    {
+        $phone = $request->get('phone');
+        $account = $request->get('account');
+        //$profiles = $this->ProfilesRepository->findContactProfileByemail(array('phone' => $phone));
+        $sql = "SELECT c.phone , c.status , p.id
+        FROM `profiles` AS p
+        LEFT JOIN `contacts` AS c ON c.id = p.u_id
+        WHERE p.u_type = 2 AND c.status = 1 and c.phone = :phone and c.account_id = :account";
+
+        $statement = $entityManagerInterface->getConnection()->prepare($sql);
+        $statement->bindValue('phone', $phone);
+        $statement->bindValue('account', $account);
+        $profiles = $statement->executeQuery()->fetchAllAssociative();
+        if (count($profiles) > 0) {
+            return new JsonResponse([
+                'success' => 'false',
+                'data' => $profiles
+            ]);
+        } else {
+            return new JsonResponse([
+                'success' => 'true',
+                'data' => $profiles
+            ]);
+        }
+
+
+        return new JsonResponse([
+            'success' => 'true',
+            'data' => $profiles
+        ]);
+    }
+
 
     #[Route('/login/2fa/verify', name: 'app_login_2fa_verify')]
     public function verify(Request $request, EntityManagerInterface $entityManagerInterface, TwoFactorAuthRequestsRepository $TwoFactorAuthRequestsRepository): Response
