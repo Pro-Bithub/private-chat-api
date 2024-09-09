@@ -6,6 +6,9 @@ use App\Entity\ContactOperations;
 use App\Entity\UserLogs;
 use App\Repository\PlansRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Sinergi\BrowserDetector\Browser;
+use Sinergi\BrowserDetector\Os;
+use Sinergi\BrowserDetector\UserAgent;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,18 +16,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-
+use Symfony\Component\HttpFoundation\RequestStack;
 #[AsController]
 class getPlansController extends AbstractController
-{
+{    private $requestStack;
 
     protected $parameterBag;
 
-    public function __construct(ParameterBagInterface $parameterBag,private PlansRepository $plansRepository)
+    public function __construct(ParameterBagInterface $parameterBag,private PlansRepository $plansRepository,RequestStack $requestStack)
     {
         $this->parameterBag = $parameterBag;
+        $this->requestStack = $requestStack;
     }
+
+
 
 
 
@@ -972,18 +977,47 @@ class getPlansController extends AbstractController
     #[Route('/getDataByProfileId/{id}')]
     public function getDataByProfileId(Request $request, $id, EntityManagerInterface $entityManagerInterface): Response
     {
-
-        $sql2 = "SELECT p.ip_address,p.browser_data, c.firstname , c.lastname , c.email ,c.phone , c.country , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
+        $sql2 = "SELECT p.ip_address,p.browser_data, c.firstname , c.lastname , c.email ,c.phone , c.country, c.country_detected , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
         $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
         $statement2->bindValue('id', $id);
         $results = $statement2->executeQuery()->fetchAllAssociative();
-
         return new JsonResponse([
             'success' => 'true',
             'data' => $results[0]
         ]);
       
     }
+
+    #[Route('/getDataByProfileIdwithbrowser/{id}')]
+    public function getDataByProfileIdwithbrowser(Request $request, $id, EntityManagerInterface $entityManagerInterface): Response
+    {        $data = json_decode($request->getContent(), true);
+
+        $sql2 = "SELECT p.ip_address,p.browser_data, c.firstname , c.lastname , c.email ,c.phone , c.country, c.country_detected , c.currency  FROM `profiles` as p  left join `contacts` as c on c.id = p.u_id  where p.id=:id limit 1";
+        $statement2 = $entityManagerInterface->getConnection()->prepare($sql2);
+        $statement2->bindValue('id', $id);
+        $results = $statement2->executeQuery()->fetchAllAssociative();
+
+
+
+            $userAgentString = $data['browser'];
+            $userAgent = new UserAgent($userAgentString);
+            $browser = new Browser($userAgent);
+            $os = new Os($userAgent);
+            $browserName = $browser->getName();
+            $osName = $os->getName();
+            $browserData = $browserName . ';' . $osName;
+
+
+
+
+        return new JsonResponse([
+            'success' => 'true',
+            'browser_data' => $browserData,
+            'data' => $results[0]
+        ]);
+      
+    }
+
 
 
     #[Route('/getTotalBalancebyaccount/{id}')]

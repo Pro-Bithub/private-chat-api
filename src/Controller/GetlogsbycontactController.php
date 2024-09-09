@@ -191,7 +191,7 @@ class GetlogsbycontactController extends AbstractController
         $ContactLogs->element = $data['element'];
         $ContactLogs->log_date = $time;
 
-        if ($ContactLogs->element === 'chat-page' || $ContactLogs->element === 'chat-wlc-page')
+        if ($ContactLogs->element === 'chat-page' || $ContactLogs->element === 'chat-wlc-page' || str_starts_with($ContactLogs->element, 'radar'))
             if (isset($data['userAgent']) && !empty($data['userAgent'])) {
                 $userAgent = $data['userAgent'];
                 $browser = new \Sinergi\BrowserDetector\Browser($userAgent);
@@ -213,7 +213,6 @@ class GetlogsbycontactController extends AbstractController
 
         return new JsonResponse([
             'success' => true,
-
         ]);
     }
 
@@ -293,7 +292,7 @@ class GetlogsbycontactController extends AbstractController
              ON  (clg.element  LIKE 'prechat-from-%' ) and  cform.id = CAST(REGEXP_SUBSTR(clg.element, '[0-9]+') AS UNSIGNED)
              
              LEFT JOIN plan_tariffs pt 
-             ON  clg.element IN ('btn-buy-plan-from-conversation', 'btn-buy-plan-from-modal')   and pt.id = clg.element_value 
+             ON  clg.element IN ('btn-buy-plan-from-conversation', 'btn-buy-plan-from-modal','btn-plan-phone-call-from-menu')   and pt.id = clg.element_value 
              LEFT JOIN plans pl        ON  pt.plan_id = pl.id
 
                  " . (!empty($filters) ? 'where  clg.profile_id = :id and p.account_id = :account_id  and ' : '') . implode(' AND', $filters) . "
@@ -382,6 +381,7 @@ class GetlogsbycontactController extends AbstractController
             'agent-btn-from-wlc-page' => 'Click to agent profile in the Left side (welcome page)',
             'btn-buy-plan-from-conversation' => 'Click in the Button Buy in the plan sent by agent',
             'btn-buy-plan-from-modal' => 'Click to Button Buy in the plans sidebar',
+            'btn-plan-phone-call-from-menu' => 'Click to Button Buy in the plans sidebar',
             'btn-mode-display' => 'Click to Button Mode display',
             'btn-change-language' => 'Click to Button Change language',
             'btn-profil-form' => 'Click to Button Open Profil sidebar',
@@ -392,7 +392,13 @@ class GetlogsbycontactController extends AbstractController
             'btn-contact-form' => 'Click to Button Submit in the Contact form',
             'btn-deconnexion' => 'Click to Button Deconnexion',
             'confirm-password' => 'Confirm password change',
-            'btn-linked' => 'Click to Predefined Link sent by agent'
+            'btn-linked' => 'Click to Predefined Link sent by agent',
+            'radar-rule-reject-users' => 'Reject users (payments)',
+            'radar-rule-reject-consecutive-payments' => 'Reject consecutive (payments)',
+            'radar-rule-reject-different-country' => 'Reject different country  (payments)',
+            'radar-rule-reject-used-browsing-data' => 'Confirm password change  (payments)',
+            'btn-login-identity' => 'Click to Button login with identity  (welcome page)',
+            'script-from-identity-input'=> 'Fill in the inputs of Identity form',
         ];
 
         $mappedResults = $this->mapResults($results, $elementActions);
@@ -474,7 +480,7 @@ class GetlogsbycontactController extends AbstractController
                 $result['element_value'] = str_replace(['s'], ' from Sms',    $result['element_value']);
             }
 
-            if ($result['element'] === 'btn-buy-plan-from-modal'  || $result['element'] === 'btn-buy-plan-from-conversation') {
+            if (   $result['element'] === 'btn-login-identity'||  $result['element'] === 'btn-plan-phone-call-from-menu'  || $result['element'] === 'btn-buy-plan-from-modal'  || $result['element'] === 'btn-buy-plan-from-conversation ') {
                 $result['element_value'] = '';
             }
           
