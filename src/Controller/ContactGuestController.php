@@ -77,10 +77,13 @@ class ContactGuestController extends AbstractController
                 $contact->date_start = new \DateTime('@' . strtotime('now'));
                 // $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
                 $contact->ip_address =  $data['ipAddress'] ?? '';
-                $contact->country = $data['country'] ??  '';
+             
                 $contact->country_detected =   $data['userCountry'] ?? '';
                 if( $contact->country_detected =='')
                 $contact->country_detected =   $data['country_detected'] ?? '';
+
+                $contact->country = $data['country'] ??  $contact->country_detected;
+
             
                 $contact->phone =  $data['phone'] ?? '';
 
@@ -191,11 +194,12 @@ class ContactGuestController extends AbstractController
 
         // $contact->ip_address =  $this->container->get('request_stack')->getCurrentRequest()->getClientIp();
         $contact->ip_address =  $data['ipAddress'] ?? '';
-        $contact->country = $data['country'] ??   '';
+    
         $contact->country_detected =   $data['userCountry'] ?? '';
         if( $contact->country_detected =='')
         $contact->country_detected =   $data['country_detected'] ?? '';
         
+        $contact->country = $data['country'] ??    $contact->country_detected;
 
 
         $entityManagerInterface->persist($contact);

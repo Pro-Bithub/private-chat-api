@@ -363,7 +363,7 @@ class GetlogsbycontactController extends AbstractController
             'script-btn-save-callback' => 'Click to Button submit callback (in script)',
             'agent-btn-right-menu' => 'Click to Button Chatter in the agent selector',
             'availableAgent-btn-right-menu' => 'Click to Button Chatter in the offers section',
-            'availableAgent-btn-from-wlc-page' => 'Click to Button Chatter in the offers section  (welcome page)',
+            'availableAgent-btn-from-wlc-page' => 'Click to Button Chatter in the offers section (welcome page)',
             'modal-chat-plans' => 'Open plans sidebar',
             'login-form' => 'Login form',
             'forget-password-form' => 'Forget password form',
@@ -372,7 +372,7 @@ class GetlogsbycontactController extends AbstractController
             'chat-page' => 'Open chat page',
             'mise-en-relation-btn' => 'Click to Button MISE EN RELATION',
             'appointment-btn-right-menu' => 'Click to Button Rendez-vous in the offers section',
-            'appointment-btn-from-wlc-page' => 'Click to Button Rendez-vous in the offers section  (welcome page)',
+            'appointment-btn-from-wlc-page' => 'Click to Button Rendez-vous in the offers section (welcome page)',
             'planifier-btn-in-modal' => 'Click to Button Planifier in the appointment modal',
             'planifier-btn-in-modal-from-wlc-page' => 'Click to Button Planifier in the appointment modal (welcome page)',
             'call-btn-right-menu' => 'Click to Button Appeler in the offers section',
@@ -395,15 +395,22 @@ class GetlogsbycontactController extends AbstractController
             'btn-linked' => 'Click to Predefined Link sent by agent',
             'radar-rule-reject-users' => 'Reject users (payments)',
             'radar-rule-reject-consecutive-payments' => 'Reject consecutive (payments)',
-            'radar-rule-reject-different-country' => 'Reject different country  (payments)',
-            'radar-rule-reject-used-browsing-data' => 'Confirm password change  (payments)',
-            'btn-login-identity' => 'Click to Button login with identity  (welcome page)',
+            'radar-rule-reject-different-country' => 'Reject different country (payments)',
+            'radar-rule-reject-used-browsing-data' => 'Confirm password change (payments)',
+            'btn-login-identity' => 'Click to Button login with identity (welcome page)',
+            'forgotcode-btn-wlc-page' => 'Click to Button forgot code (welcome page)',
+            'btn-forgot-code' => 'Click to Button Retrieve in the forgot code form',
+            'btn-identity-step-tow' => 'Click to Button Validate in the verification of identity form',
+            'identity-step-tow-from-input-email-wlc'=> 'Fill in the inputs of verification of identity form',
+            'forgotcode-from-input-email-wlc'=> 'Fill in the inputs of forgot code form',
             'script-from-identity-input'=> 'Fill in the inputs of Identity form',
+            'script-from-code-identity-input'=> 'Fill in the inputs of identity code form',
         ];
 
         $mappedResults = $this->mapResults($results, $elementActions);
 
 
+     /*    $elementActions[''] =   'Fill in the inputs of identity code form'; */
 
         $elementActions['prechat-from-'] =   'Fill in the inputs of Prechat form';
         $elementActions['auth-from-input-'] =  'Fill in the inputs of Authentification form';
@@ -413,6 +420,8 @@ class GetlogsbycontactController extends AbstractController
         $elementActions['script-btn-choose-'] =  'Click to Button choose (in script)';
      
 
+        asort($elementActions);
+        
         return new JsonResponse([
             'draw' => $draw,
             'recordsTotal' => $results3,
@@ -484,6 +493,10 @@ class GetlogsbycontactController extends AbstractController
                 $result['element_value'] = '';
             }
           
+            if (   $result['element'] === 'script-from-identity-input') {
+                $action = 'Fill in the inputs of identity code form';
+            }
+
 
             if (isset($elementActions[$result['element']])) {
                 $action = $elementActions[$result['element']];
@@ -537,7 +550,10 @@ class GetlogsbycontactController extends AbstractController
     $groupedResults = [
         'welcome' => [],
         'expired_balance' => [],
-        'registration' => []
+        'registration' => [],
+        'welcome_code' => [],
+        'welcome_pre_paid' => [],
+      
     ];
     
     $tempResults = [];
@@ -583,6 +599,13 @@ class GetlogsbycontactController extends AbstractController
             case 3:
                 $groupedResults['registration'][] = $tempResult;
                 break;
+            case 4:
+                $groupedResults['welcome_code'][] = $tempResult;
+                break;   
+           case 5:
+               $groupedResults['welcome_pre_paid'][] = $tempResult;
+                break;     
+       
         }
     }
     
