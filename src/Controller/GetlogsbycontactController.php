@@ -396,7 +396,7 @@ class GetlogsbycontactController extends AbstractController
             'radar-rule-reject-users' => 'Reject users (payments)',
             'radar-rule-reject-consecutive-payments' => 'Reject consecutive (payments)',
             'radar-rule-reject-different-country' => 'Reject different country (payments)',
-            'radar-rule-reject-used-browsing-data' => 'Confirm password change (payments)',
+            'radar-rule-reject-used-browsing-data' => 'Reject-used-browsing-data (payments)',
             'btn-login-identity' => 'Click to Button login with identity (welcome page)',
             'forgotcode-btn-wlc-page' => 'Click to Button forgot code (welcome page)',
             'btn-forgot-code' => 'Click to Button Retrieve in the forgot code form',
@@ -605,6 +605,9 @@ class GetlogsbycontactController extends AbstractController
            case 5:
                $groupedResults['welcome_pre_paid'][] = $tempResult;
                 break;     
+            case 6:
+               $groupedResults['welcome_after_submit_code'][] = $tempResult;
+               break;  
        
         }
     }
