@@ -553,7 +553,7 @@ class GetlogsbycontactController extends AbstractController
         'registration' => [],
         'welcome_code' => [],
         'welcome_pre_paid' => [],
-      
+        'welcome_after_submit_code' => [],
     ];
     
     $tempResults = [];
